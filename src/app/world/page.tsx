@@ -1,11 +1,13 @@
 import { SectionCard } from '@/components/section-card';
 import { SiteShell } from '@/components/site-shell';
+import { siteData } from '@/content/site-data';
 
 export const metadata = {
   title: '世界観 | 天霧 澪',
 };
 
 export default function WorldPage() {
+  const assets = siteData.generatedAssets;
   const rules = [
     {
       title: '違和感は説明しすぎない',
@@ -28,10 +30,13 @@ export default function WorldPage() {
 
   return (
     <SiteShell>
-      <section className="hero-card compact-hero">
-        <p className="eyebrow">世界観</p>
-        <h1>観測メモ</h1>
-        <p className="hero-summary">この日記を取り巻く、境界線の薄い世界のための小さなメモ。</p>
+      <section className="hero-card compact-hero diary-hero world-hero">
+        <div className="diary-hero__copy">
+          <p className="eyebrow">世界観</p>
+          <h1>観測メモ</h1>
+          <p className="hero-summary">この日記を取り巻く、境界線の薄い世界のための小さなメモ。</p>
+        </div>
+        <img className="diary-hero__image" src={assets.diaryDecor.src} alt={assets.diaryDecor.alt} />
       </section>
 
       <section className="content-grid two-up">

@@ -1,0 +1,49 @@
+<svg width="800" height="1000" viewBox="0 0 800 1000" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg04" x1="120" y1="40" x2="650" y2="980" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fffafc"/>
+      <stop offset="1" stop-color="#edf3ff"/>
+    </linearGradient>
+    <radialGradient id="orb04" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(585 180) rotate(132) scale(220 220)">
+      <stop stop-color="#8f6fff" stop-opacity="0.42"/>
+      <stop offset="1" stop-color="#8f6fff" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="orbB04" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(230 760) rotate(90) scale(240 240)">
+      <stop stop-color="#ffcee8" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#ffcee8" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="panel04" x1="110" y1="120" x2="650" y2="870" gradientUnits="userSpaceOnUse">
+      <stop stop-color="white" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="white" stop-opacity="0.55"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="1000" rx="48" fill="url(#bg04)"/>
+  <circle cx="585" cy="180" r="220" fill="url(#orb04)"/>
+  <circle cx="230" cy="760" r="240" fill="url(#orbB04)"/>
+  <circle cx="575" cy="210" r="84" stroke="#8f6fff" stroke-opacity="0.26" stroke-width="2"/>
+  <circle cx="610" cy="248" r="16" fill="white" fill-opacity="0.86"/>
+  <path d="M592 194C581 244 541 282 493 285C532 301 580 286 615 247C649 210 665 161 657 122C647 160 621 183 592 194Z" fill="white" fill-opacity="0.9"/>
+  <rect x="92" y="98" width="616" height="804" rx="40" fill="url(#panel04)" stroke="white" stroke-opacity="0.75"/>
+  <rect x="130" y="136" width="154" height="34" rx="17" fill="white" fill-opacity="0.82"/>
+  <text x="152" y="158" fill="#8f6fff" font-family="Inter,Arial,sans-serif" font-size="16" letter-spacing="3.2">VISUAL 04</text>
+  <text x="130" y="228" fill="#2D2444" font-family="Inter,Arial,sans-serif" font-size="42" font-weight="700">Quiet Orbit</text>
+  <text x="130" y="262" fill="#6F628F" font-family="Inter,Arial,sans-serif" font-size="22">静かな軌道</text>
+  <g opacity="0.9">
+    <rect x="126" y="322" width="548" height="432" rx="34" fill="white" fill-opacity="0.46" stroke="white" stroke-opacity="0.72"/>
+    <ellipse cx="405" cy="534" rx="168" ry="216" fill="#8f6fff" fill-opacity="0.1"/>
+    <ellipse cx="405" cy="520" rx="136" ry="178" fill="white" fill-opacity="0.85"/>
+    <path d="M292 603C333 570 365 558 405 558C445 558 480 570 519 603" stroke="#8f6fff" stroke-opacity="0.5" stroke-width="10" stroke-linecap="round"/>
+    <path d="M352 470C377 441 432 438 460 470" stroke="#ffcee8" stroke-opacity="0.45" stroke-width="14" stroke-linecap="round"/>
+    <rect x="260" y="654" width="292" height="26" rx="13" fill="white" fill-opacity="0.62"/>
+    <rect x="298" y="690" width="216" height="16" rx="8" fill="white" fill-opacity="0.42"/>
+    <circle cx="252" cy="432" r="22" fill="#ffcee8" fill-opacity="0.28"/>
+    <circle cx="560" cy="422" r="18" fill="#8f6fff" fill-opacity="0.26"/>
+    <path d="M212 370C258 356 299 334 336 302" stroke="#8f6fff" stroke-opacity="0.24" stroke-width="5" stroke-linecap="round"/>
+    <path d="M470 316C512 344 550 362 598 374" stroke="#ffcee8" stroke-opacity="0.24" stroke-width="5" stroke-linecap="round"/>
+  </g>
+  <rect x="130" y="792" width="240" height="52" rx="26" fill="white" fill-opacity="0.82"/>
+  <text x="160" y="824" fill="#2D335F" font-family="Inter,Arial,sans-serif" font-size="20">AMAGIRI MIO concept art</text>
+  <circle cx="630" cy="816" r="6" fill="#8f6fff"/>
+  <circle cx="652" cy="816" r="6" fill="#ffcee8"/>
+  <circle cx="674" cy="816" r="6" fill="#FFFFFF"/>
+</svg>

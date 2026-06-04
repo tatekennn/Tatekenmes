@@ -8,6 +8,7 @@ export const metadata = {
 
 export default function ProfilePage() {
   const profile = siteData.profile;
+  const assets = siteData.generatedAssets;
   const facts = [
     { label: '名前', value: `${profile.name}（${profile.ruby}）` },
     { label: '年齢', value: `${profile.age}歳` },
@@ -24,13 +25,16 @@ export default function ProfilePage() {
 
   return (
     <SiteShell>
-      <section className="hero-card compact-hero">
-        <p className="eyebrow">プロフィール</p>
-        <h1>{profile.name}</h1>
-        <p className="hero-summary">{profile.bio[1]}</p>
+      <section className="hero-card compact-hero profile-hero">
+        <div className="profile-hero__copy">
+          <p className="eyebrow">プロフィール</p>
+          <h1>{profile.name}</h1>
+          <p className="hero-summary">{profile.bio[1]}</p>
+        </div>
+        <img className="profile-hero__icon" src={assets.profileIcon.src} alt={assets.profileIcon.alt} />
       </section>
 
-      <section className="content-grid two-up">
+      <section className="content-grid two-up profile-stage">
         <SectionCard title="基本情報" eyebrow="略歴">
           <dl className="detail-list">
             {facts.map((fact) => (
@@ -42,6 +46,13 @@ export default function ProfilePage() {
           </dl>
         </SectionCard>
 
+        <section className="section-card profile-figure-card" aria-label="天霧澪の立ち絵">
+          <p className="eyebrow">Selected visual</p>
+          <img className="profile-figure-card__image" src={assets.profileFull.src} alt={assets.profileFull.alt} />
+        </section>
+      </section>
+
+      <section className="content-grid two-up">
         <SectionCard title="気質" eyebrow="ふるまい">
           <ul className="tag-list">
             {traits.map((trait) => (
@@ -49,18 +60,18 @@ export default function ProfilePage() {
             ))}
           </ul>
         </SectionCard>
-      </section>
 
-      <SectionCard title="輪郭" eyebrow="背景">
-        <div className="stack-list">
-          {timeline.map((item) => (
-            <article key={item.title} className="stack-item">
-              <h3>{item.title}</h3>
-              <p>{item.body}</p>
-            </article>
-          ))}
-        </div>
-      </SectionCard>
+        <SectionCard title="輪郭" eyebrow="背景">
+          <div className="stack-list">
+            {timeline.map((item) => (
+              <article key={item.title} className="stack-item">
+                <h3>{item.title}</h3>
+                <p>{item.body}</p>
+              </article>
+            ))}
+          </div>
+        </SectionCard>
+      </section>
     </SiteShell>
   );
 }

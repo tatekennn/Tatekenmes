@@ -24,7 +24,7 @@ function getNavItems() {
 export function SiteShell({ children }: Readonly<{ children: ReactNode }>) {
   const navItems = getNavItems();
   const name = siteData.profile.name;
-  const subtitle = '東京の夕暮れに残る、静かな観測記録';
+  const subtitle = 'Diary / profile / city-nocturne archive';
 
   return (
     <main className="site-shell">
@@ -32,6 +32,7 @@ export function SiteShell({ children }: Readonly<{ children: ReactNode }>) {
       <div className="site-shell__inner">
         <header className="site-header">
           <div className="site-brand">
+            <p className="site-note">AMAGIRI MIO OFFICIAL ARCHIVE</p>
             <strong>{name}</strong>
             <span>{subtitle}</span>
           </div>
@@ -47,7 +48,12 @@ export function SiteShell({ children }: Readonly<{ children: ReactNode }>) {
         <div className="page-stack">{children}</div>
 
         <footer className="site-footer">
-          <p>記録は、見失わないために静かに残されています。</p>
+          <p>昼の輪郭と、夜にだけ残る気配をやわらかく束ねた、小さなオフィシャルアーカイブ。</p>
+          <div className="site-footer__links">
+            <Link href="/diary">日記</Link>
+            <Link href="/profile">プロフィール</Link>
+            <Link href="/world">世界観</Link>
+          </div>
         </footer>
       </div>
     </main>
