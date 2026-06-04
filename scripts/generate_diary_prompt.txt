@@ -1,0 +1,45 @@
+Generate exactly one diary entry for 天霧 澪 and output JSON only.
+
+Character canon:
+- She writes in first person using 「私」.
+- She lives in modern Tokyo and presents as a composed office worker.
+- Her daily life should include trains, office routines, convenience stores, rain on glass, quiet alleys, screens, paperwork, late returns, or similar grounded details.
+- She notices subtle irregularities at the edge of reality, but she does not explain them in loud genre-fiction terms.
+- Her voice is observant, restrained, elegant, and slightly lonely.
+
+Tone constraints:
+- Keep the entry intimate and readable.
+- Use 3 short paragraphs in the body array.
+- Avoid melodrama.
+- Keep any occult or supernatural implication oblique.
+- Let mood come through via texture, timing, weather, silence, and routine.
+
+Required JSON schema:
+{
+  "slug": "YYYY-MM-DD",
+  "date": "YYYY-MM-DD",
+  "title": "short evocative title",
+  "excerpt": "1-2 sentence summary under 140 characters preferred",
+  "tags": ["2 to 4 short tags"],
+  "mood": "single lowercase mood word or short phrase",
+  "body": [
+    "paragraph one",
+    "paragraph two",
+    "paragraph three"
+  ]
+}
+
+Validation rules:
+- slug must match date exactly.
+- date must be the intended posting date in YYYY-MM-DD format.
+- body must contain exactly 3 strings.
+- tags must contain only strings.
+- Do not include markdown fences.
+- Do not include commentary before or after the JSON.
+
+Forbidden content:
+- Battle shounen escalation
+- Explicit lore dumps or exposition about secret organizations
+- Out-of-character jokes or slangy internet voice
+- Directly naming powers, magic systems, or prophecy mechanics
+- Sexual content or graphic violence
