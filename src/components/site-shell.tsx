@@ -21,39 +21,79 @@ function getNavItems() {
     .filter((item: { href: string; label: string }) => item.href && item.label);
 }
 
-export function SiteShell({ children }: Readonly<{ children: ReactNode }>) {
+type SiteShellProps = Readonly<{
+  children: ReactNode;
+  variant?: 'default' | 'home';
+}>;
+
+export function SiteShell({ children, variant = 'default' }: SiteShellProps) {
   const navItems = getNavItems();
   const name = siteData.profile.name;
-  const subtitle = 'Diary / profile / city-nocturne archive';
+  const subtitle = variant === 'home' ? 'Official site / nocturne archive' : 'Diary / profile / city-nocturne archive';
+  const socialLinks = Array.isArray(siteData.socialLinks) ? siteData.socialLinks.slice(0, 2) : [];
 
   return (
-    <main className="site-shell">
+    <main className={`site-shell site-shell--${variant}`}>
       <AmbientOrb />
       <div className="site-shell__inner">
         <header className="site-header">
           <div className="site-brand">
-            <p className="site-note">AMAGIRI MIO OFFICIAL ARCHIVE</p>
+            <p className="site-note">AMAGIRI MIO OFFICIAL SITE</p>
             <strong>{name}</strong>
             <span>{subtitle}</span>
           </div>
-          <nav className="site-nav" aria-label="主要ナビゲーション">
-            {navItems.map((item) => (
-              <Link key={`${item.href}-${item.label}`} href={item.href}>
-                {item.label}
-              </Link>
-            ))}
-          </nav>
+
+          <div className="site-header__cluster">
+            <nav className="site-nav" aria-label="主要ナビゲーション">
+              {navItems.map((item) => (
+                <Link key={`${item.href}-${item.label}`} href={item.href}>
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
+
+            {socialLinks.length ? (
+              <div className="site-social" aria-label="SNSリンク">
+                {socialLinks.map((item) => (
+                  <a
+                    key={item.label}
+                    href={item.href}
+                    target={item.external ? '_blank' : undefined}
+                    rel={item.external ? 'noreferrer' : undefined}
+                    aria-label={item.label}
+                    title={item.label}
+                  >
+                    <span aria-hidden="true">{item.icon}</span>
+                  </a>
+                ))}
+              </div>
+            ) : null}
+          </div>
         </header>
 
         <div className="page-stack">{children}</div>
 
         <footer className="site-footer">
-          <p>昼の輪郭と、夜にだけ残る気配をやわらかく束ねた、小さなオフィシャルアーカイブ。</p>
+          <p>昼の輪郭と、夜にだけ残る気配をやわらかく束ねた、天霧澪のオフィシャルサイト。</p>
           <div className="site-footer__links">
             <Link href="/diary">日記</Link>
             <Link href="/profile">プロフィール</Link>
             <Link href="/world">世界観</Link>
           </div>
+          {socialLinks.length ? (
+            <div className="site-footer__social" aria-label="SNSリンク">
+              {socialLinks.map((item) => (
+                <a
+                  key={item.label}
+                  href={item.href}
+                  target={item.external ? '_blank' : undefined}
+                  rel={item.external ? 'noreferrer' : undefined}
+                >
+                  {item.icon} {item.label}
+                </a>
+              ))}
+            </div>
+          ) : null}
         </footer>
       </div>
     </main>

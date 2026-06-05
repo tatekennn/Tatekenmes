@@ -1,7 +1,21 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
+import { Inter, Noto_Serif_JP } from 'next/font/google';
 import { siteData } from '@/content/site-data';
 import './globals.css';
+
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-sans',
+  display: 'swap',
+});
+
+const notoSerifJp = Noto_Serif_JP({
+  subsets: ['latin'],
+  variable: '--font-serif',
+  weight: ['400', '500', '700'],
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: siteData.metadata.title,
@@ -11,7 +25,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <html lang="ja">
-      <body>{children}</body>
+      <body className={`${inter.variable} ${notoSerifJp.variable}`}>{children}</body>
     </html>
   );
 }

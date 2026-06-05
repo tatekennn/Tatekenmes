@@ -26,6 +26,14 @@ export type VisualAsset = {
   note: string;
 };
 
+export type SocialLink = {
+  label: string;
+  href: string;
+  icon: string;
+  note: string;
+  external?: boolean;
+};
+
 export type SiteData = {
   metadata: {
     title: string;
@@ -58,13 +66,14 @@ export type SiteData = {
   worldFragments: WorldFragment[];
   navigation: NavigationItem[];
   tagDescriptions: TagDescription[];
+  socialLinks: SocialLink[];
 };
 
 export const siteData: SiteData = {
   metadata: {
-    title: '天霧 澪 オフィシャルアーカイブ',
+    title: '天霧 澪 オフィシャルサイト',
     description:
-      '都内で働く天霧 澪の、日記・プロフィール・世界観をまとめたキャラクターサイト。明るい体温の中に、夜の観測が少しだけ混ざっている。',
+      '都内で働く天霧 澪の、日記・プロフィール・世界観をまとめたVTuber公式サイト。平日の体温の中に、夜の観測が少しだけ混ざっている。',
     locale: 'ja-JP',
   },
   generatedAssets: {
@@ -72,31 +81,31 @@ export const siteData: SiteData = {
       src: '/generated/mio-hero-main.png',
       alt: '天霧澪のトップビジュアル。夜のオフィスで静かに佇む紫髪の女性。',
       title: 'Hero visual',
-      note: 'トップページのメインビジュアル。'
+      note: 'トップページのメインビジュアル。',
     },
     profileFull: {
       src: '/generated/mio-profile-full.png',
       alt: '天霧澪の全身立ち絵。紫髪と落ち着いた表情、オフィスワーカーを思わせる衣装。',
       title: 'Profile full',
-      note: 'プロフィール詳細ページ用の立ち絵。'
+      note: 'プロフィール詳細ページ用の立ち絵。',
     },
     profileIcon: {
       src: '/generated/mio-profile-icon.png',
       alt: '天霧澪のプロフィールアイコン。肩上のポートレート。',
       title: 'Profile icon',
-      note: 'アイコンや小さな紹介枠向け。'
+      note: 'アイコンや小さな紹介枠向け。',
     },
     diaryHeader: {
       src: '/generated/mio-diary-header.png',
       alt: '日記ページ用のヘッダー画像。窓辺の机で静かに過ごす天霧澪。',
       title: 'Diary header',
-      note: '日記一覧・導入セクション向け。'
+      note: '日記一覧・導入セクション向け。',
     },
     diaryDecor: {
       src: '/generated/mio-diary-decor.png',
       alt: 'ノートや文具、淡いオカルト記号をあしらった装飾背景。',
       title: 'Diary decor',
-      note: '背景や区切り装飾に使う抽象ビジュアル。'
+      note: '背景や区切り装飾に使う抽象ビジュアル。',
     },
   },
   profile: {
@@ -117,8 +126,7 @@ export const siteData: SiteData = {
       '大げさな出来事は求めていない。ただ、東京の夜がたまに見せる余白を、忘れないうちに言葉へ置き換えておきたいと思っている。',
     ],
   },
-  featuredQuote:
-    '昼の整頓は現実のために。夜の観測は、こぼれた星を見失わないために。',
+  featuredQuote: '昼の整頓は現実のために。夜の観測は、こぼれた星を見失わないために。',
   quickFacts: [
     {
       label: '呼び名',
@@ -197,6 +205,22 @@ export const siteData: SiteData = {
     {
       tag: '生活',
       description: 'コンビニ、部屋、食事など、日常の手触りに寄った断片。',
+    },
+  ],
+  socialLinks: [
+    {
+      label: 'X',
+      href: 'https://x.com/amagiri_mio',
+      icon: '𝕏',
+      note: '夜の短い観測メモ',
+      external: true,
+    },
+    {
+      label: 'YouTube',
+      href: 'https://www.youtube.com/@amagirimio',
+      icon: '▶',
+      note: '配信 / アーカイブ置き場',
+      external: true,
     },
   ],
 };
