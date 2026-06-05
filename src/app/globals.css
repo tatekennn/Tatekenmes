@@ -1708,3 +1708,90 @@ h3 {
     min-height: 17rem;
   }
 }
+
+/* --- Original-design extension helpers --- */
+.talent-meta-panel {
+  display: grid;
+  gap: 1rem;
+}
+
+.talent-meta-panel--compact {
+  padding: 1rem 1.1rem;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.56);
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(14px);
+}
+
+.showcase-triptych {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.showcase-triptych__card {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  min-height: 420px;
+  padding: 1.25rem;
+  border-radius: 32px;
+  border: 1px solid rgba(255, 255, 255, 0.74);
+  box-shadow: var(--shadow);
+  color: white;
+  isolation: isolate;
+}
+
+.showcase-triptych__image {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+}
+
+.showcase-triptych__veil {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(18, 15, 45, 0.08), rgba(14, 11, 33, 0.84) 78%);
+}
+
+.showcase-triptych__copy {
+  position: relative;
+  z-index: 1;
+  max-width: 18rem;
+}
+
+.showcase-triptych__copy .eyebrow {
+  color: rgba(235, 227, 255, 0.84);
+}
+
+.showcase-triptych__copy h2 {
+  margin-bottom: 0.5rem;
+  color: white;
+  font-size: clamp(1.55rem, 2vw, 2rem);
+}
+
+.showcase-triptych__copy p {
+  color: rgba(235, 228, 245, 0.82);
+}
+
+.showcase-triptych__copy span {
+  display: inline-block;
+  margin-top: 0.8rem;
+  color: white;
+  font-weight: 600;
+}
+
+@media (max-width: 960px) {
+  .showcase-triptych {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .showcase-triptych__card {
+    border-radius: 26px;
+    min-height: 340px;
+  }
+}
