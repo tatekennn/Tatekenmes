@@ -29,8 +29,9 @@ type SiteShellProps = Readonly<{
 export function SiteShell({ children, variant = 'default' }: SiteShellProps) {
   const navItems = getNavItems();
   const name = siteData.profile.name;
-  const subtitle = variant === 'home' ? 'Official site / nocturne archive' : 'Diary / profile / city-nocturne archive';
+  const subtitle = variant === 'home' ? 'Official website' : 'Diary / profile / city-nocturne archive';
   const socialLinks = Array.isArray(siteData.socialLinks) ? siteData.socialLinks.slice(0, 2) : [];
+  const showChromeSocials = variant !== 'home';
 
   return (
     <main className={`site-shell site-shell--${variant}`}>
@@ -52,7 +53,7 @@ export function SiteShell({ children, variant = 'default' }: SiteShellProps) {
               ))}
             </nav>
 
-            {socialLinks.length ? (
+            {showChromeSocials && socialLinks.length ? (
               <div className="site-social" aria-label="SNSリンク">
                 {socialLinks.map((item) => (
                   <a
@@ -80,7 +81,7 @@ export function SiteShell({ children, variant = 'default' }: SiteShellProps) {
             <Link href="/profile">プロフィール</Link>
             <Link href="/world">世界観</Link>
           </div>
-          {socialLinks.length ? (
+          {showChromeSocials && socialLinks.length ? (
             <div className="site-footer__social" aria-label="SNSリンク">
               {socialLinks.map((item) => (
                 <a

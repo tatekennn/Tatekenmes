@@ -2638,6 +2638,245 @@ h3,
   color: var(--muted);
 }
 
+.official-hero--minimal {
+  min-height: min(920px, calc(100vh - 2rem));
+}
+
+.official-hero--minimal .official-hero__backdrop {
+  opacity: 0.08;
+}
+
+.official-hero--minimal .official-hero__texture {
+  background:
+    radial-gradient(circle at 18% 18%, rgba(255, 227, 242, 0.2), transparent 18%),
+    radial-gradient(circle at 76% 22%, rgba(147, 109, 255, 0.16), transparent 22%),
+    linear-gradient(180deg, rgba(16, 16, 34, 0.22), rgba(28, 23, 58, 0.78));
+}
+
+.official-hero__orb {
+  position: absolute;
+  border-radius: 999px;
+  pointer-events: none;
+  filter: blur(12px);
+}
+
+.official-hero__orb--one {
+  inset: 14% auto auto 44%;
+  width: 10rem;
+  height: 10rem;
+  background: radial-gradient(circle, rgba(255, 228, 245, 0.45), transparent 70%);
+}
+
+.official-hero__orb--two {
+  inset: auto 12% 16% auto;
+  width: 12rem;
+  height: 12rem;
+  background: radial-gradient(circle, rgba(122, 195, 255, 0.16), rgba(157, 115, 255, 0.16) 45%, transparent 72%);
+}
+
+.official-hero__content--minimal {
+  grid-template-columns: minmax(280px, 0.72fr) minmax(420px, 1.18fr);
+  gap: 0.5rem;
+  align-items: center;
+  min-height: calc(100vh - 9rem);
+}
+
+.official-hero__copy--minimal {
+  max-width: 24rem;
+  padding-left: clamp(0rem, 1vw, 0.4rem);
+}
+
+.official-tagline--minimal {
+  max-width: 18rem;
+  margin: 0;
+  color: rgba(244, 238, 255, 0.92);
+  font-size: clamp(1.1rem, 2vw, 1.35rem);
+  line-height: 1.75;
+}
+
+.official-hero__actions--minimal {
+  margin-top: 1.4rem;
+}
+
+.official-hero__visual--minimal {
+  min-height: 78vh;
+}
+
+.official-hero__figure-wrap--minimal {
+  inset: auto 0 0 -2%;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.official-hero__figure--minimal {
+  width: auto;
+  height: min(70vh, 860px);
+  max-width: min(100%, 760px);
+  object-fit: contain;
+  object-position: center bottom;
+  filter: drop-shadow(0 34px 80px rgba(15, 13, 31, 0.5));
+}
+
+.official-shortcuts {
+  margin-top: -0.45rem;
+}
+
+.official-shortcuts__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+}
+
+.official-shortcuts__link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.8rem;
+  padding: 0.72rem 1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(125, 85, 232, 0.12);
+  background: rgba(255, 255, 255, 0.6);
+  color: var(--navy);
+  font-size: 0.84rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  backdrop-filter: blur(16px);
+}
+
+.official-shortcuts__link:hover,
+.official-shortcuts__link:focus-visible {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.86);
+}
+
+.official-latest,
+.official-about--minimal,
+.official-contact--compact {
+  display: grid;
+  gap: 1.6rem;
+  padding: clamp(1.4rem, 3vw, 2.4rem) clamp(1rem, 2.4vw, 1.4rem);
+}
+
+.official-latest__card {
+  display: grid;
+  gap: 0.95rem;
+  padding: clamp(1.25rem, 2.4vw, 1.8rem);
+  border-radius: 30px;
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(246, 240, 255, 0.96));
+  box-shadow: 0 18px 42px rgba(96, 74, 145, 0.1);
+}
+
+.official-latest__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  color: rgba(88, 79, 116, 0.76);
+  font-size: 0.82rem;
+  letter-spacing: 0.04em;
+}
+
+.official-latest__card h3 {
+  margin: 0;
+  color: #2f244a;
+  font-size: clamp(1.7rem, 2.8vw, 2.4rem);
+}
+
+.official-latest__card p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.85;
+}
+
+.official-latest__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+  align-items: center;
+}
+
+.official-button--soft {
+  background: rgba(255, 255, 255, 0.88);
+  color: var(--navy);
+  border: 1px solid rgba(125, 85, 232, 0.12);
+  box-shadow: none;
+}
+
+.official-about__layout--minimal {
+  grid-template-columns: minmax(320px, 0.9fr) minmax(0, 1fr);
+  gap: 1.4rem;
+  align-items: center;
+}
+
+.official-about__portrait--minimal {
+  min-height: 420px;
+  border-radius: 34px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.official-about__portrait-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.official-about__copy--minimal {
+  gap: 1rem;
+  max-width: 34rem;
+}
+
+.official-about__copy--minimal p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.9;
+}
+
+.official-movie--minimal {
+  overflow: hidden;
+  border-radius: 36px;
+}
+
+.official-movie__visual--minimal {
+  min-height: 420px;
+  display: flex;
+  align-items: flex-end;
+}
+
+.official-movie__copy--minimal {
+  max-width: 34rem;
+  gap: 1rem;
+}
+
+.official-contact__compact-links {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.official-contact__compact-link {
+  display: grid;
+  grid-template-columns: 3rem 1fr;
+  gap: 0.9rem;
+  align-items: center;
+  padding: 1rem 1.1rem;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.68);
+  box-shadow: 0 14px 32px rgba(96, 74, 145, 0.08);
+}
+
+.official-contact__compact-link strong {
+  display: block;
+  color: #2f244a;
+  font-family: var(--font-serif), 'Noto Serif JP', serif;
+}
+
+.official-contact__compact-link small {
+  color: var(--muted);
+}
+
 .fade-in-section {
   animation: official-fade-up 0.8s ease both;
 }
@@ -2671,7 +2910,10 @@ h3,
   .official-about__layout,
   .official-diary__layout,
   .official-contact__layout,
-  .official-movie__panel-wrap {
+  .official-movie__panel-wrap,
+  .official-hero__content--minimal,
+  .official-about__layout--minimal,
+  .official-contact__compact-links {
     grid-template-columns: 1fr;
   }
 
@@ -2679,8 +2921,16 @@ h3,
     min-height: 620px;
   }
 
+  .official-hero__visual--minimal {
+    min-height: 640px;
+  }
+
   .official-hero__figure-wrap {
     inset: 4% 2% 0 2%;
+  }
+
+  .official-hero__figure-wrap--minimal {
+    inset: auto 0 0 0;
   }
 
   .official-hero__sidecard--status {
@@ -2730,12 +2980,20 @@ h3,
   .site-footer__social,
   .official-hero__actions,
   .official-pills,
-  .official-hero__spotlight {
+  .official-hero__spotlight,
+  .official-shortcuts__links,
+  .official-latest__actions,
+  .official-contact__compact-links {
     width: 100%;
   }
 
   .site-social a,
   .official-button {
+    width: 100%;
+  }
+
+  .official-shortcuts__link,
+  .official-contact__compact-link {
     width: 100%;
   }
 
@@ -2749,12 +3007,24 @@ h3,
     min-height: auto;
   }
 
+  .official-hero__content--minimal {
+    gap: 1rem;
+  }
+
   .official-title {
     font-size: clamp(3rem, 16vw, 4.7rem);
   }
 
   .official-hero__visual {
     min-height: 520px;
+  }
+
+  .official-hero__visual--minimal {
+    min-height: 420px;
+  }
+
+  .official-hero__figure--minimal {
+    height: min(58vh, 560px);
   }
 
   .official-hero__sidecard--status {
