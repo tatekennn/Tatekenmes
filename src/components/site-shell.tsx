@@ -25,7 +25,6 @@ export function SiteShell({ children }: Readonly<{ children: ReactNode }>) {
   const navItems = getNavItems();
   const name = siteData.profile.name;
   const subtitle = 'Diary / profile / city-nocturne archive';
-  const socials = Object.values(siteData.socialLinks);
 
   return (
     <main className="site-shell">
@@ -37,28 +36,13 @@ export function SiteShell({ children }: Readonly<{ children: ReactNode }>) {
             <strong>{name}</strong>
             <span>{subtitle}</span>
           </div>
-          <div className="site-header__actions">
-            <nav className="site-nav" aria-label="主要ナビゲーション">
-              {navItems.map((item) => (
-                <Link key={`${item.href}-${item.label}`} href={item.href}>
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
-            <div className="site-socials" aria-label="SNSリンク">
-              {socials.map((item) => (
-                item.href ? (
-                  <a key={item.label} href={item.href} target="_blank" rel="noreferrer">
-                    {item.label}
-                  </a>
-                ) : (
-                  <span key={item.label} className="site-socials__item site-socials__item--disabled" aria-disabled="true">
-                    {item.label}
-                  </span>
-                )
-              ))}
-            </div>
-          </div>
+          <nav className="site-nav" aria-label="主要ナビゲーション">
+            {navItems.map((item) => (
+              <Link key={`${item.href}-${item.label}`} href={item.href}>
+                {item.label}
+              </Link>
+            ))}
+          </nav>
         </header>
 
         <div className="page-stack">{children}</div>
@@ -69,19 +53,6 @@ export function SiteShell({ children }: Readonly<{ children: ReactNode }>) {
             <Link href="/diary">日記</Link>
             <Link href="/profile">プロフィール</Link>
             <Link href="/world">世界観</Link>
-          </div>
-          <div className="site-socials site-socials--footer" aria-label="SNSリンク">
-            {socials.map((item) => (
-              item.href ? (
-                <a key={item.label} href={item.href} target="_blank" rel="noreferrer">
-                  {item.label}
-                </a>
-              ) : (
-                <span key={item.label} className="site-socials__item site-socials__item--disabled" aria-disabled="true">
-                  {item.label}
-                </span>
-              )
-            ))}
           </div>
         </footer>
       </div>

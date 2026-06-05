@@ -124,7 +124,6 @@ See `docs/hermes-automation.md` for the operational flow and guardrails.
 2. In Vercel, ensure the framework preset is Next.js.
 3. Keep the production branch aligned with the branch Hermes pushes to.
 4. Each new diary commit triggers a new deployment automatically.
-5. Set `NEXT_PUBLIC_SITE_URL` in Vercel to the production site URL (for example `https://example.vercel.app` or your custom domain) so Open Graph and Twitter metadata resolve absolute image URLs correctly.
 
 ローカル JSON をそのまま読むため、基本構成では別途 CMS やデータベースは不要です。
 

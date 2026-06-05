@@ -5,7 +5,7 @@ import { siteData } from '@/content/site-data';
 import { getDiaryEntries, type DiaryEntry } from '@/lib/diary';
 
 export const metadata = {
-  title: '日記',
+  title: '日記 | 天霧 澪',
 };
 
 export default function DiaryIndexPage() {

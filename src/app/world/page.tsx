@@ -3,7 +3,7 @@ import { SiteShell } from '@/components/site-shell';
 import { siteData } from '@/content/site-data';
 
 export const metadata = {
-  title: '世界観',
+  title: '世界観 | 天霧 澪',
 };
 
 export default function WorldPage() {

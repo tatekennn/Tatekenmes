@@ -3,7 +3,7 @@ import { SiteShell } from '@/components/site-shell';
 import { siteData } from '@/content/site-data';
 
 export const metadata = {
-  title: 'プロフィール',
+  title: 'プロフィール | 天霧 澪',
 };
 
 export default function ProfilePage() {
