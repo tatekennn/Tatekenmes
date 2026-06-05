@@ -5,9 +5,9 @@ import { siteData } from '@/content/site-data';
 
 const sectionIndex = [
   { label: 'News', href: '#news', note: '今夜のお知らせ' },
+  { label: 'Stage', href: '#stage', note: '配信 / 導線' },
   { label: 'About', href: '#about', note: '人物紹介' },
   { label: 'Diary', href: '#diary', note: '夜の観察日記' },
-  { label: 'Movie', href: '#movie', note: '配信 / 映像' },
   { label: 'Contact', href: '#contact', note: 'SNS / Contact' },
 ] as const;
 
@@ -16,6 +16,36 @@ const personalLines = [
   '昼に整えたことが、夜の静けさを少しだけ助ける気がしています。',
   '見過ごせる違和感ほど、あとからやさしく残ります。',
   '更新というより、今夜の小さな近況だと思ってもらえたらうれしいです。',
+] as const;
+
+const stageCards = [
+  {
+    eyebrow: 'Latest archive',
+    title: '夜の観測ログ vol.01',
+    body: '配信アーカイブや short movie を置く席を、トップからすぐ触れる形で用意します。',
+    href: '/world',
+    cta: '世界観の導入を見る',
+  },
+  {
+    eyebrow: 'Tonight schedule',
+    title: '23:30ごろ、小さな観測配信を想定',
+    body: '雑談、短い朗読、帰宅後の街の話。大きすぎない温度で、夜更け前に集まれる居場所を想定しています。',
+    href: '#contact',
+    cta: '入口を確認する',
+  },
+  {
+    eyebrow: 'First visit',
+    title: '初めてなら、プロフィール → 日記の順がおすすめ',
+    body: 'キャラクターの輪郭を掴んでから日記へ入ると、静かな違和感の濃度がちょうどよく伝わります。',
+    href: '/profile',
+    cta: '先にプロフィールへ',
+  },
+] as const;
+
+const streamFormats = [
+  '夜の観測ログ',
+  '作業終わりの短い雑談',
+  '街と天気を読む short clip',
 ] as const;
 
 export default function HomePage() {
@@ -27,6 +57,8 @@ export default function HomePage() {
   const socials = siteData.socialLinks;
   const leadEntry = latestEntries[0];
   const trailEntries = latestEntries.slice(1);
+  const primarySocial = socials[1] ?? socials[0];
+  const secondarySocial = socials[0];
 
   return (
     <SiteShell variant="home">
@@ -52,7 +84,10 @@ export default function HomePage() {
             <blockquote className="official-hero__quote">「{featuredQuote}」</blockquote>
 
             <div className="official-hero__actions">
-              <Link className="official-button" href="#diary">
+              <Link className="official-button" href="#stage">
+                入口をひらく
+              </Link>
+              <Link className="official-button official-button--ghost" href="#diary">
                 夜の観察日記へ
               </Link>
               <Link className="official-text-link" href="/profile">
@@ -60,12 +95,47 @@ export default function HomePage() {
               </Link>
             </div>
 
+            <div className="official-hero__spotlight" aria-label="活動導線">
+              {primarySocial ? (
+                <a
+                  className="official-hero__spotlight-card official-hero__spotlight-card--primary"
+                  href={primarySocial.href}
+                  target={primarySocial.external ? '_blank' : undefined}
+                  rel={primarySocial.external ? 'noreferrer' : undefined}
+                >
+                  <span className="official-sidecard__label">Watch / Archive</span>
+                  <strong>{primarySocial.label} へ</strong>
+                  <p>{primarySocial.note}</p>
+                </a>
+              ) : null}
+
+              {secondarySocial ? (
+                <a
+                  className="official-hero__spotlight-card"
+                  href={secondarySocial.href}
+                  target={secondarySocial.external ? '_blank' : undefined}
+                  rel={secondarySocial.external ? 'noreferrer' : undefined}
+                >
+                  <span className="official-sidecard__label">Night signal</span>
+                  <strong>{secondarySocial.label} で近況を見る</strong>
+                  <p>{secondarySocial.note}</p>
+                </a>
+              ) : null}
+            </div>
+
             <p className="official-hero__line">{personalLines[0]}</p>
           </div>
 
           <div className="official-hero__visual fade-in-section">
+            <div className="official-hero__halo" aria-hidden="true" />
             <div className="official-hero__figure-wrap">
               <img className="official-hero__figure" src={assets.profileFull.src} alt={assets.profileFull.alt} />
+            </div>
+
+            <div className="official-hero__sidecard official-hero__sidecard--signal">
+              <span className="official-sidecard__label">Moon phase / quiet signal</span>
+              <strong>月齢 13.4 / 観測しやすい夜</strong>
+              <p>星図ではなく、駅のガラスに残る遅れを見るためのメモ。ほんの少しだけ、怪異の方向へ針を傾けています。</p>
             </div>
 
             <div className="official-hero__sidecard official-hero__sidecard--status">
@@ -89,9 +159,32 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="official-news fade-in-section" id="news">
+      <section className="official-stage fade-in-section" id="stage">
         <div className="official-section-heading">
           <p className="official-section-heading__index">01</p>
+          <div>
+            <p className="official-kicker">Stage / Entry</p>
+            <h2 className="official-section-title">最初に触れてほしい入口</h2>
+          </div>
+        </div>
+
+        <div className="official-stage__grid">
+          {stageCards.map((card) => (
+            <article key={card.title} className="official-stage__card">
+              <p className="official-kicker">{card.eyebrow}</p>
+              <h3>{card.title}</h3>
+              <p>{card.body}</p>
+              <Link className="official-text-link" href={card.href}>
+                {card.cta}
+              </Link>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="official-news fade-in-section" id="news">
+        <div className="official-section-heading">
+          <p className="official-section-heading__index">02</p>
           <div>
             <p className="official-kicker">News</p>
             <h2 className="official-section-title">今夜のお知らせ</h2>
@@ -137,7 +230,7 @@ export default function HomePage() {
 
       <section className="official-about fade-in-section" id="about">
         <div className="official-section-heading">
-          <p className="official-section-heading__index">02</p>
+          <p className="official-section-heading__index">03</p>
           <div>
             <p className="official-kicker">About</p>
             <h2 className="official-section-title">天霧 澪という人</h2>
@@ -178,7 +271,7 @@ export default function HomePage() {
 
       <section className="official-diary fade-in-section" id="diary">
         <div className="official-section-heading">
-          <p className="official-section-heading__index">03</p>
+          <p className="official-section-heading__index">04</p>
           <div>
             <p className="official-kicker">Diary</p>
             <h2 className="official-section-title">夜の観察日記</h2>
@@ -215,7 +308,9 @@ export default function HomePage() {
                 <p>{entry.body[0] ?? entry.excerpt}</p>
                 <div className="official-diary__fragment-meta">
                   <strong>{entry.title}</strong>
-                  <small>{entry.date} / {entry.tags.slice(0, 2).join(' / ')}</small>
+                  <small>
+                    {entry.date} / {entry.tags.slice(0, 2).join(' / ')}
+                  </small>
                 </div>
               </Link>
             ))}
@@ -232,7 +327,7 @@ export default function HomePage() {
           <div className="official-movie__veil" />
           <div className="official-movie__copy">
             <div className="official-section-heading official-section-heading--light">
-              <p className="official-section-heading__index">04</p>
+              <p className="official-section-heading__index">05</p>
               <div>
                 <p className="official-kicker">Movie / Stream</p>
                 <h2 className="official-section-title">配信と映像のための余白</h2>
@@ -244,12 +339,23 @@ export default function HomePage() {
               「夜の街を歩くように見られるコンテンツ」が入る前提で席を確保しています。
             </p>
 
-            <div className="official-movie__panel">
-              <strong>Coming soon</strong>
-              <p>夜の観測ログ / 配信アーカイブ / short movie placeholder</p>
-              <Link className="official-text-link official-text-link--light" href="/world">
-                先に世界観をみる
-              </Link>
+            <div className="official-movie__panel-wrap">
+              <div className="official-movie__panel official-movie__panel--strong">
+                <strong>Planned formats</strong>
+                <ul className="official-movie__list">
+                  {streamFormats.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="official-movie__panel">
+                <strong>Current route</strong>
+                <p>まずは日記と世界観で空気を整え、その上に動画と配信の導線を重ねていきます。</p>
+                <Link className="official-text-link official-text-link--light" href="/world">
+                  先に世界観をみる
+                </Link>
+              </div>
             </div>
           </div>
         </div>
@@ -257,7 +363,7 @@ export default function HomePage() {
 
       <section className="official-contact fade-in-section" id="contact">
         <div className="official-section-heading">
-          <p className="official-section-heading__index">05</p>
+          <p className="official-section-heading__index">06</p>
           <div>
             <p className="official-kicker">SNS / Contact</p>
             <h2 className="official-section-title">澪の夜へつながる入口</h2>
@@ -281,7 +387,9 @@ export default function HomePage() {
                 target={item.external ? '_blank' : undefined}
                 rel={item.external ? 'noreferrer' : undefined}
               >
-                <span className="official-contact__icon" aria-hidden="true">{item.icon}</span>
+                <span className="official-contact__icon" aria-hidden="true">
+                  {item.icon}
+                </span>
                 <span>
                   <strong>{item.label}</strong>
                   <small>{item.note}</small>
