@@ -26,6 +26,33 @@ export type VisualAsset = {
   note: string;
 };
 
+export type NewsItem = {
+  date: string;
+  category: string;
+  title: string;
+};
+
+export type BroadcastItem = {
+  eyebrow: string;
+  title: string;
+  note: string;
+  href: string | null;
+  status: string;
+};
+
+export type SocialLink = {
+  label: string;
+  href: string | null;
+  note: string;
+  status: string;
+};
+
+export type LaunchNote = {
+  label: string;
+  value: string;
+  detail: string;
+};
+
 export type SiteData = {
   metadata: {
     title: string;
@@ -58,6 +85,14 @@ export type SiteData = {
   worldFragments: WorldFragment[];
   navigation: NavigationItem[];
   tagDescriptions: TagDescription[];
+  newsItems: NewsItem[];
+  broadcasts: BroadcastItem[];
+  launchNotes: LaunchNote[];
+  socialLinks: {
+    x: SocialLink;
+    youtube: SocialLink;
+    contact: SocialLink;
+  };
 };
 
 export const siteData: SiteData = {
@@ -72,31 +107,31 @@ export const siteData: SiteData = {
       src: '/generated/mio-hero-main.png',
       alt: '天霧澪のトップビジュアル。夜のオフィスで静かに佇む紫髪の女性。',
       title: 'Hero visual',
-      note: 'トップページのメインビジュアル。'
+      note: 'トップページのメインビジュアル。',
     },
     profileFull: {
       src: '/generated/mio-profile-full.png',
       alt: '天霧澪の全身立ち絵。紫髪と落ち着いた表情、オフィスワーカーを思わせる衣装。',
       title: 'Profile full',
-      note: 'プロフィール詳細ページ用の立ち絵。'
+      note: 'プロフィール詳細ページ用の立ち絵。',
     },
     profileIcon: {
       src: '/generated/mio-profile-icon.png',
       alt: '天霧澪のプロフィールアイコン。肩上のポートレート。',
       title: 'Profile icon',
-      note: 'アイコンや小さな紹介枠向け。'
+      note: 'アイコンや小さな紹介枠向け。',
     },
     diaryHeader: {
       src: '/generated/mio-diary-header.png',
       alt: '日記ページ用のヘッダー画像。窓辺の机で静かに過ごす天霧澪。',
       title: 'Diary header',
-      note: '日記一覧・導入セクション向け。'
+      note: '日記一覧・導入セクション向け。',
     },
     diaryDecor: {
       src: '/generated/mio-diary-decor.png',
       alt: 'ノートや文具、淡いオカルト記号をあしらった装飾背景。',
       title: 'Diary decor',
-      note: '背景や区切り装飾に使う抽象ビジュアル。'
+      note: '背景や区切り装飾に使う抽象ビジュアル。',
     },
   },
   profile: {
@@ -199,6 +234,76 @@ export const siteData: SiteData = {
       description: 'コンビニ、部屋、食事など、日常の手触りに寄った断片。',
     },
   ],
+  newsItems: [
+    {
+      date: '2026.06.05',
+      category: 'site update',
+      title: 'トップページを、キャラクター主体のオフィシャルアーカイブ構成へ調整しました。',
+    },
+    {
+      date: '2026.06.04',
+      category: 'diary',
+      title: '夜の観察日記に、帰路の記録を追加しました。',
+    },
+    {
+      date: '2026.06.03',
+      category: 'schedule',
+      title: '配信・短尺動画の公開動線を準備中です。',
+    },
+  ],
+  broadcasts: [
+    {
+      eyebrow: 'Live archive',
+      title: '夜更けの観測ログ',
+      note: '作業雑談、夜の観測メモ、帰宅後の静かな配信を置くための枠です。',
+      href: null,
+      status: '配信導線を準備中',
+    },
+    {
+      eyebrow: 'Short clip',
+      title: '一分だけ残る余韻',
+      note: '短い切り抜きや日記導入の映像をまとめるための導線です。',
+      href: null,
+      status: '初回公開を準備中',
+    },
+  ],
+  launchNotes: [
+    {
+      label: 'Update rhythm',
+      value: '日記を主軸に更新',
+      detail: '平日の記録を中心に、観測メモと小さな更新を積み上げていく想定です。',
+    },
+    {
+      label: 'On site now',
+      value: 'トップ / 日記 / プロフィール / 世界観',
+      detail: '読む入口として必要な4ページは先に揃え、導線もトップから辿れる状態です。',
+    },
+    {
+      label: 'Next opening',
+      value: '配信・SNS導線を順次開放',
+      detail: '公開順をぼかさず見せるため、未開放部分は準備中として明示しています。',
+    },
+  ],
+  socialLinks: {
+    x: {
+      label: 'X',
+      href: null,
+      note: '夜のひとことと更新告知',
+      status: '公開準備中',
+    },
+    youtube: {
+      label: 'YouTube',
+      href: null,
+      note: '配信・アーカイブ・短い映像',
+      status: 'チャンネル準備中',
+    },
+    contact: {
+      label: 'Contact',
+      href: null,
+      note: 'お知らせ・お仕事連絡',
+      status: '窓口準備中',
+    },
+  },
 };
 
 export default siteData;

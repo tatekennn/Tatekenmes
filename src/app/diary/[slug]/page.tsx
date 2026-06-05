@@ -12,7 +12,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const entry = getDiaryEntryBySlug(slug);
 
   return {
-    title: entry ? `${entry.title} | 天霧 澪` : '日記 | 天霧 澪',
+    title: entry ? entry.title : '日記',
     description: entry?.excerpt ?? '天霧 澪の日記',
   };
 }

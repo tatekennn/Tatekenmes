@@ -54,6 +54,10 @@ export default function HomePage() {
   const assets = siteData.generatedAssets;
   const featuredEntry = latestEntries[0];
   const recentEntries = latestEntries.slice(1);
+  const socials = siteData.socialLinks;
+  const newsItems = siteData.newsItems;
+  const movieLinks = siteData.broadcasts;
+  const launchNotes = siteData.launchNotes;
 
   return (
     <SiteShell>
@@ -116,6 +120,16 @@ export default function HomePage() {
                 ))}
               </dl>
             </div>
+
+            <div className="launch-note-strip" aria-label="公開状況">
+              {launchNotes.map((item) => (
+                <article key={item.label} className="launch-note-card">
+                  <p className="eyebrow">{item.label}</p>
+                  <strong>{item.value}</strong>
+                  <p>{item.detail}</p>
+                </article>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -131,7 +145,28 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="illustration-stage illustration-stage--wide">
+      <section className="news-stage" id="news">
+        <div className="section-heading section-intro news-stage__intro">
+          <div>
+            <p className="eyebrow">News</p>
+            <h2>静かな更新を、先に知らせる。</h2>
+            <p>大きな告知を誇張せず、生活の延長で届く更新だけを細く置く。公開前の導線も、隠さず静かに見せます。</p>
+          </div>
+        </div>
+        <div className="news-rail" aria-label="最新のお知らせ">
+          {newsItems.map((item) => (
+            <article key={`${item.date}-${item.title}`} className="news-rail__item">
+              <p className="eyebrow">{item.category}</p>
+              <div className="news-rail__meta">
+                <span>{item.date}</span>
+                <strong>{item.title}</strong>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="illustration-stage illustration-stage--wide" id="about">
         <div className="illustration-stage__paper" style={{ backgroundImage: `url(${assets.diaryDecor.src})` }} />
         <div className="illustration-stage__intro section-heading">
           <div>
@@ -207,7 +242,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="diary-stage diary-stage--featured">
+      <section className="diary-stage diary-stage--featured" id="diary">
         <div className="diary-stage__backdrop" style={{ backgroundImage: `url(${assets.diaryHeader.src})` }} />
         <div className="section-heading section-intro diary-stage__heading">
           <div>
@@ -262,6 +297,35 @@ export default function HomePage() {
         )}
       </section>
 
+      <section className="broadcast-stage" id="movie">
+        <div className="section-heading section-intro">
+          <div>
+            <p className="eyebrow">Movie / Broadcast</p>
+            <h2>声で触れられる場所も、ちゃんと用意する。</h2>
+            <p>文章だけで閉じず、配信やアーカイブへの導線を“会いに行ける窓”として置きます。</p>
+          </div>
+        </div>
+        <div className="broadcast-rail">
+          {movieLinks.map((item) =>
+            item.href ? (
+              <a key={item.title} className="broadcast-link" href={item.href} target="_blank" rel="noreferrer">
+                <p className="eyebrow">{item.eyebrow}</p>
+                <strong>{item.title}</strong>
+                <span>{item.note}</span>
+                <em>Open ↗</em>
+              </a>
+            ) : (
+              <div key={item.title} className="broadcast-link broadcast-link--disabled" aria-disabled="true">
+                <p className="eyebrow">{item.eyebrow}</p>
+                <strong>{item.title}</strong>
+                <span>{item.note}</span>
+                <em>{item.status}</em>
+              </div>
+            ),
+          )}
+        </div>
+      </section>
+
       <section className="archive-landing">
         <div className="archive-landing__panel archive-landing__panel--profile archive-landing__panel--profile-light">
           <div className="archive-landing__intro">
@@ -304,6 +368,34 @@ export default function HomePage() {
               <span>夜の街にだけ残る気配を、断片ごとに辿れます。</span>
               <em>世界観へ →</em>
             </Link>
+          </div>
+        </div>
+      </section>
+
+      <section className="contact-stage" id="contact">
+        <div className="contact-stage__panel">
+          <div>
+            <p className="eyebrow">SNS / Contact</p>
+            <h2>今日も終電、ありがとうございました。</h2>
+            <p>
+              日記で追う、配信で会う、SNSで気配を拾う。応援の接点を最後にまとめ、ファンが迷わず次の行動へ進めるようにしています。
+            </p>
+          </div>
+          <div className="contact-stage__links">
+            {Object.values(socials).map((item) =>
+              item.href ? (
+                <a key={item.label} href={item.href} target="_blank" rel="noreferrer">
+                  <strong>{item.label}</strong>
+                  <span>{item.note}</span>
+                </a>
+              ) : (
+                <div key={item.label} className="contact-link contact-link--disabled" aria-disabled="true">
+                  <strong>{item.label}</strong>
+                  <span>{item.note}</span>
+                  <em>{item.status}</em>
+                </div>
+              ),
+            )}
           </div>
         </div>
       </section>
