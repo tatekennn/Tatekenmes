@@ -2071,12 +2071,20 @@ h3,
 }
 
 .official-sidecard__label {
-  display: inline-block;
+  display: block;
   margin-bottom: 0.4rem;
   color: rgba(211, 195, 255, 0.85);
   letter-spacing: 0.15em;
   text-transform: uppercase;
   font-size: 0.72rem;
+}
+
+.official-hero__sidecard strong {
+  display: block;
+  color: rgba(248, 244, 255, 0.96);
+  font-family: var(--font-serif), 'Noto Serif JP', serif;
+  font-size: 1.12rem;
+  line-height: 1.55;
 }
 
 .official-hero__sidecard p {
