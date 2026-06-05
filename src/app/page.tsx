@@ -250,8 +250,7 @@ export default function HomePage() {
                     <span>{formatMoodLabel(entry.mood)}</span>
                   </div>
                   <strong>{entry.title}</strong>
-                  <p>{entry.excerpt}</p>
-                  <em>記録を読む →</em>
+                  <p>{entry.tags.slice(0, 2).join(' / ')}</p>
                 </Link>)
               )}
             </div>
