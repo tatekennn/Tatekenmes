@@ -21,25 +21,26 @@ export default function HomePage() {
 
   return (
     <SiteShell variant="home">
-      <section className="home-kv fade-in-section" id="top">
-        <img className="home-kv__bg" src={assets.heroMain.src} alt={assets.heroMain.alt} />
-        <div className="home-kv__veil" aria-hidden="true" />
+      <section className="home-hero-panel fade-in-section" id="top">
+        <div className="home-hero-panel__visual">
+          <img className="home-hero-panel__bg" src={assets.heroMain.src} alt={assets.heroMain.alt} />
+          <div className="home-hero-panel__veil" aria-hidden="true" />
+        </div>
 
-        <div className="home-kv__content">
-          <div className="home-kv__copy">
-            <p className="home-kv__eyebrow">AMAGIRI MIO / OFFICIAL SITE</p>
-            <p className="home-kv__ruby">{profile.ruby} / AMAGIRI MIO</p>
-            <h1>天霧 澪</h1>
-            <p className="home-kv__summary">平日は都内で事務の仕事をしていて、その合間や帰り道のことをここに残しています。</p>
-            <p className="home-kv__lead">仕事のこと、帰り道にふと思ったこと、その日に話したいと思ったこと。配信や日記に、無理のないペースで少しずつ置いていくための場所です。</p>
+        <div className="home-hero-panel__body">
+          <div className="home-hero-panel__copy">
+            <p className="eyebrow">Official site</p>
+            <p className="home-hero-panel__ruby">{profile.ruby} / AMAGIRI MIO</p>
+            <h1>平日のことと、帰り道のことを少しずつ残しています。</h1>
+            <p className="home-hero-panel__summary">仕事のこと、その日に少し気になったこと、あとから見返したいと思ったこと。配信と日記に、無理のないペースで置いていくための場所です。</p>
 
-            <div className="home-kv__actions">
+            <div className="home-hero-panel__actions">
               <Link className="pill-button" href="/diary">
                 日記を読む
               </Link>
               {youtube ? (
                 <a
-                  className="home-kv__sub-link"
+                  className="official-text-link"
                   href={youtube.href}
                   target={youtube.external ? '_blank' : undefined}
                   rel={youtube.external ? 'noreferrer' : undefined}
@@ -49,12 +50,23 @@ export default function HomePage() {
               ) : null}
               {xLink ? (
                 <a
-                  className="home-kv__sub-link"
+                  className="official-text-link"
                   href={xLink.href}
                   target={xLink.external ? '_blank' : undefined}
                   rel={xLink.external ? 'noreferrer' : undefined}
                 >
                   X →
+                </a>
+              ) : null}
+            </div>
+
+            <div className="home-hero-panel__route" aria-label="主要導線">
+              <Link href="/profile">PROFILE</Link>
+              <Link href="/diary#latest">LATEST</Link>
+              <Link href="/diary">DIARY</Link>
+              {youtube ? (
+                <a href={youtube.href} target={youtube.external ? '_blank' : undefined} rel={youtube.external ? 'noreferrer' : undefined}>
+                  MOVIE
                 </a>
               ) : null}
             </div>
@@ -144,11 +156,12 @@ export default function HomePage() {
           </div>
         </div>
 
-        <img
-          src="/generated/mio-chibi-guide-20260606.png"
-          alt="天霧澪のちびキャラ案内役。観測ノートを手にしたミニキャラ。"
-          className="home-stream-plain__chibi"
-        />
+        <div className="home-stream-plain__visual" aria-hidden="true">
+          <p>AFTER WORK ROUTE</p>
+          <span>18:40 帰宅後にひと息</span>
+          <span>22:00 配信メモを整理</span>
+          <span>DIARY その日に残したいことだけ記録</span>
+        </div>
       </section>
 
       <section className="home-connect-line fade-in-section" id="contact">

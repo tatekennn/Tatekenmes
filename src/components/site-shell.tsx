@@ -31,6 +31,7 @@ export function SiteShell({ children, variant = 'default' }: SiteShellProps) {
   const subtitle = variant === 'home' ? 'Official website' : 'Diary / profile / city-nocturne archive';
   const socialLinks = Array.isArray(siteData.socialLinks) ? siteData.socialLinks.slice(0, 2) : [];
   const showChromeSocials = variant !== 'home';
+  const showHeaderSocials = variant !== 'home';
 
   return (
     <main className={`site-shell site-shell--${variant}`}>
@@ -41,7 +42,7 @@ export function SiteShell({ children, variant = 'default' }: SiteShellProps) {
             {variant === 'home' ? (
               <Link href="/" className="site-brand__logo-link" aria-label={`${name} オフィシャルサイト トップへ`}>
                 <img
-                  src="/generated/amagiri-mio-logo.svg"
+                  src="/generated/amagiri-mio-logo-ai-clean.png"
                   alt="天霧澪 オフィシャルサイト ロゴ"
                   className="site-brand__logo"
                 />
@@ -64,7 +65,7 @@ export function SiteShell({ children, variant = 'default' }: SiteShellProps) {
               ))}
             </nav>
 
-            {socialLinks.length ? (
+            {showHeaderSocials && socialLinks.length ? (
               <div className="site-social" aria-label="SNSリンク">
                 {socialLinks.map((item) => (
                   <a

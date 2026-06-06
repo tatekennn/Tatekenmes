@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import { formatMoodLabel, type DiaryEntry } from '@/lib/diary';
-import { SectionCard } from '@/components/section-card';
 
 type DiaryCardProps = {
   entry: DiaryEntry;
@@ -8,12 +7,13 @@ type DiaryCardProps = {
 
 export function DiaryCard({ entry }: DiaryCardProps) {
   return (
-    <SectionCard title={entry.title} eyebrow="日記">
-      <article className="diary-card">
-        <div className="diary-card__meta">
+    <article className="diary-index-item">
+      <Link className="diary-index-item__link" href={`/diary/${entry.slug}`}>
+        <div className="diary-index-item__meta">
           <span>{entry.date}</span>
           <span>{formatMoodLabel(entry.mood)}</span>
         </div>
+        <h3>{entry.title}</h3>
         <p>{entry.excerpt}</p>
         <div className="tag-row">
           {entry.tags.map((tag) => (
@@ -22,10 +22,8 @@ export function DiaryCard({ entry }: DiaryCardProps) {
             </span>
           ))}
         </div>
-        <Link className="diary-card__link" href={`/diary/${entry.slug}`}>
-          記録を読む →
-        </Link>
-      </article>
-    </SectionCard>
+        <span className="diary-index-item__arrow">記録を読む →</span>
+      </Link>
+    </article>
   );
 }
