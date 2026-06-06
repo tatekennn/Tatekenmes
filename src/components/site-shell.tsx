@@ -40,7 +40,13 @@ export function SiteShell({ children, variant = 'default' }: SiteShellProps) {
         <header className="site-header">
           <div className={`site-brand ${variant === 'home' ? 'site-brand--home' : ''}`}>
             {variant === 'home' ? (
-              <strong>{name}</strong>
+              <Link href="/" className="site-brand__logo-link" aria-label={`${name} オフィシャルサイト トップへ`}>
+                <img
+                  src="/generated/amagiri-mio-logo.svg"
+                  alt="天霧澪 オフィシャルサイト ロゴ"
+                  className="site-brand__logo"
+                />
+              </Link>
             ) : (
               <>
                 <p className="site-note">AMAGIRI MIO OFFICIAL SITE</p>
@@ -59,7 +65,7 @@ export function SiteShell({ children, variant = 'default' }: SiteShellProps) {
               ))}
             </nav>
 
-            {showChromeSocials && socialLinks.length ? (
+            {socialLinks.length ? (
               <div className="site-social" aria-label="SNSリンク">
                 {socialLinks.map((item) => (
                   <a
@@ -74,6 +80,12 @@ export function SiteShell({ children, variant = 'default' }: SiteShellProps) {
                   </a>
                 ))}
               </div>
+            ) : null}
+
+            {variant === 'home' ? (
+              <Link href="/diary" className="site-header__cta">
+                Diary
+              </Link>
             ) : null}
           </div>
         </header>

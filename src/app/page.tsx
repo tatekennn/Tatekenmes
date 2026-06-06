@@ -3,10 +3,10 @@ import { SiteShell } from '@/components/site-shell';
 import { getLatestDiaryEntries } from '@/lib/diary';
 import { siteData } from '@/content/site-data';
 
-const quickLinks = [
-  { label: 'プロフィール', href: '/profile', note: '輪郭を知る' },
-  { label: '日記', href: '/diary', note: '今夜の記録へ' },
-  { label: '世界観', href: '/world', note: '違和感の断片' },
+const entryLinks = [
+  { label: 'PROFILE', href: '/profile' },
+  { label: 'DIARY', href: '/diary' },
+  { label: 'WORLD', href: '/world' },
 ] as const;
 
 export default function HomePage() {
@@ -19,58 +19,44 @@ export default function HomePage() {
   const socialLinks = [youtube, xLink].filter((item, index, arr): item is NonNullable<typeof item> => Boolean(item) && arr.indexOf(item) === index);
   const aboutParagraphs = profile.bio.slice(0, 2);
   const quickFacts = siteData.quickFacts.slice(0, 3);
-  const noticeItems = [
+  const tonightGuide = [
     {
       label: '今夜の温度',
       value: latestEntry ? latestEntry.tags.slice(0, 2).join(' / ') : '静かな観測モード',
     },
     {
-      label: '配信導線',
-      value: 'YouTube を起点に準備中',
+      label: '入口',
+      value: '長い記録は日記、短い温度は X へ',
     },
     {
-      label: '短い記録',
-      value: 'X に夜の観測メモを追記',
+      label: '配信準備',
+      value: 'YouTube を中心に静かに整備中',
     },
   ] as const;
-  const streamStatusCards = [
-    {
-      label: 'Next opening',
-      title: '初回配信は準備中',
-      text: '雑談と観測ログを軸に、静かな導入回から始める想定です。',
-    },
-    {
-      label: 'Main format',
-      title: '短い雑談 / 夜の記録',
-      text: '長時間よりも、空気の残る短めの配信やアーカイブを主軸に整えていきます。',
-    },
-  ] as const;
-  const updateNotes = [
-    'YouTube を公開導線の中心に配置',
-    'X は短い観測メモの即時更新用',
-    '日記側と役割が被りすぎない構成で整理中',
+  const streamNotes = [
+    '初回は短い雑談と観測ログ寄りで開始予定',
+    'アーカイブも“夜の記録”として残せる構成に調整中',
+    '日記・X・配信の役割が被りすぎない導線で整理',
   ] as const;
 
   return (
     <SiteShell variant="home">
-      <section className="hero-card home-hero fade-in-section" id="top">
-        <img className="home-hero__bg" src={assets.heroMain.src} alt={assets.heroMain.alt} />
-        <div className="home-hero__veil" aria-hidden="true" />
+      <section className="home-stage fade-in-section" id="top">
+        <img className="home-stage__bg" src={assets.heroMain.src} alt={assets.heroMain.alt} />
+        <div className="home-stage__veil" aria-hidden="true" />
+        <div className="home-stage__glow" aria-hidden="true" />
 
-        <div className="home-hero__content">
-          <div className="home-hero__copy">
-            <p className="eyebrow">AMAGIRI MIO OFFICIAL SITE</p>
-            <p className="hero-ruby">{profile.ruby} / AMAGIRI MIO</p>
+        <div className="home-stage__content">
+          <div className="home-stage__copy">
+            <p className="home-stage__kicker">AMAGIRI MIO / OFFICIAL SITE</p>
+            <p className="hero-ruby home-stage__ruby">{profile.ruby} / AMAGIRI MIO</p>
             <h1>天霧 澪</h1>
-            <p className="hero-summary home-hero__summary">昼は静かに整え、夜は東京の違和感を観測するVTuber。</p>
-            <p className="home-hero__lead">日記、配信準備、街に混じる小さな気配。その入口だけを、ここにまとめました。</p>
+            <p className="hero-summary home-stage__summary">昼は静かに整え、夜は東京の違和感を観測するVTuber。</p>
+            <p className="home-stage__lead">仕事帰りの光、ガラス越しのズレ、言葉にしきれない小さな気配。配信、日記、街の観測記録を、この場所にまとめています。</p>
 
-            <div className="hero-actions home-hero__actions">
+            <div className="home-stage__actions">
               <Link className="pill-button" href="/diary">
                 日記を読む
-              </Link>
-              <Link className="pill-button secondary" href="/profile">
-                プロフィール
               </Link>
               {youtube ? (
                 <a
@@ -83,234 +69,159 @@ export default function HomePage() {
                 </a>
               ) : null}
             </div>
-          </div>
-        </div>
 
-        <div className="home-hero__rail" aria-label="主要導線">
-          {quickLinks.map((item) => (
-            <Link key={item.href} href={item.href} className="home-hero__rail-link">
-              <strong>{item.label}</strong>
-              <span>{item.note}</span>
-            </Link>
-          ))}
-          {socialLinks.map((item) => (
-            <a
-              key={item.label}
-              href={item.href}
-              className="home-hero__rail-link"
-              target={item.external ? '_blank' : undefined}
-              rel={item.external ? 'noreferrer' : undefined}
-            >
-              <strong>{item.label}</strong>
-              <span>{item.note}</span>
-            </a>
-          ))}
-        </div>
-      </section>
-
-      {latestEntry ? (
-        <section className="section-card home-section home-latest-section fade-in-section" id="latest">
-          <div className="section-card__header">
-            <div>
-              <p className="eyebrow">Latest / Tonight</p>
-              <h2>今夜の入口</h2>
-            </div>
-            <Link className="official-text-link" href="/diary">
-              日記一覧へ →
-            </Link>
-          </div>
-
-          <div className="home-latest-layout">
-            <article className="home-latest">
-              <p className="home-latest__lead-label">Observation log</p>
-              <div className="home-latest__meta">
-                <span>{latestEntry.date}</span>
-                <span>{latestEntry.tags.slice(0, 2).join(' / ')}</span>
-              </div>
-              <h3>{latestEntry.title}</h3>
-              <p>{latestEntry.excerpt}</p>
-              <Link className="official-text-link" href={`/diary/${latestEntry.slug}`}>
-                この日記を読む →
-              </Link>
-            </article>
-
-            <aside className="home-tonight-note" aria-label="今夜の案内">
-              <p className="home-tonight-note__eyebrow">Tonight&apos;s note</p>
-              <h3>配信前に覗ける場所</h3>
-              <p className="home-tonight-note__copy">{siteData.featuredQuote}</p>
-
-              <dl className="home-tonight-note__list">
-                {noticeItems.map((item) => (
-                  <div key={item.label} className="home-tonight-note__row">
-                    <dt>{item.label}</dt>
-                    <dd>{item.value}</dd>
-                  </div>
-                ))}
-              </dl>
-
-              <div className="home-tonight-note__actions">
-                {xLink ? (
-                  <a
-                    className="official-text-link"
-                    href={xLink.href}
-                    target={xLink.external ? '_blank' : undefined}
-                    rel={xLink.external ? 'noreferrer' : undefined}
-                  >
-                    X の観測メモへ →
-                  </a>
-                ) : null}
-                {youtube ? (
-                  <a
-                    className="official-text-link"
-                    href={youtube.href}
-                    target={youtube.external ? '_blank' : undefined}
-                    rel={youtube.external ? 'noreferrer' : undefined}
-                  >
-                    YouTube を開く →
-                  </a>
-                ) : null}
-              </div>
-            </aside>
-          </div>
-        </section>
-      ) : null}
-
-      <section className="home-grid">
-        <section className="section-card home-section fade-in-section" id="about">
-          <div className="section-card__header">
-            <div>
-              <p className="eyebrow">About</p>
-              <h2>澪について</h2>
-            </div>
-            <Link className="official-text-link" href="/profile">
-              プロフィールへ →
-            </Link>
-          </div>
-
-          <div className="home-about">
-            <img src={assets.diaryHeader.src} alt={assets.diaryHeader.alt} className="home-about__image" />
-            <div className="home-about__copy">
-              {aboutParagraphs.map((paragraph) => (
-                <p key={paragraph}>{paragraph}</p>
+            <div className="home-stage__route" aria-label="主要導線">
+              {entryLinks.map((item) => (
+                <Link key={item.href} href={item.href} className="home-stage__route-link">
+                  <span>{item.label}</span>
+                </Link>
+              ))}
+              {socialLinks.map((item) => (
+                <a
+                  key={item.label}
+                  href={item.href}
+                  className="home-stage__route-link"
+                  target={item.external ? '_blank' : undefined}
+                  rel={item.external ? 'noreferrer' : undefined}
+                >
+                  <span>{item.label}</span>
+                </a>
               ))}
             </div>
-            <dl className="home-about__facts">
-              {quickFacts.map((fact) => (
-                <div key={fact.label} className="home-about__fact-row">
-                  <dt>{fact.label}</dt>
-                  <dd>{fact.value}</dd>
+          </div>
+
+          <aside className="home-stage__note" aria-label="今夜の案内">
+            <p className="home-stage__note-label">Tonight&apos;s note</p>
+            <h2>配信前の小さな案内</h2>
+            <p className="home-stage__note-copy">{siteData.featuredQuote}</p>
+            <dl className="home-stage__note-list">
+              {tonightGuide.map((item) => (
+                <div key={item.label} className="home-stage__note-row">
+                  <dt>{item.label}</dt>
+                  <dd>{item.value}</dd>
                 </div>
               ))}
             </dl>
-          </div>
-        </section>
+          </aside>
+        </div>
 
-        <section className="section-card home-section fade-in-section" id="movie">
-          <div className="section-card__header">
-            <div>
-              <p className="eyebrow">Movie / Stream</p>
-              <h2>配信と映像</h2>
-            </div>
-          </div>
-
-          <div className="home-guide-panel">
-            <img
-              src="/generated/mio-chibi-guide-20260606.png"
-              alt="天霧澪のちびキャラ案内役。観測ノートを手にしたミニキャラ。"
-              className="home-guide-panel__image"
-            />
-            <div className="home-guide-panel__body">
-              <p className="home-guide-panel__eyebrow">Guide</p>
-              <h3>ミニ澪がご案内</h3>
-              <p>配信は YouTube にて準備中。夜の観測ログや短い雑談、街の温度が少しだけ変わる瞬間を、ここから辿れるようにしていきます。</p>
-              <ul className="home-guide-panel__tags" aria-label="案内タグ">
-                <li>配信準備中</li>
-                <li>夜の観測ログ</li>
-                <li>短い雑談</li>
-              </ul>
-              <div className="home-guide-panel__links">
-                {youtube ? (
-                  <a
-                    className="pill-button secondary"
-                    href={youtube.href}
-                    target={youtube.external ? '_blank' : undefined}
-                    rel={youtube.external ? 'noreferrer' : undefined}
-                  >
-                    YouTubeを見る
-                  </a>
-                ) : null}
-                {xLink ? (
-                  <a
-                    className="official-text-link"
-                    href={xLink.href}
-                    target={xLink.external ? '_blank' : undefined}
-                    rel={xLink.external ? 'noreferrer' : undefined}
-                  >
-                    X の短い観測メモへ →
-                  </a>
-                ) : null}
-              </div>
-            </div>
-          </div>
-
-          <div className="home-stream-status" aria-label="配信準備状況">
-            <div className="home-stream-status__grid">
-              {streamStatusCards.map((item) => (
-                <article key={item.label} className="home-stream-status__card">
-                  <p className="home-stream-status__label">{item.label}</p>
-                  <h3>{item.title}</h3>
-                  <p>{item.text}</p>
-                </article>
-              ))}
-            </div>
-
-            <aside className="home-update-note" aria-label="更新メモ">
-              <p className="home-update-note__eyebrow">Update memo</p>
-              <h3>公開前の整え方</h3>
-              <ul className="home-update-note__list">
-                {updateNotes.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
-            </aside>
-          </div>
-        </section>
+        <div className="home-stage__scallop" aria-hidden="true" />
       </section>
 
-      <section className="section-card home-section fade-in-section" id="contact">
-        <div className="section-card__header">
-          <div>
-            <p className="eyebrow">SNS</p>
-            <h2>つながる場所</h2>
+      {latestEntry ? (
+        <section className="home-news-strip fade-in-section" id="latest">
+          <p className="home-news-strip__label">Latest entry</p>
+          <div className="home-news-strip__body">
+            <span className="home-news-strip__date">{latestEntry.date}</span>
+            <strong>{latestEntry.title}</strong>
+            <p>{latestEntry.excerpt}</p>
+          </div>
+          <Link className="official-text-link" href={`/diary/${latestEntry.slug}`}>
+            この記録を読む →
+          </Link>
+        </section>
+      ) : null}
+
+      <section className="home-about-band fade-in-section" id="about">
+        <div className="home-about-band__media">
+          <img src={assets.diaryHeader.src} alt={assets.diaryHeader.alt} className="home-about-band__image" />
+        </div>
+
+        <div className="home-about-band__body">
+          <p className="eyebrow">About</p>
+          <h2>昼の輪郭と、夜の観測</h2>
+          <div className="home-about-band__copy">
+            {aboutParagraphs.map((paragraph) => (
+              <p key={paragraph}>{paragraph}</p>
+            ))}
+          </div>
+
+          <dl className="home-about-band__facts">
+            {quickFacts.map((fact) => (
+              <div key={fact.label} className="home-about-band__fact">
+                <dt>{fact.label}</dt>
+                <dd>{fact.value}</dd>
+              </div>
+            ))}
+          </dl>
+
+          <Link className="official-text-link" href="/profile">
+            プロフィールへ →
+          </Link>
+        </div>
+      </section>
+
+      <section className="home-media-band fade-in-section" id="movie">
+        <div className="home-media-band__guide">
+          <img
+            src="/generated/mio-chibi-guide-20260606.png"
+            alt="天霧澪のちびキャラ案内役。観測ノートを手にしたミニキャラ。"
+            className="home-media-band__chibi"
+          />
+          <div className="home-media-band__guide-copy">
+            <p className="eyebrow">Movie / Stream</p>
+            <h2>配信と映像の入口</h2>
+            <p>配信は大きく騒ぐ場というより、夜の温度を少しだけ拾うための入口として整備中です。ちび澪が、配信と短い観測メモの行き先を案内します。</p>
+            <div className="home-media-band__actions">
+              {youtube ? (
+                <a
+                  className="pill-button secondary"
+                  href={youtube.href}
+                  target={youtube.external ? '_blank' : undefined}
+                  rel={youtube.external ? 'noreferrer' : undefined}
+                >
+                  YouTubeを見る
+                </a>
+              ) : null}
+              {xLink ? (
+                <a
+                  className="official-text-link"
+                  href={xLink.href}
+                  target={xLink.external ? '_blank' : undefined}
+                  rel={xLink.external ? 'noreferrer' : undefined}
+                >
+                  X の観測メモへ →
+                </a>
+              ) : null}
+            </div>
           </div>
         </div>
 
-        <div className="home-socials home-socials--staged">
-          <div className="home-socials__intro">
-            <p className="home-socials__eyebrow">Entry guide</p>
-            <h3>更新の気配を追うならこの2つ</h3>
-            <p>長い記録は日記へ、短い温度は X へ。配信が動き始めたら、YouTube をいちばん表の入口に置いていきます。</p>
-          </div>
-
-          <div className="home-socials__stack">
-            {socialLinks.map((item) => (
-              <a
-                key={item.label}
-                className="home-socials__link"
-                href={item.href}
-                target={item.external ? '_blank' : undefined}
-                rel={item.external ? 'noreferrer' : undefined}
-              >
-                <span className="official-contact__icon" aria-hidden="true">
-                  {item.icon}
-                </span>
-                <span>
-                  <strong>{item.label}</strong>
-                  <small>{item.note}</small>
-                </span>
-              </a>
+        <aside className="home-media-band__status" aria-label="配信準備メモ">
+          <p className="home-media-band__status-label">Stream memo</p>
+          <h3>公開前の整え方</h3>
+          <ul className="home-media-band__status-list">
+            {streamNotes.map((item) => (
+              <li key={item}>{item}</li>
             ))}
-          </div>
+          </ul>
+        </aside>
+      </section>
+
+      <section className="home-social-band fade-in-section" id="contact">
+        <div>
+          <p className="eyebrow">Connect</p>
+          <h2>更新の気配を追う場所</h2>
+        </div>
+
+        <div className="home-social-band__links">
+          {socialLinks.map((item) => (
+            <a
+              key={item.label}
+              className="home-social-band__link"
+              href={item.href}
+              target={item.external ? '_blank' : undefined}
+              rel={item.external ? 'noreferrer' : undefined}
+            >
+              <span className="home-social-band__icon" aria-hidden="true">
+                {item.icon}
+              </span>
+              <span>
+                <strong>{item.label}</strong>
+                <small>{item.note}</small>
+              </span>
+            </a>
+          ))}
         </div>
       </section>
     </SiteShell>
