@@ -67,7 +67,7 @@ export const siteData: SiteData = {
   metadata: {
     title: '天霧 澪 — Juice=Juice 日報',
     description:
-      '最近Juice=Juiceにハマった天霧澪の日記サイト。プラトニックとプラネットから入って、他の曲も聴き始めています。',
+      '最近Juice=Juiceにハマった天霧澪の日記サイト。「プラトニック・プラネット」から入って、他の曲も聴き始めています。',
     locale: 'ja-JP',
   },
   generatedAssets: {
@@ -109,18 +109,18 @@ export const siteData: SiteData = {
     job: 'Juice=Juiceに最近ハマった日記VTuber',
     location: '東京',
     tone: 'calm, curious, still discovering',
-    concept: '最近Juice=JuiceにハマったばかりのVTuber。プラトニックとプラネットから入って、他の曲も少しずつ聴いています。その発見の過程を日記に書いています。',
+    concept: '最近Juice=JuiceにハマったばかりのVTuber。「プラトニック・プラネット」から入って、他の曲も少しずつ聴いています。その発見の過程を日記に書いています。',
     worldRatio: {
       reality: 95,
       occult: 5,
     },
     bio: [
-      '天霧澪です。最近Juice=Juiceにハマりました。きっかけは「プラトニック」と「プラネット」。この二曲に惹かれて、他の曲も聴き始めています。',
+      '天霧澪です。最近Juice=Juiceにハマりました。きっかけは「プラトニック・プラネット」。この曲に惹かれて、他の曲も聴き始めています。',
       'まだライブには行ったことがなくて、まずは曲とMVを知るところから始めています。知らない曲に出会うたびに「なんで今まで聴かなかったんだろう」と思います。',
       'Juice=Juiceのことをもっと知りたい。そう思って始めた日記です。同じ気持ちの人と、少しでも共有できたらうれしいです。',
     ],
   },
-  featuredQuote: 'プラトニックに惹かれて、ここから先に進んでいる。',
+  featuredQuote: 'プラトニック・プラネットに惹かれて、ここから先に進んでいる。',
   quickFacts: [
     {
       label: '呼び名',
@@ -132,7 +132,7 @@ export const siteData: SiteData = {
     },
     {
       label: 'きっかけの曲',
-      value: 'プラトニック / プラネット',
+      value: 'プラトニック・プラネット',
     },
     {
       label: '現在',

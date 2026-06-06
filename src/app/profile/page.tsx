@@ -17,7 +17,7 @@ export default function ProfilePage() {
     { label: '活動', value: profile.job },
     { label: '拠点', value: `${profile.location}` },
   ];
-  const traits = ['最近ハマった', 'プラトニック派', '静かに熱い', '発見が好き', 'マイペース'];
+  const traits = ['最近ハマった', 'プラトニック・プラネット派', '静かに熱い', '発見が好き', 'マイペース'];
   const timeline = [
     {
       title: '日記',
