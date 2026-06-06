@@ -14,9 +14,9 @@ export default function HomePage() {
   const aboutParagraphs = profile.bio.slice(0, 2);
   const quickFacts = siteData.quickFacts.slice(0, 3);
   const streamNotes = [
-    '最初は、短い雑談と観測ログみたいな配信から始めるつもりです',
-    'X には短い観測メモを、日記には少し長めの記録を置いています',
-    '配信アーカイブも、夜の観測記録みたいに残していけたらと思っています',
+    '最初は、短い雑談配信から始めるつもりです',
+    'X にはその日のひとことを、日記にはもう少しまとまった話を書いています',
+    '配信のアーカイブも、あとから見返しやすいように残していきます',
   ] as const;
 
   return (
@@ -30,8 +30,8 @@ export default function HomePage() {
             <p className="home-kv__eyebrow">AMAGIRI MIO / OFFICIAL SITE</p>
             <p className="home-kv__ruby">{profile.ruby} / AMAGIRI MIO</p>
             <h1>天霧 澪</h1>
-            <p className="home-kv__summary">昼は静かに働いて、夜は東京の違和感を少しだけ見ています。</p>
-            <p className="home-kv__lead">仕事帰りの光や、ガラス越しにずれた景色や、言葉にしきれない小さな気配。私が見つけたものを、配信と日記に少しずつ置いていくための場所です。</p>
+            <p className="home-kv__summary">平日は都内で事務の仕事をしていて、その合間や帰り道のことをここに残しています。</p>
+            <p className="home-kv__lead">仕事のこと、帰り道にふと思ったこと、その日に話したいと思ったこと。配信や日記に、無理のないペースで少しずつ置いていくための場所です。</p>
 
             <div className="home-kv__actions">
               <Link className="pill-button" href="/diary">
@@ -80,7 +80,7 @@ export default function HomePage() {
         <div className="home-section-plain__copy">
           <p className="eyebrow">About</p>
           <p className="home-ambient-label">Observation archive / daylight memo</p>
-          <h2>私の昼と、夜のこと</h2>
+          <h2>仕事のことと、普段のこと</h2>
           {aboutParagraphs.map((paragraph) => (
             <p key={paragraph}>{paragraph}</p>
           ))}
@@ -112,7 +112,7 @@ export default function HomePage() {
           <p className="eyebrow">Movie / Stream</p>
           <p className="home-ambient-label">Tonight&apos;s route / stream entry / soft records</p>
           <h2>配信や記録の置き場所</h2>
-          <p>配信は、大きく騒ぐためというより、夜の温度を少しだけ拾って話すための場所にしたいと思っています。短い雑談や観測ログみたいなものを、無理のない形で残していくつもりです。</p>
+          <p>配信では、その日にあったことや考えていたことを落ち着いて話せたらと思っています。日記と合わせて、あとから見返しやすい形にしていくつもりです。</p>
 
           <ul className="home-stream-plain__list">
             {streamNotes.map((item) => (
@@ -138,7 +138,7 @@ export default function HomePage() {
                 target={xLink.external ? '_blank' : undefined}
                 rel={xLink.external ? 'noreferrer' : undefined}
               >
-                X の観測メモへ →
+                X を見る →
               </a>
             ) : null}
           </div>

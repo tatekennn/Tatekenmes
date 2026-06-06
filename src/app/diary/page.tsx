@@ -18,7 +18,7 @@ export default function DiaryIndexPage() {
         <div className="diary-hero__copy">
           <p className="eyebrow">アーカイブ</p>
           <h1>日記</h1>
-          <p className="hero-summary">静かな平日と、街の端に残った違和感を日付順に並べた記録。</p>
+          <p className="hero-summary">仕事のあとに書いておきたかったことや、その日のうちに残しておきたかったことを、日付ごとにまとめています。</p>
         </div>
         <img className="diary-hero__image" src={assets.diaryHeader.src} alt={assets.diaryHeader.alt} />
       </section>

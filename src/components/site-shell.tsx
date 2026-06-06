@@ -7,7 +7,6 @@ const fallbackNav = [
   { href: '/', label: 'ホーム' },
   { href: '/diary', label: '日記' },
   { href: '/profile', label: 'プロフィール' },
-  { href: '/world', label: '世界観' },
 ];
 
 function getNavItems() {
@@ -87,11 +86,10 @@ export function SiteShell({ children, variant = 'default' }: SiteShellProps) {
         <div className="page-stack">{children}</div>
 
         <footer className="site-footer">
-          <p>昼の仕事のことも、夜に見つけた小さな違和感も、ここに少しずつ置いていきます。</p>
+          <p>仕事のことや、その日のうちに残しておきたいことを、ここに少しずつ置いていきます。</p>
           <div className="site-footer__links">
             <Link href="/diary">日記</Link>
             <Link href="/profile">プロフィール</Link>
-            <Link href="/world">世界観</Link>
           </div>
           {showChromeSocials && socialLinks.length ? (
             <div className="site-footer__social" aria-label="SNSリンク">
