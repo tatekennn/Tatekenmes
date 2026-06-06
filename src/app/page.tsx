@@ -5,18 +5,11 @@ import { siteData } from '@/content/site-data';
 
 export default function HomePage() {
   const latestEntry = getLatestDiaryEntries(1)[0];
+  const recentEntries = getLatestDiaryEntries(3);
   const profile = siteData.profile;
   const assets = siteData.generatedAssets;
   const socials = siteData.socialLinks;
   const xLink = socials.find((item) => item.label.toLowerCase() === 'x') ?? socials[0];
-  const socialLinks = [xLink].filter((item, index, arr): item is NonNullable<typeof item> => Boolean(item) && arr.indexOf(item) === index);
-  const aboutParagraphs = profile.bio.slice(0, 2);
-  const quickFacts = siteData.quickFacts.slice(0, 3);
-  const streamNotes = [
-    '「プラトニック・プラネット」から入って、他の曲も少しずつ聴いています',
-    'X では短い反応やメモ、日記ではもう少し長めの話を書いています',
-    '知らない曲に出会うたびに「なんで今まで聴かなかった」と思います',
-  ] as const;
 
   return (
     <SiteShell variant="home">
@@ -27,10 +20,14 @@ export default function HomePage() {
 
           <div className="home-hero-panel__body">
             <div className="home-hero-panel__copy">
-              <p className="eyebrow">Juice=Juice 日報</p>
+              <p className="eyebrow">天霧 澪 の Juice=Juice 日記</p>
               <p className="home-hero-panel__ruby">{profile.ruby} / AMAGIRI MIO</p>
-              <h1>最近Juice=Juiceにハマりました。</h1>
-              <p className="home-hero-panel__summary">「プラトニック・プラネット」から入って、他の曲も少しずつ聴いています。知らない曲に出会うたびに、ここに書いています。</p>
+              <h1>最近、Juice=Juiceにハマりました。</h1>
+              <p className="home-hero-panel__summary">
+                きっかけは「プラトニック・プラネット」。
+                この曲に惹かれて、他の曲も少しずつ聴いています。
+                知らない曲に出会うたびに、ここに書いています。
+              </p>
 
               <div className="home-hero-panel__actions">
                 <Link className="pill-button" href="/diary">
@@ -49,9 +46,9 @@ export default function HomePage() {
               </div>
 
               <div className="home-hero-panel__route" aria-label="主要導線">
-                <Link href="/profile">PROFILE</Link>
                 <Link href="/diary#latest">LATEST</Link>
                 <Link href="/diary">DIARY</Link>
+                <Link href="/profile">PROFILE</Link>
               </div>
             </div>
           </div>
@@ -67,7 +64,7 @@ export default function HomePage() {
             <p>{latestEntry.excerpt}</p>
           </div>
           <Link className="official-text-link" href={`/diary/${latestEntry.slug}`}>
-            最新の日記を見る →
+            この日記を読む →
           </Link>
         </section>
       ) : null}
@@ -75,14 +72,14 @@ export default function HomePage() {
       <section className="home-section-plain home-section-plain--about fade-in-section" id="about">
         <div className="home-section-plain__copy">
           <p className="eyebrow">About</p>
-          <p className="home-ambient-label">About / Juice=Juice / newcomer</p>
-          <h2>はじめまして、天霧澪です</h2>
-          {aboutParagraphs.map((paragraph) => (
+          <p className="home-ambient-label">はじめまして</p>
+          <h2>天霧 澪です</h2>
+          {profile.bio.slice(0, 2).map((paragraph) => (
             <p key={paragraph}>{paragraph}</p>
           ))}
 
           <dl className="home-fact-line">
-            {quickFacts.map((fact) => (
+            {siteData.quickFacts.slice(0, 3).map((fact) => (
               <div key={fact.label} className="home-fact-line__item">
                 <dt>{fact.label}</dt>
                 <dd>{fact.value}</dd>
@@ -91,73 +88,62 @@ export default function HomePage() {
           </dl>
 
           <Link className="official-text-link" href="/profile">
-            プロフィールへ →
+            プロフィールを見る →
           </Link>
         </div>
 
         <div className="home-section-plain__visual">
           <span className="home-section-plain__stamp" aria-hidden="true">
-            official profile
+            newcomer
           </span>
           <img src={assets.diaryHeader.src} alt={assets.diaryHeader.alt} className="home-section-plain__image" />
         </div>
       </section>
 
-      <section className="home-stream-plain fade-in-section" id="movie">
-        <div className="home-stream-plain__copy">
-          <p className="eyebrow">Diary / Memo</p>
-          <p className="home-ambient-label">Juice=Juice / 発見 / メモ</p>
-          <h2>Juice=Juiceのことを、少しずつ</h2>
-          <p>最近ハマったばかりで、知らない曲がまだたくさんあります。ひとつ見つけるたびに、ここに書いていきます。</p>
-
-          <ul className="home-stream-plain__list">
-            {streamNotes.map((item) => (
-              <li key={item}>{item}</li>
-            ))}
-          </ul>
-
-          <div className="home-stream-plain__links">
-            {xLink ? (
-              <a
-                className="official-text-link"
-                href={xLink.href}
-                target={xLink.external ? '_blank' : undefined}
-                rel={xLink.external ? 'noreferrer' : undefined}
-              >
-                X を見る →
-              </a>
-            ) : null}
+      {recentEntries.length > 1 ? (
+        <section className="home-diary-preview fade-in-section" id="diary-preview">
+          <div className="home-diary-preview__header">
+            <p className="eyebrow">Diary</p>
+            <h2>最近の記録</h2>
+            <p>知らない曲に出会うたびに、ここに書いています。</p>
           </div>
-        </div>
 
-        <div className="home-stream-plain__visual" aria-hidden="true">
-          <p>JUICE=JUICE</p>
-          <span>プラトニック・プラネット</span>
-          <span>知らない曲との出会い</span>
-          <span>DIARY ひとつずつ記録していく</span>
-        </div>
-      </section>
+          <div className="home-diary-preview__grid">
+            {recentEntries.slice(0, 3).map((entry) => (
+              <Link key={entry.slug} className="home-diary-preview__card" href={`/diary/${entry.slug}`}>
+                <span className="home-diary-preview__date">{entry.date}</span>
+                <strong>{entry.title}</strong>
+                <p>{entry.excerpt}</p>
+              </Link>
+            ))}
+          </div>
+
+          <Link className="official-text-link" href="/diary">
+            すべての日記を見る →
+          </Link>
+        </section>
+      ) : null}
 
       <section className="home-connect-line fade-in-section" id="contact">
         <div>
-          <p className="eyebrow">Connect</p>
-          <p className="home-ambient-label">X / Juice=Juice日記</p>
-          <h2>更新先</h2>
+          <p className="eyebrow">Follow</p>
+          <p className="home-ambient-label">X / 日記 / 更新</p>
+          <h2>ここから辿れます</h2>
+          <p>日記は毎日更新しています。Xでは短い反応やメモを書いています。</p>
         </div>
 
         <div className="home-connect-line__links">
-          {socialLinks.map((item) => (
+          {xLink ? (
             <a
-              key={item.label}
               className="home-connect-line__link"
-              href={item.href}
-              target={item.external ? '_blank' : undefined}
-              rel={item.external ? 'noreferrer' : undefined}
+              href={xLink.href}
+              target={xLink.external ? '_blank' : undefined}
+              rel={xLink.external ? 'noreferrer' : undefined}
             >
-              <strong>{item.label}</strong>
-              <span>{item.note}</span>
+              <strong>{xLink.label}</strong>
+              <span>{xLink.note}</span>
             </a>
-          ))}
+          ) : null}
         </div>
 
         <div className="home-ending-mark" aria-hidden="true">
