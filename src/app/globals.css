@@ -5222,6 +5222,7 @@ h3,
 
   .home-hero-panel__body {
     padding: 0.9rem;
+    align-items: flex-start;
   }
 
   .home-hero-panel__copy {
@@ -5326,6 +5327,7 @@ h3,
 
   .home-hero-panel__body {
     padding: 0.75rem;
+    align-items: flex-start;
   }
 
   .home-hero-panel__copy {
