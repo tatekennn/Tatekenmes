@@ -18,6 +18,7 @@ export default function HomePage() {
   const xLink = socials.find((item) => item.label.toLowerCase() === 'x') ?? socials[1] ?? socials[0];
   const socialLinks = [youtube, xLink].filter((item, index, arr): item is NonNullable<typeof item> => Boolean(item) && arr.indexOf(item) === index);
   const aboutParagraphs = profile.bio.slice(0, 2);
+  const quickFacts = siteData.quickFacts.slice(0, 3);
 
   return (
     <SiteShell variant="home">
@@ -121,6 +122,14 @@ export default function HomePage() {
                 <p key={paragraph}>{paragraph}</p>
               ))}
             </div>
+            <dl className="home-about__facts">
+              {quickFacts.map((fact) => (
+                <div key={fact.label} className="home-about__fact-row">
+                  <dt>{fact.label}</dt>
+                  <dd>{fact.value}</dd>
+                </div>
+              ))}
+            </dl>
           </div>
         </section>
 
@@ -132,18 +141,44 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="home-note-block">
-            <p>配信は YouTube にて準備中。夜の観測ログや短い雑談を、落ち着いた温度で届けていく予定です。</p>
-            {youtube ? (
-              <a
-                className="pill-button secondary"
-                href={youtube.href}
-                target={youtube.external ? '_blank' : undefined}
-                rel={youtube.external ? 'noreferrer' : undefined}
-              >
-                YouTubeを見る
-              </a>
-            ) : null}
+          <div className="home-guide-panel">
+            <img
+              src="/generated/mio-chibi-guide-20260606.png"
+              alt="天霧澪のちびキャラ案内役。観測ノートを手にしたミニキャラ。"
+              className="home-guide-panel__image"
+            />
+            <div className="home-guide-panel__body">
+              <p className="home-guide-panel__eyebrow">Guide</p>
+              <h3>ミニ澪がご案内</h3>
+              <p>配信は YouTube にて準備中。夜の観測ログや短い雑談、街の温度が少しだけ変わる瞬間を、ここから辿れるようにしていきます。</p>
+              <ul className="home-guide-panel__tags" aria-label="案内タグ">
+                <li>配信準備中</li>
+                <li>夜の観測ログ</li>
+                <li>短い雑談</li>
+              </ul>
+              <div className="home-guide-panel__links">
+                {youtube ? (
+                  <a
+                    className="pill-button secondary"
+                    href={youtube.href}
+                    target={youtube.external ? '_blank' : undefined}
+                    rel={youtube.external ? 'noreferrer' : undefined}
+                  >
+                    YouTubeを見る
+                  </a>
+                ) : null}
+                {xLink ? (
+                  <a
+                    className="official-text-link"
+                    href={xLink.href}
+                    target={xLink.external ? '_blank' : undefined}
+                    rel={xLink.external ? 'noreferrer' : undefined}
+                  >
+                    X の短い観測メモへ →
+                  </a>
+                ) : null}
+              </div>
+            </div>
           </div>
         </section>
       </section>
