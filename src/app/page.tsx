@@ -19,6 +19,37 @@ export default function HomePage() {
   const socialLinks = [youtube, xLink].filter((item, index, arr): item is NonNullable<typeof item> => Boolean(item) && arr.indexOf(item) === index);
   const aboutParagraphs = profile.bio.slice(0, 2);
   const quickFacts = siteData.quickFacts.slice(0, 3);
+  const noticeItems = [
+    {
+      label: '今夜の温度',
+      value: latestEntry ? latestEntry.tags.slice(0, 2).join(' / ') : '静かな観測モード',
+    },
+    {
+      label: '配信導線',
+      value: 'YouTube を起点に準備中',
+    },
+    {
+      label: '短い記録',
+      value: 'X に夜の観測メモを追記',
+    },
+  ] as const;
+  const streamStatusCards = [
+    {
+      label: 'Next opening',
+      title: '初回配信は準備中',
+      text: '雑談と観測ログを軸に、静かな導入回から始める想定です。',
+    },
+    {
+      label: 'Main format',
+      title: '短い雑談 / 夜の記録',
+      text: '長時間よりも、空気の残る短めの配信やアーカイブを主軸に整えていきます。',
+    },
+  ] as const;
+  const updateNotes = [
+    'YouTube を公開導線の中心に配置',
+    'X は短い観測メモの即時更新用',
+    '日記側と役割が被りすぎない構成で整理中',
+  ] as const;
 
   return (
     <SiteShell variant="home">
@@ -78,28 +109,69 @@ export default function HomePage() {
       </section>
 
       {latestEntry ? (
-        <section className="section-card home-section fade-in-section" id="latest">
+        <section className="section-card home-section home-latest-section fade-in-section" id="latest">
           <div className="section-card__header">
             <div>
-              <p className="eyebrow">Latest</p>
-              <h2>最新の記録</h2>
+              <p className="eyebrow">Latest / Tonight</p>
+              <h2>今夜の入口</h2>
             </div>
             <Link className="official-text-link" href="/diary">
               日記一覧へ →
             </Link>
           </div>
 
-          <article className="home-latest">
-            <div className="home-latest__meta">
-              <span>{latestEntry.date}</span>
-              <span>{latestEntry.tags.slice(0, 2).join(' / ')}</span>
-            </div>
-            <h3>{latestEntry.title}</h3>
-            <p>{latestEntry.excerpt}</p>
-            <Link className="official-text-link" href={`/diary/${latestEntry.slug}`}>
-              この日記を読む →
-            </Link>
-          </article>
+          <div className="home-latest-layout">
+            <article className="home-latest">
+              <p className="home-latest__lead-label">Observation log</p>
+              <div className="home-latest__meta">
+                <span>{latestEntry.date}</span>
+                <span>{latestEntry.tags.slice(0, 2).join(' / ')}</span>
+              </div>
+              <h3>{latestEntry.title}</h3>
+              <p>{latestEntry.excerpt}</p>
+              <Link className="official-text-link" href={`/diary/${latestEntry.slug}`}>
+                この日記を読む →
+              </Link>
+            </article>
+
+            <aside className="home-tonight-note" aria-label="今夜の案内">
+              <p className="home-tonight-note__eyebrow">Tonight&apos;s note</p>
+              <h3>配信前に覗ける場所</h3>
+              <p className="home-tonight-note__copy">{siteData.featuredQuote}</p>
+
+              <dl className="home-tonight-note__list">
+                {noticeItems.map((item) => (
+                  <div key={item.label} className="home-tonight-note__row">
+                    <dt>{item.label}</dt>
+                    <dd>{item.value}</dd>
+                  </div>
+                ))}
+              </dl>
+
+              <div className="home-tonight-note__actions">
+                {xLink ? (
+                  <a
+                    className="official-text-link"
+                    href={xLink.href}
+                    target={xLink.external ? '_blank' : undefined}
+                    rel={xLink.external ? 'noreferrer' : undefined}
+                  >
+                    X の観測メモへ →
+                  </a>
+                ) : null}
+                {youtube ? (
+                  <a
+                    className="official-text-link"
+                    href={youtube.href}
+                    target={youtube.external ? '_blank' : undefined}
+                    rel={youtube.external ? 'noreferrer' : undefined}
+                  >
+                    YouTube を開く →
+                  </a>
+                ) : null}
+              </div>
+            </aside>
+          </div>
         </section>
       ) : null}
 
@@ -180,6 +252,28 @@ export default function HomePage() {
               </div>
             </div>
           </div>
+
+          <div className="home-stream-status" aria-label="配信準備状況">
+            <div className="home-stream-status__grid">
+              {streamStatusCards.map((item) => (
+                <article key={item.label} className="home-stream-status__card">
+                  <p className="home-stream-status__label">{item.label}</p>
+                  <h3>{item.title}</h3>
+                  <p>{item.text}</p>
+                </article>
+              ))}
+            </div>
+
+            <aside className="home-update-note" aria-label="更新メモ">
+              <p className="home-update-note__eyebrow">Update memo</p>
+              <h3>公開前の整え方</h3>
+              <ul className="home-update-note__list">
+                {updateNotes.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </aside>
+          </div>
         </section>
       </section>
 
@@ -191,24 +285,32 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div className="home-socials">
-          {socialLinks.map((item) => (
-            <a
-              key={item.label}
-              className="home-socials__link"
-              href={item.href}
-              target={item.external ? '_blank' : undefined}
-              rel={item.external ? 'noreferrer' : undefined}
-            >
-              <span className="official-contact__icon" aria-hidden="true">
-                {item.icon}
-              </span>
-              <span>
-                <strong>{item.label}</strong>
-                <small>{item.note}</small>
-              </span>
-            </a>
-          ))}
+        <div className="home-socials home-socials--staged">
+          <div className="home-socials__intro">
+            <p className="home-socials__eyebrow">Entry guide</p>
+            <h3>更新の気配を追うならこの2つ</h3>
+            <p>長い記録は日記へ、短い温度は X へ。配信が動き始めたら、YouTube をいちばん表の入口に置いていきます。</p>
+          </div>
+
+          <div className="home-socials__stack">
+            {socialLinks.map((item) => (
+              <a
+                key={item.label}
+                className="home-socials__link"
+                href={item.href}
+                target={item.external ? '_blank' : undefined}
+                rel={item.external ? 'noreferrer' : undefined}
+              >
+                <span className="official-contact__icon" aria-hidden="true">
+                  {item.icon}
+                </span>
+                <span>
+                  <strong>{item.label}</strong>
+                  <small>{item.note}</small>
+                </span>
+              </a>
+            ))}
+          </div>
         </div>
       </section>
     </SiteShell>
