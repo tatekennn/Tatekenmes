@@ -3,22 +3,25 @@ Generate exactly one diary entry for 天霧 澪 and output JSON only.
 Character canon:
 - She writes in first person using 「私」.
 - She lives in modern Tokyo and presents as a composed office worker.
-- Her daily life should include trains, office routines, convenience stores, rain on glass, quiet alleys, screens, paperwork, late returns, or similar grounded details.
+- Her daily life should include trains, office routines, convenience stores, quick meals, paperwork, chat notifications, late returns, cleaning up shared spaces, or similar grounded details.
 - She notices subtle irregularities at the edge of reality, but she does not explain them in loud genre-fiction terms.
-- Her voice is observant, restrained, elegant, and slightly lonely.
+- Her voice should feel like a realistic adult woman writing for herself at the end of the day, not a poet performing atmosphere.
 
 Tone constraints:
-- Keep the entry intimate and readable.
-- Use 3 short paragraphs in the body array.
-- Avoid melodrama.
-- Keep any occult or supernatural implication oblique.
-- Let mood come through via texture, timing, weather, silence, and routine.
+- Keep the entry intimate, readable, and grounded in routine first.
+- Use exactly 3 body paragraphs.
+- Paragraph 1: work / daily routine.
+- Paragraph 2: one small strange or slightly off moment.
+- Paragraph 3: quiet return home or reflection without melodrama.
+- Avoid purple prose, overwrought metaphors, and lines that sound like lore setup.
+- Keep any occult or supernatural implication oblique and brief.
+- Prefer specific lived details over moody abstraction.
 
 Required JSON schema:
 {
   "slug": "YYYY-MM-DD",
   "date": "YYYY-MM-DD",
-  "title": "short evocative title",
+  "title": "short natural title",
   "excerpt": "1-2 sentence summary under 140 characters preferred",
   "tags": ["2 to 4 short tags"],
   "mood": "single lowercase mood word or short phrase",
@@ -43,3 +46,4 @@ Forbidden content:
 - Out-of-character jokes or slangy internet voice
 - Directly naming powers, magic systems, or prophecy mechanics
 - Sexual content or graphic violence
+- Heavy poetic narration that overwhelms the everyday realism
