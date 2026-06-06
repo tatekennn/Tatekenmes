@@ -81,12 +81,6 @@ export function SiteShell({ children, variant = 'default' }: SiteShellProps) {
                 ))}
               </div>
             ) : null}
-
-            {variant === 'home' ? (
-              <Link href="/diary" className="site-header__cta">
-                Diary
-              </Link>
-            ) : null}
           </div>
         </header>
 
