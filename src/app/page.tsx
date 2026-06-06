@@ -14,9 +14,9 @@ export default function HomePage() {
   const aboutParagraphs = profile.bio.slice(0, 2);
   const quickFacts = siteData.quickFacts.slice(0, 3);
   const streamNotes = [
-    '最初は、短い雑談配信から始めるつもりです',
-    'X にはその日のひとことを、日記にはもう少しまとまった話を書いています',
-    '配信のアーカイブも、あとから見返しやすいように残していきます',
+    '雑談中心で、ゆっくり話せる配信をしていくつもりです',
+    'X ではお知らせやひとこと、日記ではもう少し長めの話を書いています',
+    'アーカイブもあとで見返しやすいように残しています',
   ] as const;
 
   return (
@@ -30,8 +30,8 @@ export default function HomePage() {
             <div className="home-hero-panel__copy">
               <p className="eyebrow">Official site</p>
               <p className="home-hero-panel__ruby">{profile.ruby} / AMAGIRI MIO</p>
-              <h1>平日のことと、帰り道のことを少しずつ残しています。</h1>
-              <p className="home-hero-panel__summary">仕事のこと、その日に少し気になったこと、あとから見返したいと思ったこと。配信と日記に、無理のないペースで置いていくための場所です。</p>
+              <h1>配信のことも、日記のことも、ここにまとめています。</h1>
+              <p className="home-hero-panel__summary">天霧澪のオフィシャルサイトです。更新のお知らせや日記、あとで見返したいことを、ゆっくり置いています。</p>
 
               <div className="home-hero-panel__actions">
                 <Link className="pill-button" href="/diary">
@@ -83,7 +83,7 @@ export default function HomePage() {
             <p>{latestEntry.excerpt}</p>
           </div>
           <Link className="official-text-link" href={`/diary/${latestEntry.slug}`}>
-            Read diary →
+            最新の日記を見る →
           </Link>
         </section>
       ) : null}
@@ -91,8 +91,8 @@ export default function HomePage() {
       <section className="home-section-plain home-section-plain--about fade-in-section" id="about">
         <div className="home-section-plain__copy">
           <p className="eyebrow">About</p>
-          <p className="home-ambient-label">Observation archive / daylight memo</p>
-          <h2>仕事のことと、普段のこと</h2>
+          <p className="home-ambient-label">Profile / voice / mood</p>
+          <h2>はじめまして、天霧澪です</h2>
           {aboutParagraphs.map((paragraph) => (
             <p key={paragraph}>{paragraph}</p>
           ))}
@@ -113,7 +113,7 @@ export default function HomePage() {
 
         <div className="home-section-plain__visual">
           <span className="home-section-plain__stamp" aria-hidden="true">
-            silent city archive
+            official profile
           </span>
           <img src={assets.diaryHeader.src} alt={assets.diaryHeader.alt} className="home-section-plain__image" />
         </div>
@@ -122,9 +122,9 @@ export default function HomePage() {
       <section className="home-stream-plain fade-in-section" id="movie">
         <div className="home-stream-plain__copy">
           <p className="eyebrow">Movie / Stream</p>
-          <p className="home-ambient-label">Tonight&apos;s route / stream entry / soft records</p>
-          <h2>配信や記録の置き場所</h2>
-          <p>配信では、その日にあったことや考えていたことを落ち着いて話せたらと思っています。日記と合わせて、あとから見返しやすい形にしていくつもりです。</p>
+          <p className="home-ambient-label">Stream / archive / update</p>
+          <h2>配信はこちら</h2>
+          <p>雑談や近況の話を中心に、無理のないペースで配信しています。気になったときに、ふらっと見に来てもらえたらうれしいです。</p>
 
           <ul className="home-stream-plain__list">
             {streamNotes.map((item) => (
@@ -157,18 +157,18 @@ export default function HomePage() {
         </div>
 
         <div className="home-stream-plain__visual" aria-hidden="true">
-          <p>AFTER WORK ROUTE</p>
-          <span>18:40 帰宅後にひと息</span>
-          <span>22:00 配信メモを整理</span>
-          <span>DIARY その日に残したいことだけ記録</span>
+          <p>STREAM MEMO</p>
+          <span>雑談 / 近況 / ゆっくりめ</span>
+          <span>配信後にアーカイブを整理</span>
+          <span>DIARY あとで見返したいことを記録</span>
         </div>
       </section>
 
       <section className="home-connect-line fade-in-section" id="contact">
         <div>
           <p className="eyebrow">Connect</p>
-          <p className="home-ambient-label">Signals / updates / small notices</p>
-          <h2>いつもの更新先</h2>
+          <p className="home-ambient-label">X / YouTube / update</p>
+          <h2>更新先</h2>
         </div>
 
         <div className="home-connect-line__links">

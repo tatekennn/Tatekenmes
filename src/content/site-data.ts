@@ -67,7 +67,7 @@ export const siteData: SiteData = {
   metadata: {
     title: '天霧 澪 オフィシャルサイト',
     description:
-      '仕事のことや、帰り道で気になったことを、無理のない言葉で残しているサイトです。',
+      '配信や日記をゆっくり更新している、天霧澪のオフィシャルサイトです。',
     locale: 'ja-JP',
   },
   generatedAssets: {
@@ -106,37 +106,37 @@ export const siteData: SiteData = {
     name: '天霧 澪',
     ruby: 'あまぎり みお',
     age: 26,
-    job: '都内IT企業の総務・業務管理寄り事務職',
+    job: 'VTuber / 雑談と日記メイン',
     location: '東京',
-    tone: 'calm, practical, observant, modern Tokyo office-worker',
-    concept: 'daytime office worker keeping small notes about work, routines, and things noticed on the way home',
+    tone: 'calm, soft-spoken, observant, modern VTuber',
+    concept: 'VTuber keeping gentle notes about streams, daily moments, and things worth remembering',
     worldRatio: {
       reality: 90,
       occult: 10,
     },
     bio: [
-      '普段は、都内の会社で総務や業務管理に近い事務仕事をしています。会議室の手配や備品の確認、数字の抜け漏れの確認みたいな、表に出にくい仕事が多いです。',
-      '仕事が終わったあとは、まっすぐ帰る日もあれば、駅前やオフィス街の空気が少し気になって、そのまま覚えておく日もあります。大げさな話ではないけれど、あとで書いておきたくなることがあります。',
-      'このサイトには、そういう日々のことや、配信で話したことを少しずつ残しています。気負わず見てもらえたらうれしいです。',
+      '天霧澪です。雑談を中心に、最近あったことや今気になっていることを、落ち着いたペースで話しています。',
+      'このサイトには、配信のお知らせや日記、それからあとで見返したいことをまとめています。気になるところから気楽に見てもらえたらうれしいです。',
+      '肩の力を抜いて続けていきたいので、のんびり付き合ってもらえたらうれしいです。',
     ],
   },
-  featuredQuote: '仕事のあとに気になったことを、忘れないうちに書いておきたいだけです。',
+  featuredQuote: '配信も日記も、あとで見返しやすい形で残していきたいです。',
   quickFacts: [
     {
       label: '呼び名',
       value: '澪 / Mio',
     },
     {
-      label: '平日の顔',
-      value: '都内オフィスで裏方の仕事をしている人',
+      label: '活動',
+      value: '雑談配信 / 日記 / お知らせ',
     },
     {
-      label: '帰り道に気になるもの',
-      value: '駅前の空気、雨上がりの道、少し遅い時間の売り場',
+      label: '好きな時間',
+      value: '夜にゆっくり話す時間',
     },
     {
       label: '好きなもの',
-      value: '温かい飲み物、静かな店内、落ち着いた服',
+      value: '温かい飲み物、静かな時間、落ち着いた服',
     },
   ],
   navigation: [
@@ -153,7 +153,7 @@ export const siteData: SiteData = {
     {
       label: 'プロフィール',
       href: '/profile',
-      description: '私の仕事や暮らしについて。',
+      description: '私のことをもう少し知りたい人向け。',
     },
   ],
   tagDescriptions: [
@@ -167,7 +167,7 @@ export const siteData: SiteData = {
     },
     {
       tag: '雨',
-      description: '天気や湿度で気分や帰り道の印象が変わる日の記録。',
+      description: '天気や湿度で、その日の気分が少し変わった日の記録。',
     },
     {
       tag: '夜',
@@ -187,7 +187,7 @@ export const siteData: SiteData = {
       label: 'X',
       href: 'https://x.com/amagiri_mio',
       icon: '𝕏',
-      note: '短い近況やひとこと',
+      note: 'お知らせとひとこと',
       external: true,
     },
     {

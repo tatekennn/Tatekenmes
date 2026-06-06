@@ -14,22 +14,22 @@ export default function ProfilePage() {
   const facts = [
     { label: '名前', value: `${profile.name}（${profile.ruby}）` },
     { label: '年齢', value: `${profile.age}歳` },
-    { label: '仕事', value: profile.job },
-    { label: '居住圏', value: `${profile.location} / 一人暮らし` },
+    { label: '活動', value: profile.job },
+    { label: '拠点', value: `${profile.location}` },
   ];
-  const traits = ['静か', '落ち着いている', '話し方はやわらかめ', '感情を大きく出しすぎない', '仕事は丁寧'];
+  const traits = ['静か', '落ち着いている', '話し方はやわらかめ', '雑談中心', 'マイペース'];
   const timeline = [
     {
-      title: '平日の昼',
-      body: '平日は都内のIT企業で、総務や業務管理に近い事務仕事をしています。会議室や備品や申請や、細かな数字がちゃんと流れるように見ていることが多いです。',
+      title: '配信',
+      body: '雑談を中心に、その日あったことや最近気になっていることを、落ち着いたテンポで話しています。気負わず見に来てもらえる配信にしたいです。',
     },
     {
-      title: '退勤後',
-      body: 'まっすぐ帰る日もありますし、少し気分を切り替えたくて寄り道する日もあります。帰り道で気になったことは、あとで思い出せるように軽くメモしています。',
+      title: '日記',
+      body: '配信では話しきれなかったことや、あとで見返したいことは日記にまとめています。長すぎず、でもちゃんと残る形にしておきたいと思っています。',
     },
     {
-      title: '記録する理由',
-      body: 'あとから振り返ったときに、その日のことをちゃんと思い出せるようにしておきたいからです。大げさに書くというより、自分の中で整理するために残しています。',
+      title: 'このサイト',
+      body: 'お知らせ、配信、日記をひとつにまとめて、気になったときにふらっと見に来てもらえる場所にしたくて作っています。',
     },
   ];
 
@@ -47,7 +47,7 @@ export default function ProfilePage() {
               <img className="talent-hero__figure-image" src={assets.profileFull.src} alt={assets.profileFull.alt} />
               <div className="talent-hero__figure-note">
                 <strong>{profile.name}</strong>
-                <span>平日は事務の仕事。帰り道やその日のことを、あとから思い出せる形で残しています。</span>
+                <span>雑談配信と日記を、自分のペースで続けています。</span>
               </div>
             </div>
           </div>
@@ -55,22 +55,22 @@ export default function ProfilePage() {
           <div className="talent-hero__copy-column">
             <section className="talent-logo-panel">
               <p className="eyebrow">Profile</p>
-              <p className="talent-logo-panel__ruby">AMAGIRI MIO / OFFICE WORKER / QUIET RECORDS</p>
+              <p className="talent-logo-panel__ruby">AMAGIRI MIO / VTUBER / DIARY & STREAM</p>
               <h1>{profile.name}</h1>
-              <p className="talent-logo-panel__tagline">仕事の延長にある生活と、その日に残したいと思ったこと。</p>
+              <p className="talent-logo-panel__tagline">ゆっくり話して、ゆっくり残していくタイプです。</p>
               <p className="talent-logo-panel__summary">{profile.bio[1]}</p>
               <div className="talent-logo-panel__chips">
                 {traits.slice(0, 4).map((trait) => (
                   <span key={trait}>{trait}</span>
                 ))}
               </div>
-              <p className="talent-logo-panel__quote">日記も配信も、少し落ち着いて見返せる場所にしたいと思っています。</p>
+              <p className="talent-logo-panel__quote">配信も日記も、あとから見返しやすい形で残していきたいです。</p>
             </section>
 
             <section className="talent-meta-panel">
               <div className="talent-meta-panel__lead">
                 <h2>基本情報</h2>
-                <p>派手な設定を見せるより、普段どんな人かが自然に伝わるくらいの整理にしています。</p>
+                <p>まずは、どんな感じで活動しているかが自然に伝わるくらいの情報だけ置いています。</p>
               </div>
               <dl className="talent-meta-grid">
                 {facts.map((fact) => (
@@ -89,7 +89,7 @@ export default function ProfilePage() {
             <p className="eyebrow">Diary</p>
             <div>
               <strong>日記を読む</strong>
-              <p>仕事のあとや帰宅後に書いた記録をまとめています。</p>
+              <p>配信では話しきれなかったことも、ここに少しずつまとめています。</p>
             </div>
             <span>→</span>
           </Link>
@@ -98,7 +98,7 @@ export default function ProfilePage() {
               <p className="eyebrow">Latest</p>
               <div>
                 <strong>{latestEntry.title}</strong>
-                <p>最新の日記から、最近の空気感をそのまま読めます。</p>
+                <p>いちばん新しい更新はこちらから読めます。</p>
               </div>
               <span>→</span>
             </Link>
@@ -107,7 +107,7 @@ export default function ProfilePage() {
             <p className="eyebrow">Home</p>
             <div>
               <strong>ホームへ戻る</strong>
-              <p>サイト全体の入口に戻って、更新先や配信導線も確認できます。</p>
+              <p>更新先や配信導線をまとめて見たいときはこちらへ。</p>
             </div>
             <span>→</span>
           </Link>
@@ -117,8 +117,8 @@ export default function ProfilePage() {
       <section className="archive-landing">
         <section className="archive-landing__panel">
           <div className="archive-landing__intro">
-            <p className="eyebrow">Weekday outline</p>
-            <h2>普段の流れ</h2>
+            <p className="eyebrow">Activity</p>
+            <h2>この場所について</h2>
           </div>
           <div className="stack-list">
             {timeline.map((item) => (
@@ -132,9 +132,9 @@ export default function ProfilePage() {
 
         <section className="archive-landing__panel archive-landing__panel--profile-light">
           <div className="archive-landing__intro">
-            <p className="eyebrow">Temperament</p>
+            <p className="eyebrow">Mood</p>
             <h2>ふだんの印象</h2>
-            <p>人前で大きく感情を動かすタイプではありませんが、必要なことは丁寧に整えておきたいほうです。</p>
+            <p>にぎやかすぎるより、落ち着いて話せる空気のほうが好きです。ゆっくり見てもらえたら、それがいちばんうれしいです。</p>
           </div>
           <ul className="tag-list">
             {traits.map((trait) => (

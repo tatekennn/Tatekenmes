@@ -25,13 +25,13 @@ export default function DiaryIndexPage() {
           <p className="eyebrow">Diary archive</p>
           <h1>日記</h1>
           <p className="archive-hero__summary">
-            仕事のこと、帰り道で気になったこと、その日のうちに書いておきたかったことをまとめています。
-            派手な出来事ではなくても、あとから見返したくなる日だけ残しています。
+            配信では話しきれなかったことや、その日のうちに残しておきたかったことをまとめています。
+            大げさじゃない日でも、あとで見返したくなりそうなものだけ残しています。
           </p>
 
           <div className="archive-hero__chips">
-            <span>都内の事務仕事</span>
-            <span>帰り道のメモ</span>
+            <span>雑談配信</span>
+            <span>日々のメモ</span>
             <span>{entries.length} records</span>
           </div>
 
@@ -87,19 +87,19 @@ export default function DiaryIndexPage() {
           <p className="eyebrow">About these notes</p>
           <h2>あとで思い出せる形にしておくための記録です</h2>
           <p>
-            {profile.name} は平日は都内で事務の仕事をしていて、日記にはその日の仕事や帰り道や部屋に戻ってからのことを書いています。
-            読み物というより、自分の中で一度きちんと置いておくための記録に近いです。
+            {profile.name} の日記には、配信では流れてしまいそうな話や、その日のうちに残しておきたかったことを書いています。
+            読み物というより、あとで自分でも見返せるように整えているメモに近いです。
           </p>
         </div>
 
         <div className="archive-note-band__links">
           <Link className="archive-note-band__link" href="/profile">
             <strong>プロフィールを見る</strong>
-            <span>仕事や暮らし方など、日記の前提になる普段の情報をまとめています。</span>
+            <span>どんな感じで活動しているかを、もう少しまとまった形で見られます。</span>
           </Link>
           <Link className="archive-note-band__link" href="/">
             <strong>ホームへ戻る</strong>
-            <span>サイト全体の入口に戻って、配信や更新先も確認できます。</span>
+            <span>更新先や配信導線をまとめて見たいときはこちらへ。</span>
           </Link>
         </div>
       </section>
