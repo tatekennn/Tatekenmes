@@ -102,7 +102,7 @@ export default async function DiaryEntryPage({ params }: { params: Promise<{ slu
             </Link>
             <Link className="archive-guide-link" href="/">
               <strong>ホームへ戻る</strong>
-              <span>サイト全体の入口へ戻って、更新導線や配信導線を見られます。</span>
+              <span>サイト全体の入口へ戻って、日記やプロフィールを見られます。</span>
               <em>Home →</em>
             </Link>
           </div>

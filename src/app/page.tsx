@@ -75,7 +75,7 @@ export default function HomePage() {
       <section className="home-section-plain home-section-plain--about fade-in-section" id="about">
         <div className="home-section-plain__copy">
           <p className="eyebrow">About</p>
-          <p className="home-ambient-label">Profile / voice / mood</p>
+          <p className="home-ambient-label">About / Juice=Juice / newcomer</p>
           <h2>はじめまして、天霧澪です</h2>
           {aboutParagraphs.map((paragraph) => (
             <p key={paragraph}>{paragraph}</p>

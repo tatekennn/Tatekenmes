@@ -99,7 +99,7 @@ export default function DiaryIndexPage() {
           </Link>
           <Link className="archive-note-band__link" href="/">
             <strong>ホームへ戻る</strong>
-            <span>更新先や配信導線をまとめて見たいときはこちらへ。</span>
+            <span>日記やプロフィールをまとめた場所はこちらです。</span>
           </Link>
         </div>
       </section>

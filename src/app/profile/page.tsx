@@ -47,7 +47,7 @@ export default function ProfilePage() {
               <img className="talent-hero__figure-image" src={assets.profileFull.src} alt={assets.profileFull.alt} />
               <div className="talent-hero__figure-note">
                 <strong>{profile.name}</strong>
-                <span>雑談配信と日記を、自分のペースで続けています。</span>
+                <span>Juice=Juiceのことを、自分のペースで記録しています。</span>
               </div>
             </div>
           </div>
@@ -64,7 +64,7 @@ export default function ProfilePage() {
                   <span key={trait}>{trait}</span>
                 ))}
               </div>
-              <p className="talent-logo-panel__quote">配信も日記も、あとから見返しやすい形で残していきたいです。</p>
+              <p className="talent-logo-panel__quote">知らない曲に出会うたびに、ここに書いていきたいです。</p>
             </section>
 
             <section className="talent-meta-panel">
@@ -107,7 +107,7 @@ export default function ProfilePage() {
             <p className="eyebrow">Home</p>
             <div>
               <strong>ホームへ戻る</strong>
-              <p>更新先や配信導線をまとめて見たいときはこちらへ。</p>
+              <p>日記やプロフィールをまとめた場所はこちらです。</p>
             </div>
             <span>→</span>
           </Link>
@@ -133,8 +133,8 @@ export default function ProfilePage() {
         <section className="archive-landing__panel archive-landing__panel--profile-light">
           <div className="archive-landing__intro">
             <p className="eyebrow">Mood</p>
-            <h2>ふだんの印象</h2>
-            <p>にぎやかすぎるより、落ち着いて話せる空気のほうが好きです。ゆっくり見てもらえたら、それがいちばんうれしいです。</p>
+            <h2>ふだんの感じ</h2>
+            <p>Juice=Juiceのことになると、つい真剣になってしまいます。でも基本はのんびりした感じです。</p>
           </div>
           <ul className="tag-list">
             {traits.map((trait) => (
