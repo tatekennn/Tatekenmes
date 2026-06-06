@@ -25,50 +25,50 @@ export default function HomePage() {
         <div className="home-hero-panel__visual">
           <img className="home-hero-panel__bg" src={assets.heroMain.src} alt={assets.heroMain.alt} />
           <div className="home-hero-panel__veil" aria-hidden="true" />
-        </div>
 
-        <div className="home-hero-panel__body">
-          <div className="home-hero-panel__copy">
-            <p className="eyebrow">Official site</p>
-            <p className="home-hero-panel__ruby">{profile.ruby} / AMAGIRI MIO</p>
-            <h1>平日のことと、帰り道のことを少しずつ残しています。</h1>
-            <p className="home-hero-panel__summary">仕事のこと、その日に少し気になったこと、あとから見返したいと思ったこと。配信と日記に、無理のないペースで置いていくための場所です。</p>
+          <div className="home-hero-panel__body">
+            <div className="home-hero-panel__copy">
+              <p className="eyebrow">Official site</p>
+              <p className="home-hero-panel__ruby">{profile.ruby} / AMAGIRI MIO</p>
+              <h1>平日のことと、帰り道のことを少しずつ残しています。</h1>
+              <p className="home-hero-panel__summary">仕事のこと、その日に少し気になったこと、あとから見返したいと思ったこと。配信と日記に、無理のないペースで置いていくための場所です。</p>
 
-            <div className="home-hero-panel__actions">
-              <Link className="pill-button" href="/diary">
-                日記を読む
-              </Link>
-              {youtube ? (
-                <a
-                  className="official-text-link"
-                  href={youtube.href}
-                  target={youtube.external ? '_blank' : undefined}
-                  rel={youtube.external ? 'noreferrer' : undefined}
-                >
-                  YouTube →
-                </a>
-              ) : null}
-              {xLink ? (
-                <a
-                  className="official-text-link"
-                  href={xLink.href}
-                  target={xLink.external ? '_blank' : undefined}
-                  rel={xLink.external ? 'noreferrer' : undefined}
-                >
-                  X →
-                </a>
-              ) : null}
-            </div>
+              <div className="home-hero-panel__actions">
+                <Link className="pill-button" href="/diary">
+                  日記を読む
+                </Link>
+                {youtube ? (
+                  <a
+                    className="official-text-link"
+                    href={youtube.href}
+                    target={youtube.external ? '_blank' : undefined}
+                    rel={youtube.external ? 'noreferrer' : undefined}
+                  >
+                    YouTube →
+                  </a>
+                ) : null}
+                {xLink ? (
+                  <a
+                    className="official-text-link"
+                    href={xLink.href}
+                    target={xLink.external ? '_blank' : undefined}
+                    rel={xLink.external ? 'noreferrer' : undefined}
+                  >
+                    X →
+                  </a>
+                ) : null}
+              </div>
 
-            <div className="home-hero-panel__route" aria-label="主要導線">
-              <Link href="/profile">PROFILE</Link>
-              <Link href="/diary#latest">LATEST</Link>
-              <Link href="/diary">DIARY</Link>
-              {youtube ? (
-                <a href={youtube.href} target={youtube.external ? '_blank' : undefined} rel={youtube.external ? 'noreferrer' : undefined}>
-                  MOVIE
-                </a>
-              ) : null}
+              <div className="home-hero-panel__route" aria-label="主要導線">
+                <Link href="/profile">PROFILE</Link>
+                <Link href="/diary#latest">LATEST</Link>
+                <Link href="/diary">DIARY</Link>
+                {youtube ? (
+                  <a href={youtube.href} target={youtube.external ? '_blank' : undefined} rel={youtube.external ? 'noreferrer' : undefined}>
+                    MOVIE
+                  </a>
+                ) : null}
+              </div>
             </div>
           </div>
         </div>
