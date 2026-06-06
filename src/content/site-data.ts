@@ -65,9 +65,9 @@ export type SiteData = {
 
 export const siteData: SiteData = {
   metadata: {
-    title: '天霧 澪 オフィシャルサイト',
+    title: '天霧 澪 — Juice=Juice 日報',
     description:
-      '配信や日記をゆっくり更新している、天霧澪のオフィシャルサイトです。',
+      'Juice=Juiceを静かに追い続けている天霧澪のオフィシャルサイト。日記とメモをまとめています。',
     locale: 'ja-JP',
   },
   generatedAssets: {
@@ -106,21 +106,21 @@ export const siteData: SiteData = {
     name: '天霧 澪',
     ruby: 'あまぎり みお',
     age: 26,
-    job: 'VTuber / 雑談と日記メイン',
+    job: 'Juice=Juice を追い続ける日記VTuber',
     location: '東京',
-    tone: 'calm, soft-spoken, observant, modern VTuber',
-    concept: 'VTuber keeping gentle notes about streams, daily moments, and things worth remembering',
+    tone: 'calm, soft-spoken, but passionate about Juice=Juice',
+    concept: 'Juice=Juice専門の日記を書くVTuber。最新ニュースから歴史の深掘りまで、毎日Juice=Juiceについて記録している。',
     worldRatio: {
       reality: 90,
       occult: 10,
     },
     bio: [
-      '天霧澪です。雑談を中心に、最近あったことや今気になっていることを、落ち着いたペースで話しています。',
-      'このサイトには、配信のお知らせや日記、それからあとで見返したいことをまとめています。気になるところから気楽に見てもらえたらうれしいです。',
-      '肩の力を抜いて続けていきたいので、のんびり付き合ってもらえたらうれしいです。',
+      '天霧澪です。Juice=Juiceのことが好きで、日々の出来事や思い出を日記にまとめています。',
+      '最新のニュースも、昔のライブの記憶も、曲への思いも、全部ここに置いていきます。',
+      'Juice=Juiceのことが好きな人と、ちょっと気になった人のために書いているので、ゆっくり見てください。',
     ],
   },
-  featuredQuote: '配信も日記も、あとで見返しやすい形で残していきたいです。',
+  featuredQuote: 'Juice=Juiceのこと、ちゃんと残しておきたい。',
   quickFacts: [
     {
       label: '呼び名',
@@ -128,15 +128,15 @@ export const siteData: SiteData = {
     },
     {
       label: '活動',
-      value: '雑談配信 / 日記 / お知らせ',
+      value: 'Juice=Juice日記 / X',
     },
     {
-      label: '好きな時間',
-      value: '夜にゆっくり話す時間',
+      label: '推し',
+      value: 'Juice=Juice',
     },
     {
       label: '好きなもの',
-      value: '温かい飲み物、静かな時間、落ち着いた服',
+      value: 'Juice=Juice、ライブ映像、グッズ整理',
     },
   ],
   navigation: [
@@ -148,7 +148,7 @@ export const siteData: SiteData = {
     {
       label: '日記',
       href: '/diary',
-      description: '日付ごとの記録一覧。',
+      description: 'Juice=Juiceに関する日記の一覧。',
     },
     {
       label: 'プロフィール',
@@ -158,28 +158,36 @@ export const siteData: SiteData = {
   ],
   tagDescriptions: [
     {
-      tag: '仕事',
-      description: '会議、書類、調整業務など、日中のオフィスワークに関する記録。',
+      tag: 'ライブ',
+      description: 'ライブに行った記録や、セットリストへの感想。',
     },
     {
-      tag: '通勤',
-      description: '電車、駅、ホーム、帰路の空気など移動中の断片。',
+      tag: '楽曲',
+      description: '曲への思い、歌詞の解釈、リピート記録。',
     },
     {
-      tag: '雨',
-      description: '天気や湿度で、その日の気分が少し変わった日の記録。',
+      tag: 'メンバー',
+      description: 'メンバーのパフォーマンス、衣装、変化へのメモ。',
     },
     {
-      tag: '夜',
-      description: '退勤後や少し遅い時間の出来事。',
+      tag: 'MV',
+      description: 'MVの発見、映像の细节、衣装の話。',
     },
     {
-      tag: '観測',
-      description: 'あとで気になりそうだと思って、簡単に書き留めたもの。',
+      tag: 'ニュース',
+      description: '新曲告知、イベント、メディア出演などの情報。',
     },
     {
-      tag: '生活',
-      description: 'コンビニ、部屋、食事など、日常の手触りに寄った断片。',
+      tag: '日常',
+      description: 'Juice=Juiceと暮らす日常の断片。',
+    },
+    {
+      tag: '歴史',
+      description: '過去の名場面、結成から現在までの流れ。',
+    },
+    {
+      tag: 'グッズ',
+      description: '手に入れたグッズ、保管方法、思い出。',
     },
   ],
   socialLinks: [
@@ -187,14 +195,7 @@ export const siteData: SiteData = {
       label: 'X',
       href: 'https://x.com/amagiri_mio',
       icon: '𝕏',
-      note: 'お知らせとひとこと',
-      external: true,
-    },
-    {
-      label: 'YouTube',
-      href: 'https://www.youtube.com/@amagirimio',
-      icon: '▶',
-      note: '配信とアーカイブ',
+      note: 'Juice=Juice日報',
       external: true,
     },
   ],

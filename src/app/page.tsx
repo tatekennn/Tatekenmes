@@ -8,15 +8,14 @@ export default function HomePage() {
   const profile = siteData.profile;
   const assets = siteData.generatedAssets;
   const socials = siteData.socialLinks;
-  const youtube = socials.find((item) => item.label.toLowerCase().includes('youtube')) ?? socials[0];
-  const xLink = socials.find((item) => item.label.toLowerCase() === 'x') ?? socials[1] ?? socials[0];
-  const socialLinks = [youtube, xLink].filter((item, index, arr): item is NonNullable<typeof item> => Boolean(item) && arr.indexOf(item) === index);
+  const xLink = socials.find((item) => item.label.toLowerCase() === 'x') ?? socials[0];
+  const socialLinks = [xLink].filter((item, index, arr): item is NonNullable<typeof item> => Boolean(item) && arr.indexOf(item) === index);
   const aboutParagraphs = profile.bio.slice(0, 2);
   const quickFacts = siteData.quickFacts.slice(0, 3);
   const streamNotes = [
-    '雑談中心で、ゆっくり話せる配信をしていくつもりです',
-    'X ではお知らせやひとこと、日記ではもう少し長めの話を書いています',
-    'アーカイブもあとで見返しやすいように残しています',
+    'Juice=Juiceの最新ニュースから過去の名場面まで、毎日書いています',
+    'X では短い反応やメモ、日記ではもう少し長めの話を書いています',
+    '推しのこと、ちゃんと残しておきたいという気持ちで続けています',
   ] as const;
 
   return (
@@ -28,25 +27,15 @@ export default function HomePage() {
 
           <div className="home-hero-panel__body">
             <div className="home-hero-panel__copy">
-              <p className="eyebrow">Official site</p>
+              <p className="eyebrow">Juice=Juice 日報</p>
               <p className="home-hero-panel__ruby">{profile.ruby} / AMAGIRI MIO</p>
-              <h1>配信のことも、日記のことも、ここにまとめています。</h1>
-              <p className="home-hero-panel__summary">天霧澪のオフィシャルサイトです。更新のお知らせや日記、あとで見返したいことを、ゆっくり置いています。</p>
+              <h1>Juice=Juiceのことを、毎日少しずつ。</h1>
+              <p className="home-hero-panel__summary">天霧澪のオフィシャルサイトです。Juice=Juiceの最新ニュースから過去の名場面まで、日記としてまとめています。</p>
 
               <div className="home-hero-panel__actions">
                 <Link className="pill-button" href="/diary">
                   日記を読む
                 </Link>
-                {youtube ? (
-                  <a
-                    className="official-text-link"
-                    href={youtube.href}
-                    target={youtube.external ? '_blank' : undefined}
-                    rel={youtube.external ? 'noreferrer' : undefined}
-                  >
-                    YouTube →
-                  </a>
-                ) : null}
                 {xLink ? (
                   <a
                     className="official-text-link"
@@ -63,11 +52,6 @@ export default function HomePage() {
                 <Link href="/profile">PROFILE</Link>
                 <Link href="/diary#latest">LATEST</Link>
                 <Link href="/diary">DIARY</Link>
-                {youtube ? (
-                  <a href={youtube.href} target={youtube.external ? '_blank' : undefined} rel={youtube.external ? 'noreferrer' : undefined}>
-                    MOVIE
-                  </a>
-                ) : null}
               </div>
             </div>
           </div>
@@ -121,10 +105,10 @@ export default function HomePage() {
 
       <section className="home-stream-plain fade-in-section" id="movie">
         <div className="home-stream-plain__copy">
-          <p className="eyebrow">Movie / Stream</p>
-          <p className="home-ambient-label">Stream / archive / update</p>
-          <h2>配信はこちら</h2>
-          <p>雑談や近況の話を中心に、無理のないペースで配信しています。気になったときに、ふらっと見に来てもらえたらうれしいです。</p>
+          <p className="eyebrow">Diary / Memo</p>
+          <p className="home-ambient-label">Juice=Juice / 日記 / メモ</p>
+          <h2>Juice=Juice日報</h2>
+          <p>Juice=Juiceの最新ニュースから過去の名場面まで、毎日少しずつ記録しています。</p>
 
           <ul className="home-stream-plain__list">
             {streamNotes.map((item) => (
@@ -133,16 +117,6 @@ export default function HomePage() {
           </ul>
 
           <div className="home-stream-plain__links">
-            {youtube ? (
-              <a
-                className="official-text-link"
-                href={youtube.href}
-                target={youtube.external ? '_blank' : undefined}
-                rel={youtube.external ? 'noreferrer' : undefined}
-              >
-                YouTube を開く →
-              </a>
-            ) : null}
             {xLink ? (
               <a
                 className="official-text-link"
@@ -157,17 +131,17 @@ export default function HomePage() {
         </div>
 
         <div className="home-stream-plain__visual" aria-hidden="true">
-          <p>STREAM MEMO</p>
-          <span>雑談 / 近況 / ゆっくりめ</span>
-          <span>配信後にアーカイブを整理</span>
-          <span>DIARY あとで見返したいことを記録</span>
+          <p>JUICE=JUICE</p>
+          <span>最新ニュース / 過去の名場面</span>
+          <span>楽曲への思い / MVの発見</span>
+          <span>DIARY 推しのこと、ちゃんと残す</span>
         </div>
       </section>
 
       <section className="home-connect-line fade-in-section" id="contact">
         <div>
           <p className="eyebrow">Connect</p>
-          <p className="home-ambient-label">X / YouTube / update</p>
+          <p className="home-ambient-label">X / Juice=Juice日報</p>
           <h2>更新先</h2>
         </div>
 

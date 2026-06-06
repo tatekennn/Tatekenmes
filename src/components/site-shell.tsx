@@ -28,7 +28,7 @@ type SiteShellProps = Readonly<{
 export function SiteShell({ children, variant = 'default' }: SiteShellProps) {
   const navItems = getNavItems();
   const name = siteData.profile.name;
-  const subtitle = variant === 'home' ? 'Official website' : 'Diary / profile / official site';
+  const subtitle = variant === 'home' ? 'Juice=Juice 日報' : 'Juice=Juice / diary / profile';
   const socialLinks = Array.isArray(siteData.socialLinks) ? siteData.socialLinks.slice(0, 2) : [];
   const showChromeSocials = variant !== 'home';
   const showHeaderSocials = variant !== 'home';
@@ -87,7 +87,7 @@ export function SiteShell({ children, variant = 'default' }: SiteShellProps) {
         <div className="page-stack">{children}</div>
 
         <footer className="site-footer">
-          <p>配信や日記を、自分のペースで少しずつまとめています。</p>
+          <p>Juice=Juiceのことを、毎日少しずつ記録しています。</p>
           <div className="site-footer__links">
             <Link href="/diary">日記</Link>
             <Link href="/profile">プロフィール</Link>

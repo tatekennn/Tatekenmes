@@ -25,12 +25,12 @@ export default function DiaryIndexPage() {
           <p className="eyebrow">Diary archive</p>
           <h1>日記</h1>
           <p className="archive-hero__summary">
-            配信では話しきれなかったことや、その日のうちに残しておきたかったことをまとめています。
-            大げさじゃない日でも、あとで見返したくなりそうなものだけ残しています。
+            Juice=Juiceの最新ニュースから過去の名場面まで、毎日少しずつ記録しています。
+            曲への思い、ライブの記憶、メンバーの変化。全部ここに置いています。
           </p>
 
           <div className="archive-hero__chips">
-            <span>雑談配信</span>
+            <span>Juice=Juice日報</span>
             <span>日々のメモ</span>
             <span>{entries.length} records</span>
           </div>
@@ -85,10 +85,10 @@ export default function DiaryIndexPage() {
       <section className="archive-note-band">
         <div className="archive-note-band__copy">
           <p className="eyebrow">About these notes</p>
-          <h2>あとで思い出せる形にしておくための記録です</h2>
+          <h2>Juice=Juiceのことをちゃんと残しておきたい</h2>
           <p>
-            {profile.name} の日記には、配信では流れてしまいそうな話や、その日のうちに残しておきたかったことを書いています。
-            読み物というより、あとで自分でも見返せるように整えているメモに近いです。
+            {profile.name} の日記には、Juice=Juiceの最新ニュース、過去の名場面、曲への思いを書いています。
+            推しのことを記録として残す。それだけのことですが、それがこのサイトの存在理由です。
           </p>
         </div>
 
