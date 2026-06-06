@@ -38,10 +38,16 @@ export function SiteShell({ children, variant = 'default' }: SiteShellProps) {
       <AmbientOrb />
       <div className="site-shell__inner">
         <header className="site-header">
-          <div className="site-brand">
-            <p className="site-note">AMAGIRI MIO OFFICIAL SITE</p>
-            <strong>{name}</strong>
-            <span>{subtitle}</span>
+          <div className={`site-brand ${variant === 'home' ? 'site-brand--home' : ''}`}>
+            {variant === 'home' ? (
+              <strong>{name}</strong>
+            ) : (
+              <>
+                <p className="site-note">AMAGIRI MIO OFFICIAL SITE</p>
+                <strong>{name}</strong>
+                <span>{subtitle}</span>
+              </>
+            )}
           </div>
 
           <div className="site-header__cluster">

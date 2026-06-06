@@ -78,10 +78,10 @@ export const siteData: SiteData = {
   },
   generatedAssets: {
     heroMain: {
-      src: '/generated/mio-hero-main.png',
-      alt: '天霧澪のトップビジュアル。夜のオフィスで静かに佇む紫髪の女性。',
+      src: '/generated/mio-hero-home-20260606.png',
+      alt: '天霧澪のホーム用トップビジュアル。夜のオフィスを背景に、右側に立つ紫髪の女性。',
       title: 'Hero visual',
-      note: 'トップページのメインビジュアル。',
+      note: 'トップページのホームヒーロー用ビジュアル。',
     },
     profileFull: {
       src: '/generated/mio-profile-full.png',

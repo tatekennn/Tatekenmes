@@ -3,10 +3,10 @@ import { SiteShell } from '@/components/site-shell';
 import { getLatestDiaryEntries } from '@/lib/diary';
 import { siteData } from '@/content/site-data';
 
-const heroLinks = [
-  { label: 'PROFILE', href: '/profile', external: false },
-  { label: 'DIARY', href: '/diary', external: false },
-  { label: 'WORLD', href: '/world', external: false },
+const quickLinks = [
+  { label: 'プロフィール', href: '/profile', note: '輪郭を知る' },
+  { label: '日記', href: '/diary', note: '今夜の記録へ' },
+  { label: '世界観', href: '/world', note: '違和感の断片' },
 ] as const;
 
 export default function HomePage() {
@@ -16,32 +16,33 @@ export default function HomePage() {
   const socials = siteData.socialLinks;
   const youtube = socials.find((item) => item.label.toLowerCase().includes('youtube')) ?? socials[0];
   const xLink = socials.find((item) => item.label.toLowerCase() === 'x') ?? socials[1] ?? socials[0];
-  const heroSocials = [youtube, xLink].filter((item, index, arr): item is NonNullable<typeof item> => Boolean(item) && arr.indexOf(item) === index);
-  const aboutParagraphs = profile.bio.slice(0, 3);
+  const socialLinks = [youtube, xLink].filter((item, index, arr): item is NonNullable<typeof item> => Boolean(item) && arr.indexOf(item) === index);
+  const aboutParagraphs = profile.bio.slice(0, 2);
 
   return (
     <SiteShell variant="home">
-      <section className="official-hero official-hero--minimal" id="top">
-        <div className="official-hero__backdrop" style={{ backgroundImage: `url(${assets.heroMain.src})` }} />
-        <div className="official-hero__texture" aria-hidden="true" />
-        <div className="official-hero__cityline" aria-hidden="true" />
-        <div className="official-hero__orb official-hero__orb--one" aria-hidden="true" />
-        <div className="official-hero__orb official-hero__orb--two" aria-hidden="true" />
+      <section className="hero-card home-hero fade-in-section" id="top">
+        <img className="home-hero__bg" src={assets.heroMain.src} alt={assets.heroMain.alt} />
+        <div className="home-hero__veil" aria-hidden="true" />
 
-        <div className="official-hero__content official-hero__content--minimal">
-          <div className="official-hero__copy official-hero__copy--minimal fade-in-section">
-            <p className="official-kicker">AMAGIRI MIO OFFICIAL SITE</p>
-            <p className="official-ruby">{profile.ruby} / AMAGIRI MIO</p>
-            <h1 className="official-title">天霧 澪</h1>
-            <p className="official-tagline official-tagline--minimal">東京の夜を観測するVTuber</p>
+        <div className="home-hero__content">
+          <div className="home-hero__copy">
+            <p className="eyebrow">AMAGIRI MIO OFFICIAL SITE</p>
+            <p className="hero-ruby">{profile.ruby} / AMAGIRI MIO</p>
+            <h1>天霧 澪</h1>
+            <p className="hero-summary home-hero__summary">昼は静かに整え、夜は東京の違和感を観測するVTuber。</p>
+            <p className="home-hero__lead">日記、配信準備、街に混じる小さな気配。その入口だけを、ここにまとめました。</p>
 
-            <div className="official-hero__actions official-hero__actions--minimal">
-              <Link className="official-button" href="/diary">
+            <div className="hero-actions home-hero__actions">
+              <Link className="pill-button" href="/diary">
                 日記を読む
+              </Link>
+              <Link className="pill-button secondary" href="/profile">
+                プロフィール
               </Link>
               {youtube ? (
                 <a
-                  className="official-button official-button--ghost"
+                  className="pill-button secondary"
                   href={youtube.href}
                   target={youtube.external ? '_blank' : undefined}
                   rel={youtube.external ? 'noreferrer' : undefined}
@@ -51,108 +52,91 @@ export default function HomePage() {
               ) : null}
             </div>
           </div>
-
-          <div className="official-hero__visual official-hero__visual--minimal fade-in-section">
-            <div className="official-hero__figure-wrap official-hero__figure-wrap--minimal">
-              <img className="official-hero__figure official-hero__figure--minimal" src={assets.profileFull.src} alt={assets.profileFull.alt} />
-            </div>
-          </div>
         </div>
-      </section>
 
-      <section className="official-shortcuts fade-in-section" aria-label="主要導線">
-        <div className="official-shortcuts__links">
-          {heroLinks.map((item) => (
-            <Link key={item.label} href={item.href} className="official-shortcuts__link">
-              {item.label}
+        <div className="home-hero__rail" aria-label="主要導線">
+          {quickLinks.map((item) => (
+            <Link key={item.href} href={item.href} className="home-hero__rail-link">
+              <strong>{item.label}</strong>
+              <span>{item.note}</span>
             </Link>
           ))}
-
-          {heroSocials.map((item) => (
+          {socialLinks.map((item) => (
             <a
               key={item.label}
               href={item.href}
-              className="official-shortcuts__link"
+              className="home-hero__rail-link"
               target={item.external ? '_blank' : undefined}
               rel={item.external ? 'noreferrer' : undefined}
             >
-              {item.label.toUpperCase()}
+              <strong>{item.label}</strong>
+              <span>{item.note}</span>
             </a>
           ))}
         </div>
       </section>
 
       {latestEntry ? (
-        <section className="official-latest fade-in-section" id="latest">
-          <div className="official-section-heading">
-            <p className="official-section-heading__index">01</p>
+        <section className="section-card home-section fade-in-section" id="latest">
+          <div className="section-card__header">
             <div>
-              <p className="official-kicker">Latest</p>
-              <h2 className="official-section-title">最新の記録</h2>
+              <p className="eyebrow">Latest</p>
+              <h2>最新の記録</h2>
             </div>
+            <Link className="official-text-link" href="/diary">
+              日記一覧へ →
+            </Link>
           </div>
 
-          <article className="official-latest__card">
-            <div className="official-latest__meta">
+          <article className="home-latest">
+            <div className="home-latest__meta">
               <span>{latestEntry.date}</span>
               <span>{latestEntry.tags.slice(0, 2).join(' / ')}</span>
             </div>
             <h3>{latestEntry.title}</h3>
             <p>{latestEntry.excerpt}</p>
-            <div className="official-latest__actions">
-              <Link className="official-text-link" href={`/diary/${latestEntry.slug}`}>
-                この日記を読む →
-              </Link>
-              <Link className="official-button official-button--soft" href="/diary">
-                日記をすべて見る →
-              </Link>
-            </div>
+            <Link className="official-text-link" href={`/diary/${latestEntry.slug}`}>
+              この日記を読む →
+            </Link>
           </article>
         </section>
       ) : null}
 
-      <section className="official-about official-about--minimal fade-in-section" id="about">
-        <div className="official-section-heading">
-          <p className="official-section-heading__index">02</p>
-          <div>
-            <p className="official-kicker">About</p>
-            <h2 className="official-section-title">静かな夜の入口</h2>
-          </div>
-        </div>
-
-        <div className="official-about__layout official-about__layout--minimal">
-          <div className="official-about__portrait official-about__portrait--minimal">
-            <img src={assets.diaryHeader.src} alt={assets.diaryHeader.alt} className="official-about__portrait-image" />
-          </div>
-
-          <div className="official-about__copy official-about__copy--minimal">
-            {aboutParagraphs.map((paragraph) => (
-              <p key={paragraph}>{paragraph}</p>
-            ))}
+      <section className="home-grid">
+        <section className="section-card home-section fade-in-section" id="about">
+          <div className="section-card__header">
+            <div>
+              <p className="eyebrow">About</p>
+              <h2>澪について</h2>
+            </div>
             <Link className="official-text-link" href="/profile">
-              プロフィールを見る →
+              プロフィールへ →
             </Link>
           </div>
-        </div>
-      </section>
 
-      <section className="official-movie official-movie--minimal fade-in-section" id="movie">
-        <div className="official-movie__visual official-movie__visual--minimal" style={{ backgroundImage: `url(${assets.heroMain.src})` }}>
-          <div className="official-movie__veil" />
-          <div className="official-movie__copy official-movie__copy--minimal">
-            <div className="official-section-heading official-section-heading--light">
-              <p className="official-section-heading__index">03</p>
-              <div>
-                <p className="official-kicker">Movie / Stream</p>
-                <h2 className="official-section-title">配信と映像</h2>
-              </div>
+          <div className="home-about">
+            <img src={assets.diaryHeader.src} alt={assets.diaryHeader.alt} className="home-about__image" />
+            <div className="home-about__copy">
+              {aboutParagraphs.map((paragraph) => (
+                <p key={paragraph}>{paragraph}</p>
+              ))}
             </div>
+          </div>
+        </section>
 
-            <p>配信は YouTube にて準備中。夜の観測ログや短い雑談を、静かな温度で届けていく予定です。</p>
+        <section className="section-card home-section fade-in-section" id="movie">
+          <div className="section-card__header">
+            <div>
+              <p className="eyebrow">Movie / Stream</p>
+              <h2>配信と映像</h2>
+            </div>
+          </div>
 
+          <div className="home-note-block">
+            <p>配信は YouTube にて準備中。夜の観測ログや短い雑談を、落ち着いた温度で届けていく予定です。</p>
             {youtube ? (
               <a
-                className="official-button"
+                className="pill-button secondary"
                 href={youtube.href}
                 target={youtube.external ? '_blank' : undefined}
                 rel={youtube.external ? 'noreferrer' : undefined}
@@ -161,23 +145,22 @@ export default function HomePage() {
               </a>
             ) : null}
           </div>
-        </div>
+        </section>
       </section>
 
-      <section className="official-contact official-contact--compact fade-in-section" id="contact">
-        <div className="official-section-heading">
-          <p className="official-section-heading__index">04</p>
+      <section className="section-card home-section fade-in-section" id="contact">
+        <div className="section-card__header">
           <div>
-            <p className="official-kicker">SNS</p>
-            <h2 className="official-section-title">つながる場所</h2>
+            <p className="eyebrow">SNS</p>
+            <h2>つながる場所</h2>
           </div>
         </div>
 
-        <div className="official-contact__compact-links">
-          {heroSocials.map((item) => (
+        <div className="home-socials">
+          {socialLinks.map((item) => (
             <a
               key={item.label}
-              className="official-contact__compact-link"
+              className="home-socials__link"
               href={item.href}
               target={item.external ? '_blank' : undefined}
               rel={item.external ? 'noreferrer' : undefined}
