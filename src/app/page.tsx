@@ -13,9 +13,9 @@ export default function HomePage() {
   const aboutParagraphs = profile.bio.slice(0, 2);
   const quickFacts = siteData.quickFacts.slice(0, 3);
   const streamNotes = [
-    'Juice=Juiceの最新ニュースから過去の名場面まで、毎日書いています',
+    'プラトニックとプラネットから入って、他の曲も少しずつ聴いています',
     'X では短い反応やメモ、日記ではもう少し長めの話を書いています',
-    '推しのこと、ちゃんと残しておきたいという気持ちで続けています',
+    '知らない曲に出会うたびに「なんで今まで聴かなかった」と思います',
   ] as const;
 
   return (
@@ -29,8 +29,8 @@ export default function HomePage() {
             <div className="home-hero-panel__copy">
               <p className="eyebrow">Juice=Juice 日報</p>
               <p className="home-hero-panel__ruby">{profile.ruby} / AMAGIRI MIO</p>
-              <h1>Juice=Juiceのことを、毎日少しずつ。</h1>
-              <p className="home-hero-panel__summary">天霧澪のオフィシャルサイトです。Juice=Juiceの最新ニュースから過去の名場面まで、日記としてまとめています。</p>
+              <h1>最近Juice=Juiceにハマりました。</h1>
+              <p className="home-hero-panel__summary">プラトニックとプラネットから入って、他の曲も少しずつ聴いています。知らない曲に出会うたびに、ここに書いています。</p>
 
               <div className="home-hero-panel__actions">
                 <Link className="pill-button" href="/diary">
@@ -106,9 +106,9 @@ export default function HomePage() {
       <section className="home-stream-plain fade-in-section" id="movie">
         <div className="home-stream-plain__copy">
           <p className="eyebrow">Diary / Memo</p>
-          <p className="home-ambient-label">Juice=Juice / 日記 / メモ</p>
-          <h2>Juice=Juice日報</h2>
-          <p>Juice=Juiceの最新ニュースから過去の名場面まで、毎日少しずつ記録しています。</p>
+          <p className="home-ambient-label">Juice=Juice / 発見 / メモ</p>
+          <h2>Juice=Juiceのことを、少しずつ</h2>
+          <p>最近ハマったばかりで、知らない曲がまだたくさんあります。ひとつ見つけるたびに、ここに書いていきます。</p>
 
           <ul className="home-stream-plain__list">
             {streamNotes.map((item) => (
@@ -132,16 +132,16 @@ export default function HomePage() {
 
         <div className="home-stream-plain__visual" aria-hidden="true">
           <p>JUICE=JUICE</p>
-          <span>最新ニュース / 過去の名場面</span>
-          <span>楽曲への思い / MVの発見</span>
-          <span>DIARY 推しのこと、ちゃんと残す</span>
+          <span>プラトニック / プラネット</span>
+          <span>知らない曲との出会い</span>
+          <span>DIARY ひとつずつ記録していく</span>
         </div>
       </section>
 
       <section className="home-connect-line fade-in-section" id="contact">
         <div>
           <p className="eyebrow">Connect</p>
-          <p className="home-ambient-label">X / Juice=Juice日報</p>
+          <p className="home-ambient-label">X / Juice=Juice日記</p>
           <h2>更新先</h2>
         </div>
 

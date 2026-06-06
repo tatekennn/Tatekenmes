@@ -67,7 +67,7 @@ export const siteData: SiteData = {
   metadata: {
     title: '天霧 澪 — Juice=Juice 日報',
     description:
-      'Juice=Juiceを静かに追い続けている天霧澪のオフィシャルサイト。日記とメモをまとめています。',
+      '最近Juice=Juiceにハマった天霧澪の日記サイト。プラトニックとプラネットから入って、他の曲も聴き始めています。',
     locale: 'ja-JP',
   },
   generatedAssets: {
@@ -106,21 +106,21 @@ export const siteData: SiteData = {
     name: '天霧 澪',
     ruby: 'あまぎり みお',
     age: 26,
-    job: 'Juice=Juice を追い続ける日記VTuber',
+    job: 'Juice=Juiceに最近ハマった日記VTuber',
     location: '東京',
-    tone: 'calm, soft-spoken, but passionate about Juice=Juice',
-    concept: 'Juice=Juice専門の日記を書くVTuber。最新ニュースから歴史の深掘りまで、毎日Juice=Juiceについて記録している。',
+    tone: 'calm, curious, still discovering',
+    concept: '最近Juice=JuiceにハマったばかりのVTuber。プラトニックとプラネットから入って、他の曲も少しずつ聴いています。その発見の過程を日記に書いています。',
     worldRatio: {
-      reality: 90,
-      occult: 10,
+      reality: 95,
+      occult: 5,
     },
     bio: [
-      '天霧澪です。Juice=Juiceのことが好きで、日々の出来事や思い出を日記にまとめています。',
-      '最新のニュースも、昔のライブの記憶も、曲への思いも、全部ここに置いていきます。',
-      'Juice=Juiceのことが好きな人と、ちょっと気になった人のために書いているので、ゆっくり見てください。',
+      '天霧澪です。最近Juice=Juiceにハマりました。きっかけは「プラトニック」と「プラネット」。この二曲に惹かれて、他の曲も聴き始めています。',
+      'まだライブには行ったことがなくて、まずは曲とMVを知るところから始めています。知らない曲に出会うたびに「なんで今まで聴かなかったんだろう」と思います。',
+      'Juice=Juiceのことをもっと知りたい。そう思って始めた日記です。同じ気持ちの人と、少しでも共有できたらうれしいです。',
     ],
   },
-  featuredQuote: 'Juice=Juiceのこと、ちゃんと残しておきたい。',
+  featuredQuote: 'プラトニックに惹かれて、ここから先に進んでいる。',
   quickFacts: [
     {
       label: '呼び名',
@@ -131,12 +131,12 @@ export const siteData: SiteData = {
       value: 'Juice=Juice日記 / X',
     },
     {
-      label: '推し',
-      value: 'Juice=Juice',
+      label: 'きっかけの曲',
+      value: 'プラトニック / プラネット',
     },
     {
-      label: '好きなもの',
-      value: 'Juice=Juice、ライブ映像、グッズ整理',
+      label: '現在',
+      value: '他の曲を少しずつ聴いている段階',
     },
   ],
   navigation: [
@@ -158,20 +158,12 @@ export const siteData: SiteData = {
   ],
   tagDescriptions: [
     {
-      tag: 'ライブ',
-      description: 'ライブに行った記録や、セットリストへの感想。',
-    },
-    {
       tag: '楽曲',
-      description: '曲への思い、歌詞の解釈、リピート記録。',
-    },
-    {
-      tag: 'メンバー',
-      description: 'メンバーのパフォーマンス、衣装、変化へのメモ。',
+      description: '曲への思い、歌詞の解釈、初めて聴いたときの記憶。',
     },
     {
       tag: 'MV',
-      description: 'MVの発見、映像の细节、衣装の話。',
+      description: 'MVの発見、映像の细节、初めて見たときの印象。',
     },
     {
       tag: 'ニュース',
@@ -182,12 +174,16 @@ export const siteData: SiteData = {
       description: 'Juice=Juiceと暮らす日常の断片。',
     },
     {
-      tag: '歴史',
-      description: '過去の名場面、結成から現在までの流れ。',
+      tag: '発見',
+      description: '知らない曲に出会ったときの記録。',
     },
     {
       tag: 'グッズ',
-      description: '手に入れたグッズ、保管方法、思い出。',
+      description: '手に入れたグッズ、欲しいもの、思い出。',
+    },
+    {
+      tag: 'メンバー',
+      description: 'メンバーのパフォーマンス、衣装、気になるところ。',
     },
   ],
   socialLinks: [

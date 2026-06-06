@@ -17,19 +17,19 @@ export default function ProfilePage() {
     { label: '活動', value: profile.job },
     { label: '拠点', value: `${profile.location}` },
   ];
-  const traits = ['Juice=Juice推し', '落ち着いている', '静かに熱い', '日記が好き', 'マイペース'];
+  const traits = ['最近ハマった', 'プラトニック派', '静かに熱い', '発見が好き', 'マイペース'];
   const timeline = [
     {
       title: '日記',
-      body: 'Juice=Juiceの最新ニュースから過去の名場面まで、毎日少しずつ日記にまとめています。曲への思い、ライブの記憶、メンバーの変化。全部ここに置いていきます。',
+      body: '最近Juice=Juiceにハマったばかりで、知らない曲がまだたくさんあります。ひとつ見つけるたびに、ここに書いています。',
     },
     {
       title: 'X',
-      body: '短い反応やメモはXに書いています。新曲の感想、ライブ前日のテンション、ちょっとした発見。日常のJuice=Juiceをつぶやいています。',
+      body: '短い反応やメモはXに書いています。新曲の感想、初めて聴いたときの印象、ちょっとした発見。',
     },
     {
       title: 'このサイト',
-      body: 'Juice=Juiceのことを好きになった人、ちょっと気になった人のために作っています。ここが入口になってもらえたらうれしいです。',
+      body: 'Juice=Juiceに興味を持った人のために作っています。ここが入口になってもらえたらうれしいです。',
     },
   ];
 
@@ -55,9 +55,9 @@ export default function ProfilePage() {
           <div className="talent-hero__copy-column">
             <section className="talent-logo-panel">
               <p className="eyebrow">Profile</p>
-              <p className="talent-logo-panel__ruby">AMAGIRI MIO / JUICE=JUICE DIARY</p>
+              <p className="talent-logo-panel__ruby">AMAGIRI MIO / JUICE=JUICE NEWCOMER</p>
               <h1>{profile.name}</h1>
-              <p className="talent-logo-panel__tagline">Juice=Juiceのことを、静かに追い続けているタイプです。</p>
+              <p className="talent-logo-panel__tagline">最近Juice=Juiceにハマりました。まだ知らない曲だらけです。</p>
               <p className="talent-logo-panel__summary">{profile.bio[1]}</p>
               <div className="talent-logo-panel__chips">
                 {traits.slice(0, 4).map((trait) => (
