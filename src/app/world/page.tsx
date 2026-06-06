@@ -11,15 +11,15 @@ export default function WorldPage() {
   const rules = [
     {
       title: '違和感は説明しすぎない',
-      body: '澪が書き留めるのは、誰にでも怪異だと断言できるものではなく、見過ごせる程度の小さな綻びだけ。',
+      body: '私が書き留めるのは、誰にでも怪異だと断言できるものではなくて、見過ごせる程度の小さな綻びだけです。',
     },
     {
       title: '昼は現実の重さを優先する',
-      body: '会議、申請、備品、通勤。日記の中心は社会人の生活であり、異界はその端ににじむ程度で留まる。',
+      body: '会議や申請や備品や通勤みたいな、ちゃんと現実の側にあるものを先に見ています。違和感は、その端ににじむくらいで十分だと思っています。',
     },
     {
       title: '観測は救済ではなく記録',
-      body: '何かを退治したり解決したりするのではなく、言葉にして忘れないための行為として扱われる。',
+      body: '何かを退治したり解決したりするためではなくて、言葉にして忘れないために書いています。',
     },
   ];
   const glossary = [
@@ -34,7 +34,7 @@ export default function WorldPage() {
         <div className="diary-hero__copy">
           <p className="eyebrow">世界観</p>
           <h1>観測メモ</h1>
-          <p className="hero-summary">この日記を取り巻く、境界線の薄い世界のための小さなメモ。</p>
+          <p className="hero-summary">私がふだん見ている違和感や、そのまわりの小さなルールを、ここにまとめています。</p>
         </div>
         <img className="diary-hero__image" src={assets.diaryDecor.src} alt={assets.diaryDecor.alt} />
       </section>

@@ -18,9 +18,9 @@ export default function ProfilePage() {
   ];
   const traits = ['静か', '観察的', '少し詩的', '感情を大きく出さない', '仕事は丁寧'];
   const timeline = [
-    { title: '平日の昼', body: '都内のIT企業で、総務・業務管理寄りの事務仕事をこなす。会議室、備品、申請、細かな数字の確認が主な領域。' },
-    { title: '退勤後', body: '寄り道をせず帰る日もあるが、駅前やガラス越しの街に違和感が残る夜は、少しだけ足を止めて観測する。' },
-    { title: '記録する理由', body: '大きな事件のためではなく、見過ごして消えていく小さなほつれを、言葉にして留めておくため。' },
+    { title: '平日の昼', body: '平日は都内のIT企業で、総務や業務管理に近い事務仕事をしています。会議室や備品や申請や、細かな数字がちゃんと流れるように見ていることが多いです。' },
+    { title: '退勤後', body: 'まっすぐ帰る日もあります。でも、駅前やガラス越しの街に違和感が残る夜は、少しだけ足を止めて見ています。' },
+    { title: '記録する理由', body: '大きな事件のためではなくて、見過ごして消えていく小さなほつれを、忘れないうちに言葉へ置いておきたいからです。' },
   ];
 
   return (
@@ -47,7 +47,7 @@ export default function ProfilePage() {
         </SectionCard>
 
         <section className="section-card profile-figure-card" aria-label="天霧澪の立ち絵">
-          <p className="eyebrow">Selected visual</p>
+          <p className="eyebrow">Visual</p>
           <img className="profile-figure-card__image" src={assets.profileFull.src} alt={assets.profileFull.alt} />
         </section>
       </section>

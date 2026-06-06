@@ -73,7 +73,7 @@ export const siteData: SiteData = {
   metadata: {
     title: '天霧 澪 オフィシャルサイト',
     description:
-      '天霧 澪のVTuber公式サイト。静かな東京の夜と、日記・配信・世界観への入口をまとめた。',
+      '昼の仕事のことや、夜に見つけた小さな違和感を、私の言葉で置いていくためのサイトです。',
     locale: 'ja-JP',
   },
   generatedAssets: {

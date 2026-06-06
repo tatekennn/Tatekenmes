@@ -87,7 +87,7 @@ export function SiteShell({ children, variant = 'default' }: SiteShellProps) {
         <div className="page-stack">{children}</div>
 
         <footer className="site-footer">
-          <p>昼の輪郭と、夜にだけ残る気配をやわらかく束ねた、天霧澪のオフィシャルサイト。</p>
+          <p>昼の仕事のことも、夜に見つけた小さな違和感も、ここに少しずつ置いていきます。</p>
           <div className="site-footer__links">
             <Link href="/diary">日記</Link>
             <Link href="/profile">プロフィール</Link>

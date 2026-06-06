@@ -14,9 +14,9 @@ export default function HomePage() {
   const aboutParagraphs = profile.bio.slice(0, 2);
   const quickFacts = siteData.quickFacts.slice(0, 3);
   const streamNotes = [
-    '初回は短い雑談と観測ログ寄りで開始予定',
-    'X は短い観測メモ、日記は長い記録として整理',
-    '配信アーカイブも“夜の観測記録”として残す想定',
+    '最初は、短い雑談と観測ログみたいな配信から始めるつもりです',
+    'X には短い観測メモを、日記には少し長めの記録を置いています',
+    '配信アーカイブも、夜の観測記録みたいに残していけたらと思っています',
   ] as const;
 
   return (
@@ -30,8 +30,8 @@ export default function HomePage() {
             <p className="home-kv__eyebrow">AMAGIRI MIO / OFFICIAL SITE</p>
             <p className="home-kv__ruby">{profile.ruby} / AMAGIRI MIO</p>
             <h1>天霧 澪</h1>
-            <p className="home-kv__summary">昼は静かに整え、夜は東京の違和感を観測するVTuber。</p>
-            <p className="home-kv__lead">仕事帰りの光、ガラス越しのズレ、言葉にしきれない小さな気配。配信、日記、街の観測記録を、この場所にまとめています。</p>
+            <p className="home-kv__summary">昼は静かに働いて、夜は東京の違和感を少しだけ見ています。</p>
+            <p className="home-kv__lead">仕事帰りの光や、ガラス越しにずれた景色や、言葉にしきれない小さな気配。私が見つけたものを、配信と日記に少しずつ置いていくための場所です。</p>
 
             <div className="home-kv__actions">
               <Link className="pill-button" href="/diary">
@@ -80,7 +80,7 @@ export default function HomePage() {
         <div className="home-section-plain__copy">
           <p className="eyebrow">About</p>
           <p className="home-ambient-label">Observation archive / daylight memo</p>
-          <h2>昼の輪郭と、夜の観測</h2>
+          <h2>私の昼と、夜のこと</h2>
           {aboutParagraphs.map((paragraph) => (
             <p key={paragraph}>{paragraph}</p>
           ))}
@@ -111,8 +111,8 @@ export default function HomePage() {
         <div className="home-stream-plain__copy">
           <p className="eyebrow">Movie / Stream</p>
           <p className="home-ambient-label">Tonight&apos;s route / stream entry / soft records</p>
-          <h2>配信と映像の入口</h2>
-          <p>配信は大きく騒ぐ場というより、夜の温度を少しだけ拾うための入口として整備中です。短い雑談、観測ログ、アーカイブの導線を静かに揃えています。</p>
+          <h2>配信や記録の置き場所</h2>
+          <p>配信は、大きく騒ぐためというより、夜の温度を少しだけ拾って話すための場所にしたいと思っています。短い雑談や観測ログみたいなものを、無理のない形で残していくつもりです。</p>
 
           <ul className="home-stream-plain__list">
             {streamNotes.map((item) => (
@@ -155,7 +155,7 @@ export default function HomePage() {
         <div>
           <p className="eyebrow">Connect</p>
           <p className="home-ambient-label">Signals / updates / small notices</p>
-          <h2>更新の気配を追う場所</h2>
+          <h2>いつもの更新先</h2>
         </div>
 
         <div className="home-connect-line__links">
