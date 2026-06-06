@@ -79,6 +79,7 @@ export default function HomePage() {
       <section className="home-section-plain home-section-plain--about fade-in-section" id="about">
         <div className="home-section-plain__copy">
           <p className="eyebrow">About</p>
+          <p className="home-ambient-label">Observation archive / daylight memo</p>
           <h2>昼の輪郭と、夜の観測</h2>
           {aboutParagraphs.map((paragraph) => (
             <p key={paragraph}>{paragraph}</p>
@@ -99,6 +100,9 @@ export default function HomePage() {
         </div>
 
         <div className="home-section-plain__visual">
+          <span className="home-section-plain__stamp" aria-hidden="true">
+            silent city archive
+          </span>
           <img src={assets.diaryHeader.src} alt={assets.diaryHeader.alt} className="home-section-plain__image" />
         </div>
       </section>
@@ -106,6 +110,7 @@ export default function HomePage() {
       <section className="home-stream-plain fade-in-section" id="movie">
         <div className="home-stream-plain__copy">
           <p className="eyebrow">Movie / Stream</p>
+          <p className="home-ambient-label">Tonight&apos;s route / stream entry / soft records</p>
           <h2>配信と映像の入口</h2>
           <p>配信は大きく騒ぐ場というより、夜の温度を少しだけ拾うための入口として整備中です。短い雑談、観測ログ、アーカイブの導線を静かに揃えています。</p>
 
@@ -149,6 +154,7 @@ export default function HomePage() {
       <section className="home-connect-line fade-in-section" id="contact">
         <div>
           <p className="eyebrow">Connect</p>
+          <p className="home-ambient-label">Signals / updates / small notices</p>
           <h2>更新の気配を追う場所</h2>
         </div>
 
@@ -165,6 +171,13 @@ export default function HomePage() {
               <span>{item.note}</span>
             </a>
           ))}
+        </div>
+
+        <div className="home-ending-mark" aria-hidden="true">
+          <span />
+          <span />
+          <span />
+          <span />
         </div>
       </section>
     </SiteShell>
