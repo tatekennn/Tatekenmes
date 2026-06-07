@@ -96,6 +96,23 @@ export default function HomePage() {
         </section>
       ) : null}
 
+      <section className="mio-guide-panel fade-in-section" aria-labelledby="guide-title">
+        <div className="mio-guide-panel__visual" aria-hidden="true">
+          <img src="/generated/mio-chibi-guide-20260606.png" alt="" />
+        </div>
+        <div className="mio-guide-panel__copy">
+          <p className="eyebrow">Guide</p>
+          <h2 id="guide-title">はじめて来た人へ</h2>
+          <p>
+            まずは最新の日記かプロフィールからどうぞ。Juice=Juiceを知っていく途中の感想を、澪のペースでまとめています。
+          </p>
+          <div className="mio-guide-panel__actions">
+            <Link className="pill-button" href="/diary">日記を読む</Link>
+            <Link className="official-text-link" href="/profile">澪について →</Link>
+          </div>
+        </div>
+      </section>
+
       <section className="follow-v2 fade-in-section" id="contact" aria-labelledby="follow-title">
         <div className="follow-v2__inner">
           <div>

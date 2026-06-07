@@ -44,7 +44,7 @@ export default function ProfilePage() {
           <div className="talent-hero__figure-column">
             <div className="talent-hero__figure-card">
               <div className="talent-hero__figure-frame" aria-hidden="true" />
-              <img className="talent-hero__figure-image" src={assets.profileFull.src} alt={assets.profileFull.alt} />
+              <img className="talent-hero__figure-image" src="/generated/mio-profile-full-cutout.png" alt={assets.profileFull.alt} />
               <div className="talent-hero__figure-note">
                 <strong>{profile.name}</strong>
                 <span>Juice=Juiceのことを、自分のペースで記録しています。</span>
