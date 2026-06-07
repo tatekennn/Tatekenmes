@@ -7419,3 +7419,11 @@ h3,
     height: 500px;
   }
 }
+
+/* Remove the inner decorative frame: it creates a stray white rounded line
+   behind the profile note on desktop. */
+.talent-hero__figure-frame,
+.talent-hero__figure-frame::before,
+.talent-hero__figure-frame::after {
+  display: none !important;
+}
