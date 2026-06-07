@@ -20,128 +20,83 @@ export default function ProfilePage() {
   const traits = ['最近ハマった', 'プラトニック・プラネット派', '静かに熱い', '発見が好き', 'マイペース'];
   const timeline = [
     {
-      title: '日記',
-      body: '最近Juice=Juiceにハマったばかりで、知らない曲がまだたくさんあります。ひとつ見つけるたびに、ここに書いています。',
+      title: 'Diary',
+      body: 'まだ知らない曲に出会うたび、感じたことを日記に残しています。',
+      href: '/diary',
     },
     {
-      title: 'X',
-      body: '短い反応やメモはXに書いています。新曲の感想、初めて聴いたときの印象、ちょっとした発見。',
+      title: 'Latest',
+      body: latestEntry ? latestEntry.title : '新しい記録が入ると、ここからも読めます。',
+      href: latestEntry ? `/diary/${latestEntry.slug}` : '/diary',
     },
     {
-      title: 'このサイト',
-      body: 'Juice=Juiceに興味を持った人のために作っています。ここが入口になってもらえたらうれしいです。',
+      title: 'Home',
+      body: 'トップでは日記、プロフィール、更新先をまとめています。',
+      href: '/',
     },
   ];
 
   return (
     <SiteShell variant="home">
-      <section className="talent-hero">
-        <div className="talent-hero__backdrop" style={{ backgroundImage: `url(${assets.profileFull.src})` }} />
-        <div className="talent-hero__glow talent-hero__glow--one" aria-hidden="true" />
-        <div className="talent-hero__glow talent-hero__glow--two" aria-hidden="true" />
-
-        <div className="talent-hero__grid">
-          <div className="talent-hero__figure-column">
-            <div className="talent-hero__figure-card">
-              <div className="talent-hero__figure-frame" aria-hidden="true" />
-              <img className="talent-hero__figure-image" src={assets.profileFull.src} alt={assets.profileFull.alt} />
-              <div className="talent-hero__figure-note">
-                <strong>{profile.name}</strong>
-                <span>Juice=Juiceのことを、自分のペースで記録しています。</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="talent-hero__copy-column">
-            <section className="talent-logo-panel">
-              <p className="eyebrow">Profile</p>
-              <p className="talent-logo-panel__ruby">AMAGIRI MIO / JUICE=JUICE NEWCOMER</p>
-              <h1>{profile.name}</h1>
-              <p className="talent-logo-panel__tagline">最近Juice=Juiceにハマりました。まだ知らない曲だらけです。</p>
-              <p className="talent-logo-panel__summary">{profile.bio[1]}</p>
-              <div className="talent-logo-panel__chips">
-                {traits.slice(0, 4).map((trait) => (
-                  <span key={trait}>{trait}</span>
-                ))}
-              </div>
-              <p className="talent-logo-panel__quote">知らない曲に出会うたびに、ここに書いていきたいです。</p>
-            </section>
-
-            <section className="talent-meta-panel">
-              <div className="talent-meta-panel__lead">
-                <h2>基本情報</h2>
-                <p>まずは、どんな感じで活動しているかが自然に伝わるくらいの情報だけ置いています。</p>
-              </div>
-              <dl className="talent-meta-grid">
-                {facts.map((fact) => (
-                  <div key={fact.label} className="talent-meta-grid__item">
-                    <dt>{fact.label}</dt>
-                    <dd>{fact.value}</dd>
-                  </div>
-                ))}
-              </dl>
-            </section>
-          </div>
+      <section className="pop-profile-hero" aria-label="天霧澪 プロフィール">
+        <div className="pop-profile-hero__decor" aria-hidden="true">
+          <span>PROFILE</span>
+          <i>✦</i>
+          <b>♪</b>
         </div>
-
-        <div className="hero-link-strip">
-          <Link className="hero-link-card" href="/diary">
-            <p className="eyebrow">Diary</p>
-            <div>
-              <strong>日記を読む</strong>
-              <p>Juice=Juiceのことを毎日少しずつまとめています。</p>
-            </div>
-            <span>→</span>
-          </Link>
-          {latestEntry ? (
-            <Link className="hero-link-card" href={`/diary/${latestEntry.slug}`}>
-              <p className="eyebrow">Latest</p>
-              <div>
-                <strong>{latestEntry.title}</strong>
-                <p>いちばん新しい更新はこちらから読めます。</p>
-              </div>
-              <span>→</span>
-            </Link>
-          ) : null}
-          <Link className="hero-link-card" href="/">
-            <p className="eyebrow">Home</p>
-            <div>
-              <strong>ホームへ戻る</strong>
-              <p>日記やプロフィールをまとめた場所はこちらです。</p>
-            </div>
-            <span>→</span>
-          </Link>
+        <div className="pop-profile-hero__figure" aria-hidden="true">
+          <img src={assets.profileFull.src} alt="" />
+        </div>
+        <div className="pop-profile-hero__copy">
+          <p className="pop-home-hero__site">AMAGIRI MIO PROFILE</p>
+          <p className="eyebrow">Profile</p>
+          <h1>{profile.name}</h1>
+          <p className="pop-profile-hero__ruby">{profile.ruby}</p>
+          <p className="pop-profile-hero__tagline">最近Juice=Juiceにハマりました。まだ知らない曲だらけです。</p>
+          <p className="pop-profile-hero__summary">知らない曲に出会うたびに、ここに書いていきたいです。まずは曲とMVを知るところから、少しずつ。</p>
+          <div className="pop-profile-hero__actions">
+            <Link className="pill-button" href="/diary">日記を読む</Link>
+            <Link className="official-text-link" href="/">Home →</Link>
+          </div>
         </div>
       </section>
 
-      <section className="archive-landing">
-        <section className="archive-landing__panel">
-          <div className="archive-landing__intro">
-            <p className="eyebrow">Activity</p>
-            <h2>この場所について</h2>
-          </div>
-          <div className="stack-list">
-            {timeline.map((item) => (
-              <article key={item.title} className="stack-item">
-                <h3>{item.title}</h3>
-                <p>{item.body}</p>
-              </article>
-            ))}
-          </div>
-        </section>
+      <section className="pop-profile-facts" aria-labelledby="profile-facts-title">
+        <div className="pop-section-heading pop-section-heading--news">
+          <span aria-hidden="true">ABOUT</span>
+          <p className="eyebrow">About</p>
+          <h2 id="profile-facts-title">澪について</h2>
+        </div>
+        <dl className="pop-profile-facts__grid">
+          {facts.map((fact) => (
+            <div key={fact.label}>
+              <dt>{fact.label}</dt>
+              <dd>{fact.value}</dd>
+            </div>
+          ))}
+        </dl>
+      </section>
 
-        <section className="archive-landing__panel archive-landing__panel--profile-light">
-          <div className="archive-landing__intro">
-            <p className="eyebrow">Mood</p>
-            <h2>ふだんの感じ</h2>
-            <p>Juice=Juiceのことになると、つい真剣になってしまいます。でも基本はのんびりした感じです。</p>
-          </div>
-          <ul className="tag-list">
-            {traits.map((trait) => (
-              <li key={trait}>{trait}</li>
-            ))}
-          </ul>
-        </section>
+      <section className="pop-profile-route" aria-labelledby="profile-route-title">
+        <div>
+          <p className="eyebrow">Route</p>
+          <h2 id="profile-route-title">ここから読めます</h2>
+          <p>プロフィールで気になったら、日記へ。日々の発見のほうが、たぶんいちばん澪らしいです。</p>
+        </div>
+        <div className="pop-profile-route__list">
+          {timeline.map((item) => (
+            <Link key={item.title} href={item.href}>
+              <span>{item.title}</span>
+              <strong>{item.body}</strong>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      <section className="pop-profile-tags" aria-label="天霧澪の雰囲気">
+        {traits.map((trait) => (
+          <span key={trait}>{trait}</span>
+        ))}
       </section>
     </SiteShell>
   );
