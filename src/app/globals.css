@@ -5591,6 +5591,26 @@ h3,
   }
 }
 
+/* ===== スマホ横画面: 画像位置調整 ===== */
+@media (max-width: 767px) and (orientation: landscape) {
+  .hero-v2__image {
+    object-position: 45% center;
+  }
+
+  .hero-v2__copy {
+    max-width: 45%;
+    padding: 0.85rem;
+  }
+
+  .hero-v2__copy h1 {
+    font-size: clamp(1.4rem, 5vw, 1.8rem);
+  }
+
+  .hero-v2__tagline {
+    font-size: 0.75rem;
+  }
+}
+
 /* ===== PC版レイアウト ===== */
 @media (min-width: 768px) {
   .hero-v2 {
