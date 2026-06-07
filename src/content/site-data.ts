@@ -78,10 +78,10 @@ export const siteData: SiteData = {
       note: 'トップページのホームヒーロー用ビジュアル。',
     },
     profileFull: {
-      src: '/generated/mio-profile-full.png',
-      alt: '天霧澪の全身立ち絵。紫髪と落ち着いた表情、オフィスワーカーを思わせる衣装。',
+      src: '/generated/mio-profile-scene-20260607.png',
+      alt: '天霧澪のプロフィール用キービジュアル。夜景の見える室内で、紫髪の女性が静かに立っている。',
       title: 'Profile full',
-      note: 'プロフィール詳細ページ用の立ち絵。',
+      note: 'プロフィール詳細ページ用の背景一体型キービジュアル。',
     },
     profileIcon: {
       src: '/generated/mio-profile-icon.png',
