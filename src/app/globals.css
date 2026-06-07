@@ -9138,3 +9138,48 @@ h3,
     display: flex;
   }
 }
+
+/* Emergency mobile header correction: moderate logo size and force-hide desktop nav. */
+@media (max-width: 767px) {
+  .site-shell--home .site-nav--desktop,
+  .site-shell--home .site-header__cluster > .site-nav--desktop {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+
+  .site-shell--home .site-header {
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    gap: 0.65rem !important;
+    margin-bottom: 0.45rem !important;
+    padding: 0.54rem 0.38rem 0.42rem 0.08rem !important;
+  }
+
+  .site-shell--home .site-brand__logo {
+    width: clamp(9.4rem, 44vw, 11.2rem) !important;
+    max-height: 4.2rem !important;
+    min-width: 0 !important;
+  }
+
+  .site-shell--home .site-menu--mobile {
+    display: flex !important;
+  }
+
+  .site-shell--home .site-menu__summary {
+    width: 2.9rem !important;
+    height: 2.9rem !important;
+  }
+
+  .site-shell--home .site-menu__summary span[aria-hidden='true'],
+  .site-shell--home .site-menu__summary span[aria-hidden='true']::before,
+  .site-shell--home .site-menu__summary span[aria-hidden='true']::after {
+    width: 2rem !important;
+    height: 0.16rem !important;
+  }
+}
+
+@media (max-width: 390px) {
+  .site-shell--home .site-brand__logo {
+    width: clamp(8.8rem, 42vw, 10.4rem) !important;
+  }
+}
