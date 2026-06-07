@@ -115,7 +115,7 @@ export default function HomePage() {
 
       <section className="pop-guide-band fade-in-section" aria-labelledby="guide-title">
         <div className="pop-guide-band__visual" aria-hidden="true">
-          <img src="/generated/mio-profile-full-cutout.png" alt="" />
+          <img src="/generated/mio-chibi-guide-20260606.png" alt="" />
         </div>
         <div className="pop-guide-band__copy">
           <p className="eyebrow">Entry guide</p>
