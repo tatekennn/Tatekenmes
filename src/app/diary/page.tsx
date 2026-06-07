@@ -91,7 +91,7 @@ export default function DiaryIndexPage() {
 
       <section className="pop-guide-band pop-guide-band--subpage" aria-labelledby="diary-guide-title">
         <div className="pop-guide-band__visual" aria-hidden="true">
-          <img src="/generated/mio-chibi-guide-20260606.png" alt="" />
+          <img src="/generated/mio-profile-full-cutout.png" alt="" />
         </div>
         <div className="pop-guide-band__copy">
           <p className="eyebrow">Short form</p>

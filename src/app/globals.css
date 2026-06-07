@@ -7920,8 +7920,10 @@ h3,
 }
 
 .pop-guide-band__visual img {
-  width: min(140px, 30vw);
+  width: auto;
+  height: clamp(9rem, 18vw, 13rem);
   display: block;
+  object-fit: contain;
   filter: drop-shadow(0 18px 30px rgba(35, 20, 70, 0.24));
   animation: mioBob 4.8s ease-in-out infinite;
 }
