@@ -30,7 +30,6 @@ export function SiteShell({ children, variant = 'default' }: SiteShellProps) {
   const name = siteData.profile.name;
   const subtitle = variant === 'home' ? 'Juice=Juice 日記' : 'Juice=Juice / diary / profile';
   const socialLinks = Array.isArray(siteData.socialLinks) ? siteData.socialLinks.slice(0, 2) : [];
-  const showChromeSocials = variant !== 'home';
   const showHeaderSocials = variant !== 'home';
 
   return (
@@ -87,12 +86,16 @@ export function SiteShell({ children, variant = 'default' }: SiteShellProps) {
         <div className="page-stack">{children}</div>
 
         <footer className="site-footer">
-          <p>最近Juice=Juiceにハマりました。知らない曲をひとつずつ見つけています。</p>
+          <div className="site-footer__brand">
+            <strong>{name}</strong>
+            <p>Juice=Juiceを知っていく途中の記録を、ここにまとめています。</p>
+          </div>
           <div className="site-footer__links">
+            <Link href="/">ホーム</Link>
             <Link href="/diary">日記</Link>
             <Link href="/profile">プロフィール</Link>
           </div>
-          {showChromeSocials && socialLinks.length ? (
+          {socialLinks.length ? (
             <div className="site-footer__social" aria-label="SNSリンク">
               {socialLinks.map((item) => (
                 <a
@@ -101,7 +104,7 @@ export function SiteShell({ children, variant = 'default' }: SiteShellProps) {
                   target={item.external ? '_blank' : undefined}
                   rel={item.external ? 'noreferrer' : undefined}
                 >
-                  {item.icon} {item.label}
+                  {item.label}
                 </a>
               ))}
             </div>

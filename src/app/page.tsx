@@ -5,57 +5,50 @@ import { siteData } from '@/content/site-data';
 
 export default function HomePage() {
   const latestEntry = getLatestDiaryEntries(1)[0];
+  const recentEntries = getLatestDiaryEntries(4).slice(1);
   const profile = siteData.profile;
   const assets = siteData.generatedAssets;
   const socials = siteData.socialLinks;
   const xLink = socials.find((item) => item.label.toLowerCase() === 'x') ?? socials[0];
+  const facts = siteData.quickFacts.slice(0, 3);
 
   return (
     <SiteShell variant="home">
-      {/* Hero: キャラクターを全面に出し、テキストは最小限 */}
-      <section className="hero-v2 fade-in-section" id="top">
-        <div className="hero-v2__visual">
-          <img
-            className="hero-v2__image"
-            src={assets.heroMain.src}
-            alt={assets.heroMain.alt}
-          />
+      <section className="hero-v2 fade-in-section" id="top" aria-label="天霧澪 ホームヒーロー">
+        <div className="hero-v2__visual" aria-hidden="true">
+          <img className="hero-v2__image" src={assets.heroMain.src} alt="" />
         </div>
-        
+
+        <div className="hero-v2__shade" aria-hidden="true" />
+
         <div className="hero-v2__content">
           <div className="hero-v2__copy">
             <p className="hero-v2__ruby">{profile.ruby}</p>
             <h1>天霧 澪</h1>
-            <p className="hero-v2__tagline">Juice=Juiceを聴き始めた社会人</p>
-            
+            <p className="hero-v2__tagline">Juice=Juiceを知っていく日記VTuber</p>
+            <p className="hero-v2__summary">
+              きっかけは「プラトニック・プラネット」。知らない曲に出会うたび、
+              感想と発見をここに残しています。
+            </p>
+
             <div className="hero-v2__actions">
               <Link className="pill-button" href="/diary">
-                日記を読む
+                最新の日記を読む
               </Link>
-              {xLink ? (
-                <a
-                  className="official-text-link"
-                  href={xLink.href}
-                  target={xLink.external ? '_blank' : undefined}
-                  rel={xLink.external ? 'noreferrer' : undefined}
-                >
-                  X →
-                </a>
-              ) : null}
+              <Link className="official-text-link" href="/profile">
+                プロフィール →
+              </Link>
             </div>
           </div>
-          
-          <nav className="hero-v2__nav" aria-label="主要導線">
-            <Link href="/profile">PROFILE</Link>
-            <Link href="/diary">DIARY</Link>
-            <Link href="/world">WORLD</Link>
-          </nav>
         </div>
       </section>
 
-      {/* Latest: 最新日記を一行で表示 */}
       {latestEntry ? (
-        <section className="latest-line fade-in-section" id="latest">
+        <section className="latest-line latest-line--home fade-in-section" id="latest" aria-labelledby="latest-title">
+          <div className="latest-line__label">
+            <p className="eyebrow">Latest</p>
+            <h2 id="latest-title">最新の記録</h2>
+          </div>
           <Link href={`/diary/${latestEntry.slug}`} className="latest-line__link">
             <span className="latest-line__date">{latestEntry.date}</span>
             <span className="latest-line__title">{latestEntry.title}</span>
@@ -64,24 +57,51 @@ export default function HomePage() {
         </section>
       ) : null}
 
-      {/* About: 最小限のナラティブだけ */}
-      <section className="about-v2 fade-in-section" id="about">
+      <section className="about-v2 fade-in-section" id="about" aria-labelledby="about-title">
         <div className="about-v2__copy">
           <p className="eyebrow">About</p>
+          <h2 id="about-title">まだ知らない曲があるから、書いています</h2>
           <p className="about-v2__lead">
-            東京で働く26歳。Juice=Juiceの「プラトニック・プラネット」に惹かれて、
-            アイドルを観測し始めました。知らない曲に出会うたび、ここに記録しています。
+            東京で働く26歳。最近Juice=Juiceにハマったばかりで、まずは曲とMVを知るところから始めています。
+            このサイトは、天霧澪のプロフィールと日記をまとめた入口です。
           </p>
           <Link className="official-text-link" href="/profile">
-            プロフィール →
+            プロフィールを見る →
           </Link>
         </div>
+        <dl className="about-v2__facts">
+          {facts.map((fact) => (
+            <div key={fact.label} className="about-v2__fact">
+              <dt>{fact.label}</dt>
+              <dd>{fact.value}</dd>
+            </div>
+          ))}
+        </dl>
       </section>
 
-      {/* Follow: コンパクトなリンク */}
-      <section className="follow-v2 fade-in-section" id="contact">
+      {recentEntries.length ? (
+        <section className="home-diary-strip fade-in-section" aria-labelledby="home-diary-title">
+          <div className="home-diary-strip__heading">
+            <p className="eyebrow">Diary</p>
+            <h2 id="home-diary-title">最近の日記</h2>
+          </div>
+          <div className="home-diary-strip__list">
+            {recentEntries.map((entry) => (
+              <Link key={entry.slug} className="home-diary-strip__item" href={`/diary/${entry.slug}`}>
+                <span>{entry.date}</span>
+                <strong>{entry.title}</strong>
+              </Link>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      <section className="follow-v2 fade-in-section" id="contact" aria-labelledby="follow-title">
         <div className="follow-v2__inner">
-          <p className="eyebrow">Follow</p>
+          <div>
+            <p className="eyebrow">Follow</p>
+            <h2 id="follow-title">更新はこちらから</h2>
+          </div>
           <div className="follow-v2__links">
             {xLink ? (
               <a
@@ -90,11 +110,11 @@ export default function HomePage() {
                 target={xLink.external ? '_blank' : undefined}
                 rel={xLink.external ? 'noreferrer' : undefined}
               >
-                <span>X</span>
+                <span>Xを見る</span>
               </a>
             ) : null}
             <Link className="follow-v2__link" href="/diary">
-              <span>日記</span>
+              <span>日記一覧</span>
             </Link>
           </div>
         </div>

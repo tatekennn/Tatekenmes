@@ -11,9 +11,10 @@ export const metadata = {
 export default function DiaryIndexPage() {
   const entries = getDiaryEntries();
   const latestEntry = entries[0];
-  const recentEntries = entries.slice(1, 5);
+  const archiveEntries = latestEntry ? entries.slice(1) : entries;
   const assets = siteData.generatedAssets;
   const profile = siteData.profile;
+  const xLink = siteData.socialLinks.find((item) => item.label.toLowerCase() === 'x') ?? siteData.socialLinks[0];
 
   return (
     <SiteShell variant="home">
@@ -22,24 +23,53 @@ export default function DiaryIndexPage() {
         <div className="archive-hero__veil" aria-hidden="true" />
 
         <div className="archive-hero__content">
-          <p className="eyebrow">Diary archive</p>
+          <p className="eyebrow">Diary</p>
           <h1>日記</h1>
           <p className="archive-hero__summary">
-            最近Juice=Juiceにハマったばかりで、知らない曲がまだたくさんあります。
-            ひとつ見つけるたびに、ここに書いています。
+            Juice=Juiceを知っていく途中の、天霧澪の記録です。
+            曲、MV、ニュースに出会ったときの感想を、少しずつ残しています。
           </p>
 
-          <div className="archive-hero__chips">
-            <span>Juice=Juice日記</span>
+          <div className="archive-hero__chips" aria-label="日記の概要">
+            <span>音楽メモ</span>
             <span>発見の記録</span>
             <span>{entries.length} records</span>
           </div>
 
           <div className="archive-hero__links">
-            <Link href="#latest">最新の記録</Link>
-            <Link href="#archive-list">一覧で読む</Link>
+            <Link href="#latest">最新</Link>
+            <Link href="#archive-list">記録一覧</Link>
             <Link href="/profile">プロフィール</Link>
           </div>
+        </div>
+      </section>
+
+      <section className="archive-note-band archive-note-band--diary-intro">
+        <div className="archive-note-band__copy">
+          <p className="eyebrow">About these notes</p>
+          <h2>{profile.name} が、今知っていること</h2>
+          <p>
+            最近ハマったばかりだから、まだ知らない曲がたくさんあります。
+            ここでは、詳しい解説よりも、初めて聴いたときの気持ちや発見を中心に書いています。
+          </p>
+        </div>
+
+        <div className="archive-note-band__links">
+          <Link className="archive-note-band__link" href="/profile">
+            <strong>プロフィールを見る</strong>
+            <span>天霧澪について、もう少しまとまった形で見られます。</span>
+          </Link>
+          {xLink ? (
+            <a
+              className="archive-note-band__link"
+              href={xLink.href}
+              target={xLink.external ? '_blank' : undefined}
+              rel={xLink.external ? 'noreferrer' : undefined}
+            >
+              <strong>Xを見る</strong>
+              <span>短い反応や更新はこちらに置いています。</span>
+            </a>
+          ) : null}
         </div>
       </section>
 
@@ -48,65 +78,34 @@ export default function DiaryIndexPage() {
           <div className="diary-stage__backdrop" style={{ backgroundImage: `url(${assets.diaryDecor.src})` }} />
 
           <div className="diary-stage__heading">
-            <p className="eyebrow">Featured entry</p>
+            <p className="eyebrow">Latest entry</p>
             <h2>いちばん新しい記録</h2>
           </div>
 
-          <div className="diary-feature-layout">
-            <article className="diary-feature-main">
-              <p className="eyebrow">{latestEntry.date}</p>
-              <h3>{latestEntry.title}</h3>
-              <div className="entry-meta">
-                <span>{formatMoodLabel(latestEntry.mood)}</span>
-                <span>{latestEntry.tags.join(' / ')}</span>
-              </div>
-              <p className="diary-feature-main__excerpt">{latestEntry.excerpt}</p>
-              <Link className="official-text-link" href={`/diary/${latestEntry.slug}`}>
-                続きを読む →
-              </Link>
-            </article>
-
-            {recentEntries.length ? (
-              <div className="diary-feature-side">
-                <p className="eyebrow diary-feature-side__label">Recent</p>
-                {recentEntries.map((entry: DiaryEntry) => (
-                  <Link key={entry.slug} className="diary-rail-link" href={`/diary/${entry.slug}`}>
-                    <strong>{entry.title}</strong>
-                    <span>{entry.date}</span>
-                    <p>{formatMoodLabel(entry.mood)}</p>
-                  </Link>
-                ))}
-              </div>
-            ) : null}
-          </div>
+          <article className="diary-feature-main diary-feature-main--solo">
+            <p className="eyebrow">{latestEntry.date}</p>
+            <h3>{latestEntry.title}</h3>
+            <div className="entry-meta">
+              <span>{formatMoodLabel(latestEntry.mood)}</span>
+              <span>{latestEntry.tags.join(' / ')}</span>
+            </div>
+            <p className="diary-feature-main__excerpt">{latestEntry.excerpt}</p>
+            <Link className="official-text-link" href={`/diary/${latestEntry.slug}`}>
+              続きを読む →
+            </Link>
+          </article>
         </section>
       ) : null}
 
-      <section className="archive-note-band">
-        <div className="archive-note-band__copy">
-          <p className="eyebrow">About these notes</p>
-          <h2>知らない曲に出会うたびに書いています</h2>
-          <p>
-            {profile.name} の日記には、最近Juice=Juiceにハマったばかりの人が、曲やMVに出会ったときの感想を書いています。
-            まだライブには行ったことがないので、まずは曲を知るところから始めています。
-          </p>
+      <section className="diary-index-list" id="archive-list" aria-labelledby="archive-list-title">
+        <div className="diary-index-list__heading">
+          <p className="eyebrow">Archive</p>
+          <h2 id="archive-list-title">記録一覧</h2>
         </div>
-
-        <div className="archive-note-band__links">
-          <Link className="archive-note-band__link" href="/profile">
-            <strong>プロフィールを見る</strong>
-            <span>どんな感じで活動しているかを、もう少しまとまった形で見られます。</span>
-          </Link>
-          <Link className="archive-note-band__link" href="/">
-            <strong>ホームへ戻る</strong>
-            <span>日記やプロフィールをまとめた場所はこちらです。</span>
-          </Link>
-        </div>
-      </section>
-
-      <section className="diary-index-list" id="archive-list">
-        {entries.length > 0 ? (
-          entries.map((entry: DiaryEntry) => <DiaryCard key={entry.slug} entry={entry} />)
+        {archiveEntries.length > 0 ? (
+          archiveEntries.map((entry: DiaryEntry) => <DiaryCard key={entry.slug} entry={entry} />)
+        ) : latestEntry ? (
+          <p className="diary-index-list__empty">過去の記録はまだありません。</p>
         ) : (
           <section className="archive-note-band archive-note-band--empty">
             <div className="archive-note-band__copy">
