@@ -56,13 +56,27 @@ export function SiteShell({ children, variant = 'default' }: SiteShellProps) {
           </div>
 
           <div className="site-header__cluster">
-            <nav className="site-nav" aria-label="主要ナビゲーション">
+            <nav className="site-nav site-nav--desktop" aria-label="主要ナビゲーション">
               {navItems.map((item) => (
                 <Link key={`${item.href}-${item.label}`} href={item.href}>
                   {item.label}
                 </Link>
               ))}
             </nav>
+
+            <details className="site-menu site-menu--mobile">
+              <summary className="site-menu__summary" aria-label="メニューを開く">
+                <span aria-hidden="true"></span>
+                <span className="sr-only">メニュー</span>
+              </summary>
+              <nav className="site-nav site-nav--mobile" aria-label="主要ナビゲーション">
+                {navItems.map((item) => (
+                  <Link key={`${item.href}-${item.label}`} href={item.href}>
+                    {item.label}
+                  </Link>
+                ))}
+              </nav>
+            </details>
 
             {showHeaderSocials && socialLinks.length ? (
               <div className="site-social" aria-label="SNSリンク">
