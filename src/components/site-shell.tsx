@@ -5,7 +5,7 @@ import { siteData } from '@/content/site-data';
 
 const fallbackNav = [
   { href: '/', label: 'ホーム' },
-  { href: '/diary', label: '日記' },
+  { href: '/diary', label: 'メモ' },
   { href: '/profile', label: 'プロフィール' },
 ];
 
@@ -28,7 +28,7 @@ type SiteShellProps = Readonly<{
 export function SiteShell({ children, variant = 'default' }: SiteShellProps) {
   const navItems = getNavItems();
   const name = siteData.profile.name;
-  const subtitle = variant === 'home' ? 'Juice=Juice 日記' : 'Juice=Juice / diary / profile';
+  const subtitle = variant === 'home' ? 'Juice=Juice 案内ノート' : 'Juice=Juice / memo / profile';
   const socialLinks = Array.isArray(siteData.socialLinks) ? siteData.socialLinks.slice(0, 2) : [];
   const showHeaderSocials = variant !== 'home';
 
@@ -88,11 +88,11 @@ export function SiteShell({ children, variant = 'default' }: SiteShellProps) {
         <footer className="site-footer">
           <div className="site-footer__brand">
             <strong>{name}</strong>
-            <p>Juice=Juiceを知っていく途中の記録を、ここにまとめています。</p>
+            <p>Juice=Juiceを好きになる入口を、調べて読みやすくまとめています。</p>
           </div>
           <div className="site-footer__links">
             <Link href="/">ホーム</Link>
-            <Link href="/diary">日記</Link>
+            <Link href="/diary">メモ</Link>
             <Link href="/profile">プロフィール</Link>
           </div>
           {socialLinks.length ? (

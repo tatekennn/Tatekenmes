@@ -13,25 +13,25 @@ export default function ProfilePage() {
   const latestEntry = getLatestDiaryEntries(1)[0];
   const facts = [
     { label: '名前', value: `${profile.name}（${profile.ruby}）` },
-    { label: '年齢', value: `${profile.age}歳` },
-    { label: '活動', value: profile.job },
+    { label: '役割', value: profile.job },
     { label: '拠点', value: `${profile.location}` },
+    { label: '発信', value: 'X短文 / 調査メモ' },
   ];
-  const traits = ['最近ハマった', 'プラトニック・プラネット派', '静かに熱い', '発見が好き', 'マイペース'];
+  const traits = ['ファンを増やす', '公式確認重視', '入口を作る', '短く届ける', '少し深掘り'];
   const timeline = [
     {
-      title: 'Diary',
-      body: 'まだ知らない曲に出会うたび、感じたことを日記に残しています。',
+      title: 'Memo',
+      body: '公式情報やメンバーの魅力を、初めて見る人にも届くメモに整えます。',
       href: '/diary',
     },
     {
       title: 'Latest',
-      body: latestEntry ? latestEntry.title : '新しい記録が入ると、ここからも読めます。',
+      body: latestEntry ? latestEntry.title : '新しい調査メモが入ると、ここからも読めます。',
       href: latestEntry ? `/diary/${latestEntry.slug}` : '/diary',
     },
     {
       title: 'Home',
-      body: 'トップでは日記、プロフィール、更新先をまとめています。',
+      body: 'トップでは新しいメモ、発信方針、Xへの導線をまとめています。',
       href: '/',
     },
   ];
@@ -48,14 +48,14 @@ export default function ProfilePage() {
           <img src={assets.profileFull.src} alt="" />
         </div>
         <div className="pop-profile-hero__copy">
-          <p className="pop-home-hero__site">AMAGIRI MIO PROFILE</p>
+          <p className="pop-home-hero__site">AMAGIRI MIO GUIDE PROFILE</p>
           <p className="eyebrow">Profile</p>
           <h1>{profile.name}</h1>
           <p className="pop-profile-hero__ruby">{profile.ruby}</p>
-          <p className="pop-profile-hero__tagline">最近Juice=Juiceにハマりました。まだ知らない曲だらけです。</p>
-          <p className="pop-profile-hero__summary">知らない曲に出会うたびに、ここに書いていきたいです。まずは曲とMVを知るところから、少しずつ。</p>
+          <p className="pop-profile-hero__tagline">Juice=Juiceの魅力を、まだ知らない人へ届ける案内係です。</p>
+          <p className="pop-profile-hero__summary">公式情報を確認しながら、メンバー・楽曲・ニュースの入口を短くわかりやすく整えます。目標は、好きになるきっかけを一つ増やすこと。</p>
           <div className="pop-profile-hero__actions">
-            <Link className="pill-button" href="/diary">日記を読む</Link>
+            <Link className="pill-button" href="/diary">調査メモを読む</Link>
             <Link className="official-text-link" href="/">Home →</Link>
           </div>
         </div>
@@ -65,7 +65,7 @@ export default function ProfilePage() {
         <div className="pop-section-heading pop-section-heading--news">
           <span aria-hidden="true">ABOUT</span>
           <p className="eyebrow">About</p>
-          <h2 id="profile-facts-title">澪について</h2>
+          <h2 id="profile-facts-title">澪の発信方針</h2>
         </div>
         <dl className="pop-profile-facts__grid">
           {facts.map((fact) => (
@@ -81,7 +81,7 @@ export default function ProfilePage() {
         <div>
           <p className="eyebrow">Route</p>
           <h2 id="profile-route-title">ここから読めます</h2>
-          <p>プロフィールで気になったら、日記へ。日々の発見のほうが、たぶんいちばん澪らしいです。</p>
+          <p>ファンを増やすために、まずは覚えやすい入口から。短い要点と、少し詳しい読み物の両方を置いていきます。</p>
         </div>
         <div className="pop-profile-route__list">
           {timeline.map((item) => (
@@ -93,7 +93,7 @@ export default function ProfilePage() {
         </div>
       </section>
 
-      <section className="pop-profile-tags" aria-label="天霧澪の雰囲気">
+      <section className="pop-profile-tags" aria-label="天霧澪の活動タグ">
         {traits.map((trait) => (
           <span key={trait}>{trait}</span>
         ))}

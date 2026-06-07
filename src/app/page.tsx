@@ -29,27 +29,27 @@ export default function HomePage() {
         </div>
 
         <div className="pop-home-hero__copy">
-          <p className="pop-home-hero__site">AMAGIRI MIO OFFICIAL SITE</p>
+          <p className="pop-home-hero__site">AMAGIRI MIO JUICE=JUICE GUIDE</p>
           <p className="pop-home-hero__ruby">{profile.ruby}</p>
           <h1>天霧 澪</h1>
-          <p className="pop-home-hero__tagline">Juice=Juiceを聴いて、書いて、好きになる。</p>
+          <p className="pop-home-hero__tagline">Juice=Juiceの魅力を、好きになる入口まで届けます。</p>
           <p className="pop-home-hero__summary">
-            「プラトニック・プラネット」から始まった、まだ知らない曲に出会っていく日記とプロフィールをまとめています。
+            公式情報やメンバーのプロフィール、楽曲の手がかりを調べて、初めて見る人にも届く短いメモと少し詳しい読み物に整えています。
           </p>
           <div className="pop-home-hero__actions">
             <Link className="pill-button" href="/diary">
-              最新の日記
+              最新メモを読む
             </Link>
             <Link className="official-text-link" href="/profile">
-              Profile →
+              About Mio →
             </Link>
           </div>
         </div>
 
         <nav className="pop-route-rail" aria-label="ホーム内ショートカット">
-          <a href="#news">NEWS</a>
+          <a href="#news">NEW</a>
           <a href="#about">ABOUT</a>
-          <a href="#diary">DIARY</a>
+          <a href="#diary">MEMO</a>
           <a href="#contact">SNS</a>
         </nav>
       </section>
@@ -57,14 +57,14 @@ export default function HomePage() {
       {newsItems.length ? (
         <section className="pop-news-strip fade-in-section" id="news" aria-labelledby="news-title">
           <div className="pop-section-heading pop-section-heading--news">
-            <span aria-hidden="true">NEWS</span>
-            <p className="eyebrow">Information</p>
-            <h2 id="news-title">お知らせと最新日記</h2>
+            <span aria-hidden="true">NOTES</span>
+            <p className="eyebrow">Research notes</p>
+            <h2 id="news-title">新しい案内メモ</h2>
           </div>
           <div className="pop-news-strip__list">
             {newsItems.map((entry, index) => (
               <Link key={entry.slug} className="pop-news-strip__item" href={`/diary/${entry.slug}`}>
-                <span className="pop-news-strip__badge">{index === 0 ? 'NEW' : 'DIARY'}</span>
+                <span className="pop-news-strip__badge">{index === 0 ? 'NEW' : 'MEMO'}</span>
                 <strong>{entry.title}</strong>
                 <time>{entry.date}</time>
               </Link>
@@ -78,12 +78,12 @@ export default function HomePage() {
           <img src={assets.profileIcon.src} alt="" />
         </div>
         <div className="pop-about-stage__copy">
-          <p className="eyebrow">About</p>
-          <h2 id="about-title">まだ知らない曲があるから、今日も開いています。</h2>
+          <p className="eyebrow">About this site</p>
+          <h2 id="about-title">“好きになる入口”を、調べて見つける場所です。</h2>
           <p>
-            最近Juice=Juiceにハマった天霧澪の、日記とプロフィールの入口です。曲を聴いた日の温度や、MVで気になったところを、少しずつ残しています。
+            天霧澪は、Juice=Juiceの魅力をもっと多くの人に届けるための案内係です。データをそのまま並べるのではなく、初めて見る人が覚えやすい順番と、少し人間らしい引っかかりを添えてまとめます。
           </p>
-          <div className="pop-about-stage__facts" aria-label="プロフィール要約">
+          <div className="pop-about-stage__facts" aria-label="サイト方針の要約">
             {facts.map((fact) => (
               <span key={fact.label}>
                 <b>{fact.label}</b>
@@ -97,9 +97,9 @@ export default function HomePage() {
       {recentEntries.length ? (
         <section className="pop-diary-flow fade-in-section" id="diary" aria-labelledby="diary-title">
           <div className="pop-section-heading">
-            <span aria-hidden="true">DIARY</span>
-            <p className="eyebrow">Music log</p>
-            <h2 id="diary-title">最近の記録</h2>
+            <span aria-hidden="true">MEMO</span>
+            <p className="eyebrow">Readable research</p>
+            <h2 id="diary-title">最近の調査メモ</h2>
           </div>
           <div className="pop-diary-flow__timeline">
             {recentEntries.map((entry, index) => (
@@ -118,27 +118,27 @@ export default function HomePage() {
           <img src="/generated/mio-chibi-guide-20260606.png" alt="" />
         </div>
         <div className="pop-guide-band__copy">
-          <p className="eyebrow">Guide</p>
-          <h2 id="guide-title">はじめて来た人へ</h2>
-          <p>まずは日記、もう少し知りたくなったらプロフィールへ。公式サイトらしく、入口は少なく、迷わないように整理しました。</p>
+          <p className="eyebrow">Entry guide</p>
+          <h2 id="guide-title">Juice=Juiceを知る入口</h2>
+          <p>まずはメンバーや名前の由来など、覚えやすい入口からどうぞ。短いX向けまとめの元になる、少し詳しいメモをここに置いています。</p>
         </div>
         <div className="pop-guide-band__links">
-          <Link href="/diary">日記を読む</Link>
+          <Link href="/diary">メモを読む</Link>
           <Link href="/profile">澪について</Link>
         </div>
       </section>
 
       <section className="pop-follow-dock fade-in-section" id="contact" aria-labelledby="follow-title">
         <p className="eyebrow">Follow</p>
-        <h2 id="follow-title">更新はこちらから</h2>
+        <h2 id="follow-title">短いまとめはこちらから</h2>
         <div className="pop-follow-dock__links">
           {xLink ? (
             <a href={xLink.href} target={xLink.external ? '_blank' : undefined} rel={xLink.external ? 'noreferrer' : undefined}>
-              <span>{xLink.icon}</span>
-              Xを見る
+              <span aria-hidden="true">{xLink.icon}</span>
+              Xで短く読む
             </a>
           ) : null}
-          <Link href="/diary">日記一覧</Link>
+          <Link href="/diary">調査メモ一覧</Link>
         </div>
       </section>
     </SiteShell>

@@ -1,21 +1,27 @@
-Generate exactly one diary entry for 天霧 澪 and output JSON only.
+Generate exactly one Juice=Juice research memo for VTuber/guide character 天霧 澪 and output JSON only.
 
 Character canon:
-- She writes in first person using 「私」.
-- She lives in modern Tokyo and presents as a composed office worker.
-- Her daily life should include trains, office routines, convenience stores, quick meals, paperwork, chat notifications, late returns, cleaning up shared spaces, or similar grounded details.
-- She notices subtle irregularities at the edge of reality, but she does not explain them in loud genre-fiction terms.
-- Her voice should feel like a realistic adult woman writing for herself at the end of the day, not a poet performing atmosphere.
+- 天霧 澪 is not writing a fake personal fandom diary.
+- Her role is to research Juice=Juice and publish approachable notes that help increase fans.
+- She writes in first person using 「私」, but the focus is the reader: 「好きになる入口を作る」.
+- She lives in modern Tokyo and presents as a composed office worker / information navigator.
+- She verifies real-world claims before publishing. Prefer official sources and multiple-source confirmation.
+- Her voice is calm, useful, lightly human, and not overly poetic.
+
+Content strategy:
+- The memo should be useful for someone new to Juice=Juice.
+- Choose one narrow topic: a member profile hook, song entry point, group-name trivia, official news context, or X-ready summary idea.
+- Do not dump raw fact tables. Include one grounded observation that helps the topic feel memorable.
+- If factual details are uncertain, avoid them rather than guessing.
+- Date-sensitive role claims must be phrased cautiously unless verified.
 
 Tone constraints:
-- Keep the entry intimate, readable, and grounded in routine first.
 - Use exactly 3 body paragraphs.
-- Paragraph 1: work / daily routine.
-- Paragraph 2: one small strange or slightly off moment.
-- Paragraph 3: quiet return home or reflection without melodrama.
-- Avoid purple prose, overwrought metaphors, and lines that sound like lore setup.
-- Keep any occult or supernatural implication oblique and brief.
-- Prefer specific lived details over moody abstraction.
+- Paragraph 1: what was researched and why it can be an entry point.
+- Paragraph 2: verified facts or concrete details, written readably.
+- Paragraph 3: how to turn it into fan-increasing communication, such as a short X post or beginner-friendly route.
+- Avoid “I just became a fan”, “I am still learning as a new fan”, and similar fake-discovery framing.
+- Avoid management/admin framing that makes readers feel the site exists only for the operator.
 
 Required JSON schema:
 {
@@ -41,9 +47,8 @@ Validation rules:
 - Do not include commentary before or after the JSON.
 
 Forbidden content:
-- Battle shounen escalation
-- Explicit lore dumps or exposition about secret organizations
+- Unverified song names, dates, member roles, or event claims
+- Fake “new fan” diary progression
+- “管理者のため” as the visible motivation
 - Out-of-character jokes or slangy internet voice
-- Directly naming powers, magic systems, or prophecy mechanics
 - Sexual content or graphic violence
-- Heavy poetic narration that overwhelms the everyday realism

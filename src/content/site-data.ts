@@ -65,9 +65,9 @@ export type SiteData = {
 
 export const siteData: SiteData = {
   metadata: {
-    title: '天霧 澪 — Juice=Juice 日報',
+    title: '天霧 澪 — Juice=Juice案内ノート',
     description:
-      '最近Juice=Juiceにハマった天霧澪の日記サイト。「プラトニック・プラネット」から入って、他の曲も聴き始めています。',
+      'Juice=Juiceの魅力をもっと多くの人に届けるために、公式情報・メンバー・楽曲の入口を調べてまとめる天霧澪の案内ノート。',
     locale: 'ja-JP',
   },
   generatedAssets: {
@@ -91,14 +91,14 @@ export const siteData: SiteData = {
     },
     diaryHeader: {
       src: '/generated/mio-diary-header.png',
-      alt: '日記ページ用のヘッダー画像。窓辺の机で静かに過ごす天霧澪。',
-      title: 'Diary header',
-      note: '日記一覧・導入セクション向け。',
+      alt: '調査メモページ用のヘッダー画像。窓辺の机で資料を整理する天霧澪。',
+      title: 'Research note header',
+      note: '調査メモ一覧・導入セクション向け。',
     },
     diaryDecor: {
       src: '/generated/mio-diary-decor.png',
       alt: 'ノートや文具をあしらった装飾背景。',
-      title: 'Diary decor',
+      title: 'Research note decor',
       note: '背景や区切り装飾に使うビジュアル。',
     },
   },
@@ -106,37 +106,37 @@ export const siteData: SiteData = {
     name: '天霧 澪',
     ruby: 'あまぎり みお',
     age: 26,
-    job: 'Juice=Juiceに最近ハマった日記VTuber',
+    job: 'Juice=Juiceの魅力を届けるリサーチナビゲーター',
     location: '東京',
-    tone: 'calm, curious, still discovering',
-    concept: '最近Juice=JuiceにハマったばかりのVTuber。「プラトニック・プラネット」から入って、他の曲も少しずつ聴いています。その発見の過程を日記に書いています。',
+    tone: 'calm, researched, welcoming, lightly human',
+    concept: 'Juice=Juiceの魅力をもっと多くの人に届けるために、公式情報・メンバー・楽曲・ニュースを調べ、初めて見る人にも入りやすい言葉に整えて発信する存在。Xでは短く、サイトでは少し詳しくまとめる。',
     worldRatio: {
-      reality: 95,
-      occult: 5,
+      reality: 98,
+      occult: 2,
     },
     bio: [
-      '天霧澪です。最近Juice=Juiceにハマりました。きっかけは「プラトニック・プラネット」。この曲に惹かれて、他の曲も聴き始めています。',
-      'まだライブには行ったことがなくて、まずは曲とMVを知るところから始めています。知らない曲に出会うたびに「なんで今まで聴かなかったんだろう」と思います。',
-      'Juice=Juiceのことをもっと知りたい。そう思って始めた日記です。同じ気持ちの人と、少しでも共有できたらうれしいです。',
+      '天霧澪です。Juice=Juiceをまだ知らない人にも届くように、公式情報やメンバーのプロフィール、楽曲の入口を調べてまとめています。',
+      '大事にしているのは、ただデータを並べることではなく、「どこから見ると好きになりやすいか」を見つけること。短い投稿では要点を、ブログでは少しだけ余白のある読み物にします。',
+      '情報はできるだけ公式・複数ソースで確認します。すでに好きな人には再発見を、これから見る人には最初の一歩を渡せる場所にしていきます。',
     ],
   },
-  featuredQuote: 'プラトニック・プラネットに惹かれて、ここから先に進んでいる。',
+  featuredQuote: '好きになる入口は、ちゃんと調べると少し見つけやすくなる。',
   quickFacts: [
     {
-      label: '呼び名',
-      value: '澪 / Mio',
+      label: '役割',
+      value: 'Juice=Juice案内係',
     },
     {
-      label: '活動',
-      value: 'Juice=Juice日記 / X',
+      label: '発信',
+      value: 'X短文 / 調査メモ',
     },
     {
-      label: 'きっかけの曲',
-      value: 'プラトニック・プラネット',
+      label: '方針',
+      value: '入口を作ってファンを増やす',
     },
     {
-      label: '現在',
-      value: '他の曲を少しずつ聴いている段階',
+      label: '確認',
+      value: '公式情報と複数ソース重視',
     },
   ],
   navigation: [
@@ -146,44 +146,40 @@ export const siteData: SiteData = {
       description: 'このサイトの入口と最新の更新。',
     },
     {
-      label: '日記',
+      label: 'メモ',
       href: '/diary',
-      description: 'Juice=Juiceに関する日記の一覧。',
+      description: 'Juice=Juiceに関する調査メモの一覧。',
     },
     {
       label: 'プロフィール',
       href: '/profile',
-      description: '私のことをもう少し知りたい人向け。',
+      description: '天霧澪の役割と発信方針。',
     },
   ],
   tagDescriptions: [
     {
+      tag: 'メンバー',
+      description: 'プロフィール、経歴、呼び方、覚えやすい入口。',
+    },
+    {
       tag: '楽曲',
-      description: '曲への思い、歌詞の解釈、初めて聴いたときの記憶。',
+      description: '曲の基本情報、聴きどころ、最初に見るポイント。',
     },
     {
       tag: 'MV',
-      description: 'MVの発見、映像の细节、初めて見たときの印象。',
+      description: '映像の入口、衣装、場面、初見でも掴みやすい見方。',
     },
     {
       tag: 'ニュース',
-      description: '新曲告知、イベント、メディア出演などの情報。',
+      description: '新曲告知、イベント、メディア出演などの要点整理。',
     },
     {
-      tag: '日常',
-      description: 'Juice=Juiceと暮らす日常の断片。',
+      tag: '豆知識',
+      description: '短く話せるJuice=Juiceの背景情報。',
     },
     {
-      tag: '発見',
-      description: '知らない曲に出会ったときの記録。',
-    },
-    {
-      tag: 'グッズ',
-      description: '手に入れたグッズ、欲しいもの、思い出。',
-    },
-    {
-      tag: 'メンバー',
-      description: 'メンバーのパフォーマンス、衣装、気になるところ。',
+      tag: '入口メモ',
+      description: 'まだ詳しくない人が好きになるための入口。',
     },
   ],
   socialLinks: [
@@ -191,7 +187,7 @@ export const siteData: SiteData = {
       label: 'X',
       href: 'https://x.com/amagiri_mio',
       icon: '𝕏',
-      note: 'Juice=Juice日報',
+      note: 'Juice=Juice案内ノート',
       external: true,
     },
   ],
