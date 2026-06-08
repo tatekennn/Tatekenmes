@@ -9,6 +9,9 @@ export type DiaryEntry = {
   tags: string[];
   mood: string;
   body: string[];
+  lead?: string;
+  sectionTitles?: string[];
+  takeaway?: string;
 };
 
 export const moodLabels: Record<string, string> = {
@@ -39,7 +42,11 @@ function isDiaryEntry(value: unknown): value is DiaryEntry {
     Array.isArray(entry.tags) &&
     entry.tags.every((tag) => typeof tag === 'string') &&
     Array.isArray(entry.body) &&
-    entry.body.every((paragraph) => typeof paragraph === 'string')
+    entry.body.every((paragraph) => typeof paragraph === 'string') &&
+    (entry.lead === undefined || typeof entry.lead === 'string') &&
+    (entry.takeaway === undefined || typeof entry.takeaway === 'string') &&
+    (entry.sectionTitles === undefined ||
+      (Array.isArray(entry.sectionTitles) && entry.sectionTitles.every((title) => typeof title === 'string')))
   );
 }
 

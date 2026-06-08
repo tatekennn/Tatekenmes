@@ -29,6 +29,9 @@ export default async function DiaryEntryPage({ params }: { params: Promise<{ slu
   const entries = getDiaryEntries();
   const relatedEntries = entries.filter((item) => item.slug !== entry.slug).slice(0, 4);
   const assets = siteData.generatedAssets;
+  const lead = entry.lead ?? entry.excerpt;
+  const sectionTitles = entry.sectionTitles ?? [];
+  const takeaway = entry.takeaway ?? 'まずは一つ、覚えやすい入口から。気になったところから次へ進めば大丈夫です。';
 
   return (
     <SiteShell variant="home" activeHref="/diary">
@@ -78,13 +81,21 @@ export default async function DiaryEntryPage({ params }: { params: Promise<{ slu
       <section className="archive-landing">
         <article className="archive-landing__panel">
           <div className="archive-landing__intro">
-            <p className="eyebrow">Readable guide</p>
-            <h2>本文</h2>
+            <p className="eyebrow">Guide note</p>
+            <h2>今回の入口</h2>
+            <p>{lead}</p>
           </div>
           <div className="reading-column">
             {entry.body.map((paragraph, index) => (
-              <p key={`${entry.slug}-${index}`}>{paragraph}</p>
+              <section key={`${entry.slug}-${index}`} className="reading-block">
+                {sectionTitles[index] ? <h3>{sectionTitles[index]}</h3> : null}
+                <p>{paragraph}</p>
+              </section>
             ))}
+            <aside className="reading-takeaway" aria-label="澪のまとめ">
+              <span>澪のメモ</span>
+              <p>{takeaway}</p>
+            </aside>
           </div>
         </article>
 
