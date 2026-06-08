@@ -9313,3 +9313,556 @@ h3,
     min-height: clamp(580px, 70vh, 700px) !important;
   }
 }
+
+/* Ultimate design pass: stronger official-site hierarchy, character-first hero, and tighter editorial sections. */
+:root {
+  --mio-brand-deep: #35205f;
+  --mio-brand-violet: #6847c9;
+  --mio-brand-pink: #ff75b7;
+  --mio-brand-blue: #5fcaff;
+}
+
+.site-shell--home .page-stack {
+  gap: clamp(1.15rem, 2.8vw, 2.4rem) !important;
+}
+
+@media (min-width: 768px) {
+  .site-shell--home .site-header {
+    position: sticky !important;
+    top: 0.75rem !important;
+    z-index: 50 !important;
+    background:
+      linear-gradient(90deg, rgba(255,255,255,0.82), rgba(255,255,255,0.58)),
+      radial-gradient(circle at 18% 50%, rgba(255, 117, 183, 0.08), transparent 18rem) !important;
+  }
+
+  .site-shell--home .site-header::after {
+    content: 'OFFICIAL GUIDE';
+    position: absolute;
+    left: clamp(16.5rem, 23vw, 25rem);
+    top: 50%;
+    transform: translateY(-50%);
+    color: rgba(53, 32, 95, 0.36);
+    font-size: 0.7rem;
+    font-weight: 900;
+    letter-spacing: 0.18em;
+    pointer-events: none;
+  }
+
+  .site-shell--home .site-nav a:first-child {
+    color: #fff !important;
+    background: linear-gradient(135deg, var(--mio-brand-deep), var(--mio-brand-violet)) !important;
+    border-color: rgba(255,255,255,0.2) !important;
+    box-shadow: 0 12px 24px rgba(104, 71, 201, 0.16) !important;
+  }
+
+  .site-shell--home .site-nav a:not(:first-child):hover,
+  .site-shell--home .site-nav a:not(:first-child):focus-visible {
+    background: rgba(255,255,255,0.86) !important;
+    border-color: rgba(104, 71, 201, 0.26) !important;
+    transform: translateY(-1px);
+  }
+
+  .pop-home-hero {
+    overflow: visible !important;
+    border: 1px solid rgba(255,255,255,0.74) !important;
+  }
+
+  .pop-home-hero::before {
+    content: 'AMAGIRI MIO';
+    position: absolute;
+    right: clamp(1.4rem, 4vw, 3.2rem);
+    top: clamp(0.8rem, 2vw, 1.7rem);
+    z-index: 1;
+    color: rgba(104, 71, 201, 0.055);
+    font-size: clamp(4rem, 9vw, 8.2rem);
+    font-weight: 950;
+    letter-spacing: -0.08em;
+    line-height: 0.8;
+    pointer-events: none;
+  }
+
+  .pop-home-hero__visual {
+    min-height: 540px !important;
+    margin: -0.18rem 0 -0.18rem -0.18rem !important;
+    background: linear-gradient(180deg, rgba(255,255,255,0.34), rgba(239, 246, 255, 0.34));
+  }
+
+  .pop-home-hero__image {
+    object-position: 62% 13% !important;
+    transform: scale(1.06) !important;
+  }
+
+  .pop-home-hero__copy {
+    position: relative !important;
+    overflow: hidden !important;
+    background:
+      linear-gradient(145deg, rgba(255,255,255,0.82), rgba(250,246,255,0.58)),
+      radial-gradient(circle at 100% 0%, rgba(255, 117, 183, 0.12), transparent 12rem) !important;
+    border: 1px solid rgba(255,255,255,0.86) !important;
+  }
+
+  .pop-home-hero__copy::before {
+    content: '';
+    position: absolute;
+    left: 1.15rem;
+    top: 1.1rem;
+    bottom: 1.1rem;
+    width: 3px;
+    border-radius: 999px;
+    background: linear-gradient(180deg, var(--mio-brand-pink), var(--mio-brand-violet), var(--mio-brand-blue));
+    opacity: 0.88;
+  }
+
+  .pop-home-hero__copy > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .pop-home-hero__site {
+    background: rgba(104, 71, 201, 0.1) !important;
+    color: var(--mio-brand-deep) !important;
+  }
+
+  .pop-home-hero__summary {
+    max-width: 42ch;
+    color: rgba(43, 34, 72, 0.76) !important;
+  }
+
+  .pop-route-rail {
+    left: clamp(1rem, 2vw, 1.6rem) !important;
+    right: auto !important;
+    bottom: -1.05rem !important;
+    padding: 0.35rem !important;
+    border-radius: 999px !important;
+    background: rgba(255,255,255,0.72) !important;
+    border: 1px solid rgba(255,255,255,0.86) !important;
+    box-shadow: 0 16px 34px rgba(96, 74, 145, 0.12) !important;
+    backdrop-filter: blur(14px) !important;
+  }
+
+  .pop-route-rail a {
+    background: transparent !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+  }
+
+  .pop-route-rail a:first-child {
+    background: rgba(104, 71, 201, 0.12) !important;
+    color: var(--mio-brand-deep) !important;
+  }
+}
+
+.pop-about-stage--priority {
+  margin-top: clamp(1.35rem, 3vw, 2.1rem) !important;
+  grid-template-columns: minmax(220px, 0.36fr) minmax(0, 1fr) !important;
+  padding: clamp(1rem, 2.8vw, 1.85rem) !important;
+  border: 1px solid rgba(255,255,255,0.8) !important;
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.74), rgba(242,248,255,0.48)),
+    radial-gradient(circle at 18% 24%, rgba(95, 202, 255, 0.16), transparent 16rem) !important;
+  box-shadow: 0 18px 46px rgba(96, 74, 145, 0.09) !important;
+}
+
+.pop-about-stage--priority::after {
+  content: 'PROFILE' !important;
+  opacity: 0.45 !important;
+}
+
+.pop-about-stage--priority .pop-about-stage__image {
+  width: min(100%, 240px) !important;
+  aspect-ratio: 1 !important;
+  justify-self: center !important;
+  border-radius: 32px !important;
+  box-shadow: 0 20px 42px rgba(96, 74, 145, 0.13) !important;
+}
+
+.pop-about-stage--priority .pop-about-stage__facts span {
+  min-height: 2.6rem !important;
+  background: rgba(255,255,255,0.66) !important;
+  box-shadow: inset 0 0 0 1px rgba(104, 71, 201, 0.08) !important;
+}
+
+.pop-guide-band--priority {
+  background:
+    linear-gradient(135deg, rgba(76, 49, 142, 0.96), rgba(128, 84, 206, 0.92) 48%, rgba(255, 117, 183, 0.82)) !important;
+  box-shadow: 0 24px 52px rgba(76, 49, 142, 0.18) !important;
+}
+
+.pop-guide-band--priority .pop-guide-band__visual img {
+  transform: translateY(0.12rem) scale(1.16) !important;
+  filter: drop-shadow(0 16px 20px rgba(29, 17, 66, 0.22)) !important;
+}
+
+.pop-guide-band--priority .pop-guide-band__links a:first-child {
+  background: #fff !important;
+  color: var(--mio-brand-deep) !important;
+  box-shadow: 0 14px 24px rgba(29, 17, 66, 0.16) !important;
+}
+
+.pop-guide-band--priority .pop-guide-band__links a:last-child {
+  background: rgba(255,255,255,0.16) !important;
+}
+
+.pop-news-strip {
+  padding: clamp(1.6rem, 4vw, 3rem) 0 clamp(0.8rem, 2vw, 1.4rem) !important;
+}
+
+.pop-news-strip__list {
+  gap: clamp(0.85rem, 1.8vw, 1.25rem) !important;
+}
+
+.pop-news-strip__item {
+  min-height: 12.5rem !important;
+  padding: 1.15rem !important;
+  border: 1px solid rgba(255,255,255,0.78) !important;
+  border-radius: 24px !important;
+  background:
+    linear-gradient(160deg, rgba(255,255,255,0.84), rgba(255,255,255,0.56)),
+    radial-gradient(circle at 100% 0%, rgba(255, 117, 183, 0.13), transparent 9rem) !important;
+  box-shadow: 0 16px 36px rgba(96, 74, 145, 0.07) !important;
+}
+
+.pop-news-strip__item::before {
+  left: auto !important;
+  right: 1rem !important;
+  top: 1rem !important;
+  width: 2.2rem !important;
+  height: 2.2rem !important;
+  background: radial-gradient(circle, rgba(255,117,183,0.25), rgba(95,202,255,0.16)) !important;
+}
+
+.pop-news-strip__item strong {
+  font-size: clamp(1.04rem, 1.5vw, 1.24rem) !important;
+  line-height: 1.5 !important;
+}
+
+.pop-news-strip__item em {
+  align-self: end;
+  color: var(--mio-brand-violet);
+  font-size: 0.78rem;
+  font-style: normal;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.pop-diary-flow {
+  padding: clamp(1rem, 3vw, 2.4rem) 0 !important;
+}
+
+.pop-diary-flow__timeline {
+  overflow: hidden;
+  border-radius: 26px;
+  background: rgba(255,255,255,0.48);
+  border: 1px solid rgba(255,255,255,0.72);
+  box-shadow: 0 16px 36px rgba(96, 74, 145, 0.06);
+}
+
+.pop-diary-flow__item {
+  padding: 1rem 1.15rem !important;
+  transition: background 180ms ease, transform 180ms ease, color 180ms ease !important;
+}
+
+.pop-diary-flow__item:hover,
+.pop-diary-flow__item:focus-visible {
+  background: rgba(255,255,255,0.72) !important;
+}
+
+.pop-follow-dock {
+  margin-top: 0 !important;
+}
+
+@media (max-width: 900px) {
+  .pop-about-stage--priority {
+    grid-template-columns: 1fr !important;
+  }
+
+  .pop-about-stage--priority .pop-about-stage__image {
+    width: min(72vw, 220px) !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .site-shell--home .page-stack {
+    gap: 1.05rem !important;
+  }
+
+  .pop-home-hero__copy::before,
+  .site-shell--home .site-header::after {
+    content: none !important;
+  }
+
+  .pop-about-stage--priority {
+    margin-top: 0.7rem !important;
+    padding: 1rem !important;
+  }
+
+  .pop-news-strip__item {
+    min-height: 0 !important;
+  }
+}
+
+/* Ultimate design pass 2: focus the first view — character, title, primary CTA. */
+@media (min-width: 768px) {
+  .site-shell--home .site-header::after {
+    left: clamp(15rem, 21vw, 23rem) !important;
+    color: rgba(53, 32, 95, 0.24) !important;
+    font-size: 0.64rem !important;
+  }
+
+  .pop-home-hero {
+    grid-template-columns: minmax(0, 1.02fr) minmax(320px, 0.92fr) !important;
+    gap: clamp(1.35rem, 3.2vw, 3.25rem) !important;
+  }
+
+  .pop-home-hero::before {
+    color: rgba(104, 71, 201, 0.034) !important;
+    right: clamp(2.2rem, 6vw, 5.2rem) !important;
+    top: clamp(1.2rem, 3vw, 2.4rem) !important;
+  }
+
+  .pop-home-hero__visual {
+    min-height: 552px !important;
+  }
+
+  .pop-home-hero__visual::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(circle at 60% 24%, rgba(255,255,255,0.28), transparent 10rem),
+      linear-gradient(90deg, rgba(20, 14, 49, 0.08), transparent 42%, rgba(255,255,255,0.08));
+    mix-blend-mode: screen;
+  }
+
+  .pop-home-hero__image {
+    object-position: 58% 11% !important;
+    transform: scale(1.095) !important;
+  }
+
+  .pop-home-hero__copy {
+    justify-self: end !important;
+    width: min(100%, 31.25rem) !important;
+    padding: clamp(1.2rem, 2.15vw, 1.7rem) !important;
+  }
+
+  .pop-home-hero__copy h1 {
+    font-size: clamp(3.05rem, 5.7vw, 4.85rem) !important;
+  }
+
+  .pop-home-hero__actions {
+    gap: 0.95rem !important;
+    margin-top: 0.85rem !important;
+    align-items: center !important;
+  }
+
+  .pop-home-hero__actions .pill-button {
+    min-height: 3.15rem !important;
+    padding: 0.86rem 1.32rem !important;
+    font-size: 0.98rem !important;
+    background: linear-gradient(135deg, var(--mio-brand-deep), var(--mio-brand-violet) 58%, var(--mio-brand-pink)) !important;
+    box-shadow: 0 18px 34px rgba(104, 71, 201, 0.24) !important;
+  }
+
+  .pop-home-hero__actions .official-text-link {
+    opacity: 0.82 !important;
+  }
+
+  .pop-route-rail {
+    left: 50% !important;
+    right: auto !important;
+    bottom: -1.25rem !important;
+    transform: translateX(-50%) !important;
+    max-width: calc(100% - 2rem) !important;
+  }
+
+  .pop-route-rail::before {
+    content: 'SITE MENU';
+    display: inline-flex;
+    align-items: center;
+    padding: 0 0.55rem;
+    color: rgba(53, 32, 95, 0.46);
+    font-size: 0.62rem;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+  }
+}
+
+@media (min-width: 1120px) {
+  .pop-home-hero__copy {
+    margin-right: clamp(0.25rem, 1.5vw, 1.1rem) !important;
+  }
+}
+
+/* Ultimate design pass 3: reduce secondary noise so the primary guide CTA wins. */
+@media (min-width: 768px) {
+  .pop-home-hero::before {
+    color: rgba(104, 71, 201, 0.024) !important;
+  }
+
+  .pop-home-hero::after {
+    opacity: 0.2 !important;
+  }
+
+  .pop-home-hero__actions .pill-button {
+    min-width: 12.5rem !important;
+    justify-content: center !important;
+  }
+
+  .pop-home-hero__actions .official-text-link {
+    color: rgba(53, 32, 95, 0.58) !important;
+    font-weight: 800 !important;
+  }
+
+  .pop-route-rail {
+    opacity: 0.88 !important;
+    transform: translateX(-50%) scale(0.96) !important;
+  }
+
+  .pop-route-rail::before {
+    color: rgba(53, 32, 95, 0.34) !important;
+  }
+
+  .pop-route-rail a {
+    color: rgba(53, 32, 95, 0.66) !important;
+  }
+
+  .pop-route-rail a:first-child {
+    background: rgba(104, 71, 201, 0.08) !important;
+    color: rgba(53, 32, 95, 0.78) !important;
+  }
+
+  .pop-section-heading > span {
+    opacity: 0.72 !important;
+  }
+}
+
+/* Ultimate design pass 4: make lower sections read as a proper guide site, not just decorative cards. */
+.pop-news-strip__item p {
+  margin: -0.15rem 0 0;
+  color: rgba(43, 34, 72, 0.66);
+  font-size: 0.9rem;
+  line-height: 1.65;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.pop-news-strip__item time {
+  margin-top: auto;
+}
+
+.pop-diary-flow__more {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.85rem;
+}
+
+.pop-diary-flow__more a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.65rem;
+  padding: 0.65rem 1rem;
+  border-radius: 999px;
+  color: var(--mio-brand-deep);
+  font-size: 0.88rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  background: rgba(255,255,255,0.68);
+  border: 1px solid rgba(104, 71, 201, 0.13);
+  box-shadow: 0 12px 26px rgba(96, 74, 145, 0.07);
+  transition: transform 180ms ease, background 180ms ease, border-color 180ms ease;
+}
+
+.pop-diary-flow__more a:hover,
+.pop-diary-flow__more a:focus-visible {
+  transform: translateY(-2px);
+  background: rgba(255,255,255,0.9);
+  border-color: rgba(104, 71, 201, 0.26);
+}
+
+.site-shell--home .site-footer {
+  margin-top: clamp(0.8rem, 2.4vw, 1.6rem) !important;
+  border-top: 1px solid rgba(104, 71, 201, 0.12) !important;
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.58), rgba(255,255,255,0.36)),
+    radial-gradient(circle at 100% 0%, rgba(255,117,183,0.1), transparent 16rem) !important;
+}
+
+.site-shell--home .site-footer__brand strong::after {
+  content: ' / Official guide archive';
+  color: rgba(53, 32, 95, 0.48);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+@media (max-width: 767px) {
+  .pop-news-strip__item p {
+    -webkit-line-clamp: 2;
+  }
+
+  .pop-diary-flow__more {
+    justify-content: stretch;
+  }
+
+  .pop-diary-flow__more a {
+    width: 100%;
+  }
+
+  .site-shell--home .site-footer__brand strong::after {
+    display: block;
+    margin-top: 0.15rem;
+  }
+}
+
+/* Ultimate design pass 5: keep latest cards scannable. */
+.pop-news-strip__item p {
+  color: rgba(43, 34, 72, 0.58) !important;
+  -webkit-line-clamp: 2 !important;
+}
+
+.pop-news-strip__item em {
+  width: fit-content;
+  padding: 0.32rem 0.58rem;
+  border-radius: 999px;
+  background: rgba(104, 71, 201, 0.08);
+}
+
+/* Ultimate design pass 6: mobile footer/social polish and entry readability. */
+.pop-guide-band--priority .pop-guide-band__copy p {
+  color: rgba(255, 255, 255, 0.86) !important;
+  text-shadow: 0 1px 10px rgba(35, 17, 83, 0.18);
+}
+
+.site-shell--home .site-footer__social {
+  justify-content: center !important;
+  width: 100% !important;
+  margin-top: 0.9rem !important;
+}
+
+.site-shell--home .site-footer__social a {
+  min-width: 3.4rem !important;
+  min-height: 2.3rem !important;
+  border-radius: 999px !important;
+  background: rgba(255,255,255,0.74) !important;
+  border: 1px solid rgba(104, 71, 201, 0.12) !important;
+  box-shadow: 0 10px 22px rgba(96, 74, 145, 0.06) !important;
+}
+
+@media (max-width: 767px) {
+  .site-shell--home .site-footer {
+    display: grid !important;
+    justify-items: center !important;
+    text-align: center !important;
+    gap: 0.9rem !important;
+    padding-bottom: 1.4rem !important;
+  }
+
+  .site-shell--home .site-footer__links {
+    justify-content: center !important;
+  }
+}

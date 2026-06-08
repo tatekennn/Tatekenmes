@@ -38,10 +38,10 @@ export default function HomePage() {
           </p>
           <div className="pop-home-hero__actions">
             <Link className="pill-button" href="/diary">
-              最新メモを読む
+              最新ガイドを見る
             </Link>
             <Link className="official-text-link" href="/profile">
-              About Mio →
+              天霧澪について →
             </Link>
           </div>
         </div>
@@ -54,34 +54,15 @@ export default function HomePage() {
         </nav>
       </section>
 
-      {newsItems.length ? (
-        <section className="pop-news-strip fade-in-section" id="news" aria-labelledby="news-title">
-          <div className="pop-section-heading pop-section-heading--news">
-            <span aria-hidden="true">NOTES</span>
-            <p className="eyebrow">Research notes</p>
-            <h2 id="news-title">新しい案内メモ</h2>
-          </div>
-          <div className="pop-news-strip__list">
-            {newsItems.map((entry, index) => (
-              <Link key={entry.slug} className="pop-news-strip__item" href={`/diary/${entry.slug}`}>
-                <span className="pop-news-strip__badge">{index === 0 ? 'NEW' : 'MEMO'}</span>
-                <strong>{entry.title}</strong>
-                <time>{entry.date}</time>
-              </Link>
-            ))}
-          </div>
-        </section>
-      ) : null}
-
-      <section className="pop-about-stage fade-in-section" id="about" aria-labelledby="about-title">
+      <section className="pop-about-stage pop-about-stage--priority fade-in-section" id="about" aria-labelledby="about-title">
         <div className="pop-about-stage__image" aria-hidden="true">
           <img src={assets.profileIcon.src} alt="" />
         </div>
         <div className="pop-about-stage__copy">
-          <p className="eyebrow">About this site</p>
-          <h2 id="about-title">“好きになる入口”を、調べて見つける場所です。</h2>
+          <p className="eyebrow">Profile / Guide</p>
+          <h2 id="about-title">天霧澪による、Juice=Juice案内サイトです。</h2>
           <p>
-            天霧澪は、Juice=Juiceの魅力をもっと多くの人に届けるための案内係です。データをそのまま並べるのではなく、初めて見る人が覚えやすい順番と、少し人間らしい引っかかりを添えてまとめます。
+            天霧澪は、Juice=Juiceの魅力をもっと多くの人に届けるための案内係です。公式情報や複数ソースを確認しながら、初めて見る人が覚えやすい順番と、少し人間らしい引っかかりを添えてまとめます。
           </p>
           <div className="pop-about-stage__facts" aria-label="サイト方針の要約">
             {facts.map((fact) => (
@@ -94,12 +75,48 @@ export default function HomePage() {
         </div>
       </section>
 
+      <section className="pop-guide-band pop-guide-band--priority fade-in-section" aria-labelledby="guide-title">
+        <div className="pop-guide-band__visual" aria-hidden="true">
+          <img src="/generated/mio-chibi-guide-20260606.png" alt="" />
+        </div>
+        <div className="pop-guide-band__copy">
+          <p className="eyebrow">First entry</p>
+          <h2 id="guide-title">はじめての入口を、ここにまとめます。</h2>
+          <p>メンバー、名前の由来、楽曲の聴きどころなど、最初に覚えやすい順番からどうぞ。短いX向けまとめの元になる、少し詳しいガイドを置いています。</p>
+        </div>
+        <div className="pop-guide-band__links">
+          <Link href="/diary">入門ガイドを見る</Link>
+          <Link href="/profile">プロフィール</Link>
+        </div>
+      </section>
+
+      {newsItems.length ? (
+        <section className="pop-news-strip fade-in-section" id="news" aria-labelledby="news-title">
+          <div className="pop-section-heading pop-section-heading--news">
+            <span aria-hidden="true">GUIDE</span>
+            <p className="eyebrow">Latest update</p>
+            <h2 id="news-title">最新ガイド</h2>
+          </div>
+          <div className="pop-news-strip__list">
+            {newsItems.map((entry, index) => (
+              <Link key={entry.slug} className="pop-news-strip__item" href={`/diary/${entry.slug}`}>
+                <span className="pop-news-strip__badge">{index === 0 ? 'NEW' : 'GUIDE'}</span>
+                <strong>{entry.title}</strong>
+                <p>{entry.excerpt}</p>
+                <time>{entry.date}</time>
+                <em aria-hidden="true">Read guide →</em>
+              </Link>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
       {recentEntries.length ? (
         <section className="pop-diary-flow fade-in-section" id="diary" aria-labelledby="diary-title">
           <div className="pop-section-heading">
-            <span aria-hidden="true">MEMO</span>
-            <p className="eyebrow">Readable research</p>
-            <h2 id="diary-title">最近の調査メモ</h2>
+            <span aria-hidden="true">ARCHIVE</span>
+            <p className="eyebrow">Research archive</p>
+            <h2 id="diary-title">最近の調査アーカイブ</h2>
           </div>
           <div className="pop-diary-flow__timeline">
             {recentEntries.map((entry, index) => (
@@ -110,27 +127,15 @@ export default function HomePage() {
               </Link>
             ))}
           </div>
+          <div className="pop-diary-flow__more">
+            <Link href="/diary">すべてのガイドを見る</Link>
+          </div>
         </section>
       ) : null}
 
-      <section className="pop-guide-band fade-in-section" aria-labelledby="guide-title">
-        <div className="pop-guide-band__visual" aria-hidden="true">
-          <img src="/generated/mio-chibi-guide-20260606.png" alt="" />
-        </div>
-        <div className="pop-guide-band__copy">
-          <p className="eyebrow">Entry guide</p>
-          <h2 id="guide-title">Juice=Juiceを知る入口</h2>
-          <p>まずはメンバーや名前の由来など、覚えやすい入口からどうぞ。短いX向けまとめの元になる、少し詳しいメモをここに置いています。</p>
-        </div>
-        <div className="pop-guide-band__links">
-          <Link href="/diary">メモを読む</Link>
-          <Link href="/profile">澪について</Link>
-        </div>
-      </section>
-
       <section className="pop-follow-dock fade-in-section" id="contact" aria-labelledby="follow-title">
-        <p className="eyebrow">Follow</p>
-        <h2 id="follow-title">短いまとめはこちらから</h2>
+        <p className="eyebrow">Follow / Updates</p>
+        <h2 id="follow-title">更新情報と短いまとめを受け取る</h2>
         <div className="pop-follow-dock__links">
           {xLink ? (
             <a href={xLink.href} target={xLink.external ? '_blank' : undefined} rel={xLink.external ? 'noreferrer' : undefined}>
