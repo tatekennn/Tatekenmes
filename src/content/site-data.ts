@@ -91,14 +91,14 @@ export const siteData: SiteData = {
     },
     diaryHeader: {
       src: '/generated/mio-diary-header.png',
-      alt: '調査メモページ用のヘッダー画像。窓辺の机で資料を整理する天霧澪。',
-      title: 'Research note header',
-      note: '調査メモ一覧・導入セクション向け。',
+      alt: 'リサーチガイドページ用のヘッダー画像。窓辺の机で資料を整理する天霧澪。',
+      title: 'Research guide header',
+      note: 'リサーチガイド一覧・導入セクション向け。',
     },
     diaryDecor: {
       src: '/generated/mio-diary-decor.png',
       alt: 'ノートや文具をあしらった装飾背景。',
-      title: 'Research note decor',
+      title: 'Research guide decor',
       note: '背景や区切り装飾に使うビジュアル。',
     },
   },
@@ -128,7 +128,7 @@ export const siteData: SiteData = {
     },
     {
       label: '発信',
-      value: 'X短文 / 調査メモ',
+      value: 'X短文 / リサーチガイド',
     },
     {
       label: '方針',
@@ -146,9 +146,9 @@ export const siteData: SiteData = {
       description: 'このサイトの入口と最新の更新。',
     },
     {
-      label: 'メモ',
+      label: 'ガイド',
       href: '/diary',
-      description: 'Juice=Juiceに関する調査メモの一覧。',
+      description: 'Juice=Juiceに関するリサーチガイドの一覧。',
     },
     {
       label: 'プロフィール',
@@ -178,7 +178,7 @@ export const siteData: SiteData = {
       description: '短く話せるJuice=Juiceの背景情報。',
     },
     {
-      tag: '入口メモ',
+      tag: '入門ガイド',
       description: 'まだ詳しくない人が好きになるための入口。',
     },
   ],

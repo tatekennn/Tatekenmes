@@ -14,7 +14,7 @@ export default function HomePage() {
   const newsItems = latestEntry ? [latestEntry, ...recentEntries].slice(0, 3) : recentEntries.slice(0, 3);
 
   return (
-    <SiteShell variant="home">
+    <SiteShell variant="home" activeHref="/">
       <section className="pop-home-hero fade-in-section" id="top" aria-label="天霧澪 ホームヒーロー">
         <div className="pop-home-hero__decor" aria-hidden="true">
           <span className="pop-home-hero__orb pop-home-hero__orb--pink" />
@@ -34,7 +34,7 @@ export default function HomePage() {
           <h1>天霧 澪</h1>
           <p className="pop-home-hero__tagline">Juice=Juiceの魅力を、好きになる入口まで届けます。</p>
           <p className="pop-home-hero__summary">
-            公式情報やメンバーのプロフィール、楽曲の手がかりを調べて、初めて見る人にも届く短いメモと少し詳しい読み物に整えています。
+            公式情報やメンバーのプロフィール、楽曲の手がかりを調べて、初めて見る人にも届く短い要点と少し詳しいガイドに整えています。
           </p>
           <div className="pop-home-hero__actions">
             <Link className="pill-button" href="/diary">
@@ -49,7 +49,7 @@ export default function HomePage() {
         <nav className="pop-route-rail" aria-label="ホーム内ショートカット">
           <a href="#news">NEW</a>
           <a href="#about">ABOUT</a>
-          <a href="#diary">MEMO</a>
+          <a href="#diary">GUIDE</a>
           <a href="#contact">SNS</a>
         </nav>
       </section>
@@ -116,7 +116,7 @@ export default function HomePage() {
           <div className="pop-section-heading">
             <span aria-hidden="true">ARCHIVE</span>
             <p className="eyebrow">Research archive</p>
-            <h2 id="diary-title">最近の調査アーカイブ</h2>
+            <h2 id="diary-title">リサーチアーカイブ</h2>
           </div>
           <div className="pop-diary-flow__timeline">
             {recentEntries.map((entry, index) => (
@@ -143,7 +143,7 @@ export default function HomePage() {
               Xで短く読む
             </a>
           ) : null}
-          <Link href="/diary">調査メモ一覧</Link>
+          <Link href="/diary">ガイド一覧</Link>
         </div>
       </section>
     </SiteShell>

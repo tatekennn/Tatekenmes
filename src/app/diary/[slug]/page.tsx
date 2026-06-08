@@ -13,8 +13,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const entry = getDiaryEntryBySlug(slug);
 
   return {
-    title: entry ? `${entry.title} | 天霧 澪` : '調査メモ | 天霧 澪',
-    description: entry?.excerpt ?? '天霧澪のJuice=Juice調査メモ',
+    title: entry ? `${entry.title} | 天霧 澪` : 'リサーチガイド | 天霧 澪',
+    description: entry?.excerpt ?? '天霧澪のJuice=Juiceリサーチガイド',
   };
 }
 
@@ -31,19 +31,19 @@ export default async function DiaryEntryPage({ params }: { params: Promise<{ slu
   const assets = siteData.generatedAssets;
 
   return (
-    <SiteShell variant="home">
+    <SiteShell variant="home" activeHref="/diary">
       <section className="diary-stage diary-stage--featured">
         <div className="diary-stage__backdrop" style={{ backgroundImage: `url(${assets.diaryHeader.src})` }} />
 
         <div className="diary-stage__heading">
-          <p className="eyebrow">Research memo</p>
+          <p className="eyebrow">Research guide</p>
           <h1>{entry.title}</h1>
           <p className="hero-summary">{entry.excerpt}</p>
         </div>
 
         <div className="diary-feature-layout">
           <article className="diary-feature-main">
-            <p className="eyebrow">Memo data</p>
+            <p className="eyebrow">Guide data</p>
             <div className="entry-meta">
               <span>{entry.date}</span>
               <span>{formatMoodLabel(entry.mood)}</span>
@@ -56,7 +56,7 @@ export default async function DiaryEntryPage({ params }: { params: Promise<{ slu
               ))}
             </div>
             <Link className="official-text-link" href="/diary">
-              メモ一覧へ戻る →
+              ガイド一覧へ戻る →
             </Link>
           </article>
 
@@ -78,7 +78,7 @@ export default async function DiaryEntryPage({ params }: { params: Promise<{ slu
       <section className="archive-landing">
         <article className="archive-landing__panel">
           <div className="archive-landing__intro">
-            <p className="eyebrow">Readable note</p>
+            <p className="eyebrow">Readable guide</p>
             <h2>本文</h2>
           </div>
           <div className="reading-column">
@@ -91,7 +91,7 @@ export default async function DiaryEntryPage({ params }: { params: Promise<{ slu
         <aside className="archive-landing__panel archive-landing__panel--profile-light">
           <div className="archive-guide-links">
             <Link className="archive-guide-link" href="/diary">
-              <strong>調査メモ一覧へ</strong>
+              <strong>リサーチガイド一覧へ</strong>
               <span>ほかのメンバー・楽曲・豆知識の入口をまとめて見たいときはこちらです。</span>
               <em>Archive →</em>
             </Link>
@@ -102,7 +102,7 @@ export default async function DiaryEntryPage({ params }: { params: Promise<{ slu
             </Link>
             <Link className="archive-guide-link" href="/">
               <strong>ホームへ戻る</strong>
-              <span>新しいメモやXへの導線をまとめた入口へ戻ります。</span>
+              <span>新しいガイドやXへの導線をまとめた入口へ戻ります。</span>
               <em>Home →</em>
             </Link>
           </div>

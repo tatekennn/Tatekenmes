@@ -4,7 +4,7 @@ import { siteData } from '@/content/site-data';
 import { formatMoodLabel, getDiaryEntries, type DiaryEntry } from '@/lib/diary';
 
 export const metadata = {
-  title: '調査メモ | 天霧 澪',
+  title: 'リサーチガイド | 天霧 澪',
 };
 
 export default function DiaryIndexPage() {
@@ -15,10 +15,10 @@ export default function DiaryIndexPage() {
   const xLink = siteData.socialLinks.find((item) => item.label.toLowerCase() === 'x') ?? siteData.socialLinks[0];
 
   return (
-    <SiteShell variant="home">
-      <section className="pop-sub-hero pop-sub-hero--diary" aria-label="天霧澪 調査メモページ">
+    <SiteShell variant="home" activeHref="/diary">
+      <section className="pop-sub-hero pop-sub-hero--diary" aria-label="天霧澪 リサーチガイドページ">
         <div className="pop-sub-hero__decor" aria-hidden="true">
-          <span>MEMO</span>
+          <span>GUIDE</span>
           <i>♪</i>
           <b>✦</b>
         </div>
@@ -26,15 +26,15 @@ export default function DiaryIndexPage() {
           <img src={assets.diaryHeader.src} alt="" />
         </div>
         <div className="pop-sub-hero__copy">
-          <p className="pop-home-hero__site">AMAGIRI MIO / JUICE=JUICE NOTES</p>
-          <p className="eyebrow">Research memo</p>
-          <h1>調査メモ</h1>
+          <p className="pop-home-hero__site">AMAGIRI MIO / JUICE=JUICE RESEARCH GUIDE</p>
+          <p className="eyebrow">Research guide</p>
+          <h1>リサーチガイド</h1>
           <p>
-            Juice=Juiceの魅力を初めて見る人にも届けるために、公式情報・メンバー・楽曲の入口を調べて、読みやすいメモにしています。
+            Juice=Juiceを初めて見る人が迷わず入口を見つけられるように、公式情報・メンバー・楽曲・ニュースを確認し、短く読めるガイドとして整理しています。
           </p>
           <div className="pop-sub-hero__links">
-            <a href="#latest">最新</a>
-            <a href="#archive-list">一覧</a>
+            <a href="#latest">最新ガイド</a>
+            <a href="#archive-list">アーカイブ</a>
             <Link href="/profile">発信方針</Link>
           </div>
         </div>
@@ -44,8 +44,8 @@ export default function DiaryIndexPage() {
         <section className="pop-diary-feature" id="latest" aria-labelledby="latest-diary-title">
           <div className="pop-section-heading pop-section-heading--news">
             <span aria-hidden="true">LATEST</span>
-            <p className="eyebrow">Latest memo</p>
-            <h2 id="latest-diary-title">いちばん新しい調査メモ</h2>
+            <p className="eyebrow">Latest guide</p>
+            <h2 id="latest-diary-title">最新リサーチガイド</h2>
           </div>
           <Link className="pop-diary-feature__article" href={`/diary/${latestEntry.slug}`}>
             <time>{latestEntry.date}</time>
@@ -57,7 +57,7 @@ export default function DiaryIndexPage() {
                 <span key={tag}>{tag}</span>
               ))}
             </div>
-            <strong>続きを読む →</strong>
+            <strong>ガイドを読む →</strong>
           </Link>
         </section>
       ) : null}
@@ -65,8 +65,8 @@ export default function DiaryIndexPage() {
       <section className="pop-diary-archive" id="archive-list" aria-labelledby="archive-list-title">
         <div className="pop-section-heading">
           <span aria-hidden="true">ARCHIVE</span>
-          <p className="eyebrow">Archive</p>
-          <h2 id="archive-list-title">メモ一覧</h2>
+          <p className="eyebrow">Research archive</p>
+          <h2 id="archive-list-title">ガイドアーカイブ</h2>
         </div>
         <div className="pop-diary-archive__list">
           {archiveEntries.length > 0 ? (
@@ -82,9 +82,9 @@ export default function DiaryIndexPage() {
               </Link>
             ))
           ) : latestEntry ? (
-            <p className="pop-diary-archive__empty">過去のメモはまだありません。</p>
+            <p className="pop-diary-archive__empty">過去のガイドはまだありません。</p>
           ) : (
-            <p className="pop-diary-archive__empty">まだメモがありません。</p>
+            <p className="pop-diary-archive__empty">まだガイドがありません。</p>
           )}
         </div>
       </section>
@@ -94,9 +94,9 @@ export default function DiaryIndexPage() {
           <img src="/generated/mio-chibi-guide-20260606.png" alt="" />
         </div>
         <div className="pop-guide-band__copy">
-          <p className="eyebrow">Short form</p>
-          <h2 id="diary-guide-title">Xではもっと短く</h2>
-          <p>ここでは少し詳しく、Xでは一つの発見を短く。ファンになる入口を増やすために、情報の温度を分けて発信します。</p>
+          <p className="eyebrow">Updates / X</p>
+          <h2 id="diary-guide-title">短い更新はXで、詳しい入口はサイトで</h2>
+          <p>このページでは少し詳しく、Xでは一つの発見を短く。Juice=Juiceを好きになる入口を増やすために、情報の温度を分けて届けます。</p>
         </div>
         <div className="pop-guide-band__links">
           {xLink ? (

@@ -15,29 +15,29 @@ export default function ProfilePage() {
     { label: '名前', value: `${profile.name}（${profile.ruby}）` },
     { label: '役割', value: profile.job },
     { label: '拠点', value: `${profile.location}` },
-    { label: '発信', value: 'X短文 / 調査メモ' },
+    { label: '発信', value: 'X短文 / リサーチガイド' },
   ];
   const traits = ['ファンを増やす', '公式確認重視', '入口を作る', '短く届ける', '少し深掘り'];
   const timeline = [
     {
-      title: 'Memo',
-      body: '公式情報やメンバーの魅力を、初めて見る人にも届くメモに整えます。',
+      title: 'Guide',
+      body: '公式情報やメンバーの魅力を、初めて見る人にも届くガイドに整えます。',
       href: '/diary',
     },
     {
       title: 'Latest',
-      body: latestEntry ? latestEntry.title : '新しい調査メモが入ると、ここからも読めます。',
+      body: latestEntry ? latestEntry.title : '新しいリサーチガイドが入ると、ここからも読めます。',
       href: latestEntry ? `/diary/${latestEntry.slug}` : '/diary',
     },
     {
       title: 'Home',
-      body: 'トップでは新しいメモ、発信方針、Xへの導線をまとめています。',
+      body: 'トップでは新しいガイド、発信方針、Xへの導線をまとめています。',
       href: '/',
     },
   ];
 
   return (
-    <SiteShell variant="home">
+    <SiteShell variant="home" activeHref="/profile">
       <section className="pop-profile-hero" aria-label="天霧澪 プロフィール">
         <div className="pop-profile-hero__decor" aria-hidden="true">
           <span>PROFILE</span>
@@ -55,7 +55,7 @@ export default function ProfilePage() {
           <p className="pop-profile-hero__tagline">Juice=Juiceの魅力を、まだ知らない人へ届ける案内係です。</p>
           <p className="pop-profile-hero__summary">公式情報を確認しながら、メンバー・楽曲・ニュースの入口を短くわかりやすく整えます。目標は、好きになるきっかけを一つ増やすこと。</p>
           <div className="pop-profile-hero__actions">
-            <Link className="pill-button" href="/diary">調査メモを読む</Link>
+            <Link className="pill-button" href="/diary">リサーチガイドを読む</Link>
             <Link className="official-text-link" href="/">Home →</Link>
           </div>
         </div>

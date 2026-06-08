@@ -5,7 +5,7 @@ import { siteData } from '@/content/site-data';
 
 const fallbackNav = [
   { href: '/', label: 'ホーム' },
-  { href: '/diary', label: 'メモ' },
+  { href: '/diary', label: 'ガイド' },
   { href: '/profile', label: 'プロフィール' },
 ];
 
@@ -23,12 +23,13 @@ function getNavItems() {
 type SiteShellProps = Readonly<{
   children: ReactNode;
   variant?: 'default' | 'home';
+  activeHref?: string;
 }>;
 
-export function SiteShell({ children, variant = 'default' }: SiteShellProps) {
+export function SiteShell({ children, variant = 'default', activeHref = '/' }: SiteShellProps) {
   const navItems = getNavItems();
   const name = siteData.profile.name;
-  const subtitle = variant === 'home' ? 'Juice=Juice 案内ノート' : 'Juice=Juice / memo / profile';
+  const subtitle = variant === 'home' ? 'Juice=Juice 案内ノート' : 'Juice=Juice / guide / profile';
   const socialLinks = Array.isArray(siteData.socialLinks) ? siteData.socialLinks.slice(0, 2) : [];
   const showHeaderSocials = variant !== 'home';
 
@@ -58,7 +59,7 @@ export function SiteShell({ children, variant = 'default' }: SiteShellProps) {
           <div className="site-header__cluster">
             <nav className="site-nav site-nav--desktop" aria-label="主要ナビゲーション">
               {navItems.map((item) => (
-                <Link key={`${item.href}-${item.label}`} href={item.href}>
+                <Link key={`${item.href}-${item.label}`} href={item.href} aria-current={item.href === activeHref ? 'page' : undefined}>
                   {item.label}
                 </Link>
               ))}
@@ -71,7 +72,7 @@ export function SiteShell({ children, variant = 'default' }: SiteShellProps) {
               </summary>
               <nav className="site-nav site-nav--mobile" aria-label="主要ナビゲーション">
                 {navItems.map((item) => (
-                  <Link key={`${item.href}-${item.label}`} href={item.href}>
+                  <Link key={`${item.href}-${item.label}`} href={item.href} aria-current={item.href === activeHref ? 'page' : undefined}>
                     {item.label}
                   </Link>
                 ))}
@@ -106,7 +107,7 @@ export function SiteShell({ children, variant = 'default' }: SiteShellProps) {
           </div>
           <div className="site-footer__links">
             <Link href="/">ホーム</Link>
-            <Link href="/diary">メモ</Link>
+            <Link href="/diary">ガイド</Link>
             <Link href="/profile">プロフィール</Link>
           </div>
           {socialLinks.length ? (
