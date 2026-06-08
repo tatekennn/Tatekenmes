@@ -9183,3 +9183,133 @@ h3,
     width: clamp(8.8rem, 42vw, 10.4rem) !important;
   }
 }
+
+/* Desktop UI polish: make the header a light navigation bar again and let the hero carry the page. */
+@media (min-width: 768px) {
+  .site-shell--home .site-header {
+    min-height: 0 !important;
+    margin-bottom: 0.7rem !important;
+    padding: 0.55rem 0.8rem 0.55rem 0.95rem !important;
+    border-radius: 28px !important;
+    background: rgba(255, 255, 255, 0.66) !important;
+    border-color: rgba(255, 255, 255, 0.76) !important;
+    box-shadow: 0 14px 34px rgba(96, 74, 145, 0.07) !important;
+    backdrop-filter: blur(16px) !important;
+  }
+
+  .site-shell--home .site-brand__logo-link {
+    padding: 0.08rem 0.35rem 0.08rem 0 !important;
+  }
+
+  .site-shell--home .site-brand__logo-link::before {
+    inset: -0.3rem -0.55rem -0.38rem -0.35rem !important;
+    background:
+      radial-gradient(circle at 42% 50%, rgba(255, 255, 255, 0.7), transparent 55%),
+      radial-gradient(circle at 58% 48%, rgba(185, 139, 255, 0.16), transparent 58%) !important;
+    filter: blur(7px) !important;
+    opacity: 0.72 !important;
+  }
+
+  .site-shell--home .site-brand__logo {
+    width: clamp(220px, 17vw, 330px) !important;
+    max-height: 86px !important;
+    object-fit: contain !important;
+    filter: drop-shadow(0 8px 12px rgba(104, 71, 201, 0.1)) !important;
+  }
+
+  .site-shell--home .site-header__cluster {
+    gap: 0.55rem !important;
+  }
+
+  .site-shell--home .site-nav {
+    gap: 0.55rem !important;
+  }
+
+  .site-shell--home .site-nav a {
+    min-width: 7.8rem !important;
+    min-height: 2.85rem !important;
+    padding: 0.62rem 1.05rem !important;
+    border-radius: 999px !important;
+    background: rgba(255, 255, 255, 0.5) !important;
+    border-color: rgba(125, 85, 232, 0.14) !important;
+    box-shadow: 0 8px 18px rgba(96, 74, 145, 0.04) !important;
+    font-size: 0.95rem !important;
+  }
+
+  .pop-home-hero {
+    grid-template-columns: minmax(0, 0.94fr) minmax(340px, 1.06fr) !important;
+    gap: clamp(0.8rem, 2vw, 2rem) !important;
+    min-height: clamp(560px, 68vh, 680px) !important;
+    padding: clamp(0.85rem, 2.2vw, 1.8rem) !important;
+    border-radius: 34px !important;
+    background:
+      linear-gradient(135deg, rgba(255,255,255,0.56), rgba(255,255,255,0.16)),
+      radial-gradient(circle at 76% 24%, rgba(255, 165, 210, 0.18), transparent 16rem),
+      radial-gradient(circle at 32% 76%, rgba(122, 210, 255, 0.14), transparent 17rem) !important;
+    box-shadow: 0 24px 60px rgba(96, 74, 145, 0.12) !important;
+  }
+
+  .pop-home-hero::after {
+    opacity: 0.34 !important;
+  }
+
+  .pop-home-hero__visual {
+    min-height: 500px !important;
+    border-radius: 28px !important;
+    transform: none !important;
+    box-shadow: 0 20px 48px rgba(96, 74, 145, 0.14) !important;
+  }
+
+  .pop-home-hero__image {
+    transform: scale(1.015) !important;
+    filter: saturate(1.06) contrast(1.02) !important;
+  }
+
+  .pop-home-hero__copy {
+    max-width: 33rem !important;
+    padding: clamp(1.1rem, 2vw, 1.55rem) !important;
+    border-radius: 26px !important;
+    background: rgba(255, 255, 255, 0.68) !important;
+    box-shadow: 0 18px 40px rgba(96, 74, 145, 0.1) !important;
+  }
+
+  .pop-home-hero__copy h1 {
+    font-size: clamp(3.1rem, 6.4vw, 5.15rem) !important;
+    letter-spacing: -0.052em !important;
+  }
+
+  .pop-home-hero__tagline {
+    font-size: clamp(1.02rem, 1.65vw, 1.24rem) !important;
+  }
+
+  .pop-home-hero__summary {
+    line-height: 1.75 !important;
+  }
+
+  .pop-route-rail {
+    bottom: 0.78rem !important;
+    gap: 0.42rem !important;
+  }
+
+  .pop-route-rail a {
+    min-height: 2.2rem !important;
+    padding: 0.45rem 0.72rem !important;
+    font-size: 0.72rem !important;
+    box-shadow: 0 8px 18px rgba(96, 74, 145, 0.08) !important;
+  }
+}
+
+@media (min-width: 1280px) {
+  .site-shell--home .site-header {
+    padding-left: 1.15rem !important;
+    padding-right: 1rem !important;
+  }
+
+  .site-shell--home .site-brand__logo {
+    width: clamp(250px, 16vw, 360px) !important;
+  }
+
+  .pop-home-hero {
+    min-height: clamp(580px, 70vh, 700px) !important;
+  }
+}
