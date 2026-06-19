@@ -19,11 +19,63 @@
 ## 重要な前提
 
 - リポジトリは Next.js 15 App Router 構成です。
+- 現在GitHub/Vercelで公開している `自分OS` は Ruby/Rails ではありません。
+- 最初にローカルで作っていた方向性はRuby/Rails寄りでしたが、既存のVercel連携リポジトリがNext.jsだったため、公開優先でNext.jsに移植しています。
 - 既存の天霧澪サイトは消していません。
 - ルート `/` は現在 `自分OS` に差し替えています。
 - 以前のトップページは `/amagiri` に退避しています。
 - 既存の `/diary` と `/profile` は維持しています。
 - GitHub の `main` に push すると、連携済みVercelで反映される想定です。
+
+## Ruby/Railsについて
+
+Rubyを使うことがこのプロジェクトの目的なら、現状のNext.js実装はあくまで「見た目と体験の先行プロトタイプ」です。
+
+VercelにはRuby Function runtimeはありますが、Railsアプリ全体を自然に動かす用途というより、単一HTTPハンドラ向けです。そのため、Ruby/Railsを主役にしたい場合は以下のどちらかを推奨します。
+
+### 推奨A: Railsを本体にする
+
+Railsでアプリ本体を作り直し、DB保存、フォーム処理、AIチャット連携もRails側で実装します。
+
+この場合、デプロイ先はVercelよりも以下のようなRails向き環境が自然です。
+
+- Render
+- Fly.io
+- Railway
+- Heroku系
+- VPS
+
+メリット:
+
+- Ruby/Railsの学習・実装目的に合う
+- フォーム、DB、認証、バックグラウンド処理を素直に書ける
+- Hotwire/Turboを使えばアプリ風UIもRuby中心で作れる
+
+注意:
+
+- 現在のVercel連携とは別のデプロイ設計になる可能性が高い
+- Next.js版のUIは移植元デザインとして扱う
+
+### 推奨B: Next.jsフロント + Ruby API
+
+Vercel上のNext.js UIは残し、保存処理やAIチャットのバックエンドをRuby/Rails APIに分けます。
+
+メリット:
+
+- 今のVercel表示を維持できる
+- Rubyも実プロダクトのバックエンドとして使える
+- UI改善とRubyバックエンド開発を分離できる
+
+注意:
+
+- フロントとAPIの2サービス構成になる
+- 認証、CORS、環境変数、デプロイ先を設計する必要がある
+
+### 非推奨寄り: Vercel Ruby Functionだけで頑張る
+
+小さなAPIなら可能ですが、Railsアプリとして育てたい目的には合いにくいです。
+
+このリポジトリを次に触るエージェントは、まず「Rubyを主目的に戻すのか」「Vercel表示を主目的にするのか」を確認してください。
 
 ## 主要ルート
 
