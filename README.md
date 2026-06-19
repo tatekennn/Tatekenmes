@@ -2,6 +2,12 @@
 
 天霧 澪の個人サイト兼日記アーカイブです。`src/content/site-data.ts` にキャラ設定を、`content/diary/*.json` に日記を置き、GitHub への push をきっかけに Vercel が再デプロイする前提で構成しています。
 
+## Current main app
+
+現在、ルート `/` は `自分OS` アプリUIを表示しています。目的・構成・挙動・次に触るべきファイルは `docs/jibun-os-handoff.md` にまとめています。
+
+既存の天霧澪トップページは `/amagiri` に退避しており、`/diary` と `/profile` は維持しています。
+
 ## What is included
 
 - Next.js 15 App Router shell in TypeScript
