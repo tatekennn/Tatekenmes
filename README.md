@@ -1,154 +1,93 @@
-# Tatekenmes character diary site
+# 覇気.com
 
-天霧 澪の個人サイト兼日記アーカイブです。`src/content/site-data.ts` にキャラ設定を、`content/diary/*.json` に日記を置き、GitHub への push をきっかけに Vercel が再デプロイする前提で構成しています。
+`覇気.com` 用の最小ランディングページです。
 
-## Current main app
+- 表示内容: 大きく「覇気」、下部に `coming soon`
+- 技術構成: Next.js 15 App Router / TypeScript
+- デプロイ: GitHub `main` への push を契機に Vercel が自動デプロイ
+- 現在確認済みの公開URL: <https://tatekenmes.vercel.app>
+- 独自ドメイン: `覇気.com` / Punycode `xn--7qwx14d.com`
 
-現在、ルート `/` は `自分OS` アプリUIを表示しています。目的・構成・挙動・次に触るべきファイルは `docs/jibun-os-handoff.md` にまとめています。
-
-既存の天霧澪トップページは `/amagiri` に退避しており、`/diary` と `/profile` は維持しています。
-
-## What is included
-
-- Next.js 15 App Router shell in TypeScript
-- Home, diary archive, diary detail, profile, and world pages
-- Server-side diary loader using `fs` and `path`
-- Purple dusk visual theme with clean cards, thin borders, and soft glow accents
-- Hermes-ready prompt and validation script for daily diary entry generation
-- Documentation for cron → git push → Vercel deployment flow
-
-## Project structure
+## 現在の構成
 
 ```text
-src/
-  app/
-  components/
-  lib/diary.ts
-  content/site-data.ts
-content/
-  diary/*.json
-scripts/
-  generate_diary_prompt.txt
-  add-diary-entry.mjs
-docs/
-  hermes-automation.md
+src/app/
+  page.tsx          # トップページ
+  globals.css       # 覇気.com の全面ビジュアル
+  layout.tsx        # metadata / viewport
+  manifest.ts       # PWA manifest
+  icon.tsx          # 512px icon
+  apple-icon.tsx    # 180px icon
+  not-found.tsx     # 404
 ```
 
-## Local setup
+旧 Juice=Juice / 天霧澪 / 自分OS 関連のページ・日記・画像・生成スクリプトは削除済みです。
 
-From the repository root:
+## Local setup
 
 ```bash
 cd /opt/data/Tatekenmes
 npm install
+npm run lint
 npm run build
 ```
 
-Optional local development server:
+開発サーバー:
 
 ```bash
 npm run dev
 ```
 
-このリポジトリには初期状態で `src/content/site-data.ts` と 5 本の日記 JSON が入っています。`content/diary` が空でもビルドは通りますが、公開サイトとしては最低 1 本以上ある方が自然です。
-
-## Content model
-
-### Site data
-
-ページ群は `src/content/site-data.ts` の以下を利用します:
-
-- `profile`
-- `navigation`
-- `worldFragments`
-- `featuredQuote`
-- `quickFacts`
-- `tagDescriptions`
-
-### Diary entries
-
-Each file in `content/diary` should be JSON with this shape:
-
-```json
-{
-  "slug": "2026-06-01",
-  "date": "2026-06-01",
-  "title": "...",
-  "excerpt": "...",
-  "tags": ["仕事", "観測"],
-  "mood": "quiet",
-  "body": ["paragraph1", "paragraph2", "paragraph3"]
-}
-```
-
-Entries are loaded on the server and sorted by `date` descending.
-
-## Adding diary entries with the script
-
-The helper script accepts either a JSON file path or stdin.
+## Deployment
 
 ```bash
-node scripts/add-diary-entry.mjs /tmp/entry.json
+git add .
+git commit -m "docs: update haki domain readme"
+git push origin main
 ```
 
-Or:
+Vercel 側で GitHub リポジトリと `main` ブランチが接続されていれば、自動で本番反映されます。
+
+## Domain setup TODO
+
+`覇気.com` を本番URLにするには、DNS側とVercel側の両方が必要です。
+
+### 1. Vercel側
+
+Vercel Project Settings → Domains に以下を追加します。
+
+- `xn--7qwx14d.com`（= 覇気.com）
+- 必要なら `www.xn--7qwx14d.com`
+
+### 2. ムームードメイン / DNS側
+
+Vercel標準構成の場合:
+
+| Host | Type | Value |
+| --- | --- | --- |
+| `@` | `A` | `76.76.21.21` |
+| `www` | `CNAME` | `cname.vercel-dns.com` |
+
+注意:
+
+- メール利用予定がある場合、MX / SPF / DKIM / DMARC などの既存レコードは消さないこと。
+- 日本語ドメインは管理画面やCLIでは Punycode の `xn--7qwx14d.com` として扱う場面があります。
+- DNS設定後、SSL/TLS発行と反映に数分〜数十分かかることがあります。
+
+## Verification
+
+DNS設定後に確認するコマンド:
 
 ```bash
-cat /tmp/entry.json | node scripts/add-diary-entry.mjs
+dig xn--7qwx14d.com A +short
+dig www.xn--7qwx14d.com CNAME +short
+curl -I https://xn--7qwx14d.com
+curl -L https://xn--7qwx14d.com | grep '覇気'
 ```
 
-It will:
+期待値:
 
-- validate required keys
-- require `slug` and `date` in `YYYY-MM-DD` format
-- require `slug === date`
-- write `content/diary/YYYY-MM-DD.json`
-- refuse overwrite unless `--force` is passed
-
-Example overwrite:
-
-```bash
-cat /tmp/entry.json | node scripts/add-diary-entry.mjs --force
-```
-
-## Hermes daily automation flow
-
-The intended automation loop is:
-
-1. Hermes runs inside `/opt/data/Tatekenmes` on a daily cron.
-2. Hermes generates one JSON entry from `scripts/generate_diary_prompt.txt`.
-3. `node scripts/add-diary-entry.mjs` validates and writes the file.
-4. Git stages the new diary file.
-5. Git commits and pushes.
-6. Vercel receives the push and rebuilds automatically.
-
-See `docs/hermes-automation.md` for the operational flow and guardrails.
-
-## Vercel deployment
-
-1. Push this repository to the git remote linked with Vercel.
-2. In Vercel, ensure the framework preset is Next.js.
-3. Keep the production branch aligned with the branch Hermes pushes to.
-4. Each new diary commit triggers a new deployment automatically.
-
-ローカル JSON をそのまま読むため、基本構成では別途 CMS やデータベースは不要です。
-
-## Git credential rotation guidance
-
-For automation:
-
-- use a dedicated git credential or PAT with the minimum push scope required
-- store it in the automation environment, not in the repo
-- rotate it on a schedule and immediately after any suspected exposure
-- verify Vercel remains connected to the correct remote after credential changes
-
-## Verification commands
-
-Use these exact commands after content files are present:
-
-```bash
-npm install
-npm run build
-# optional
-npm run dev
-```
+- apex `xn--7qwx14d.com` が Vercel の `76.76.21.21` へ向く
+- `www` が `cname.vercel-dns.com` へ向く
+- HTTPSでアクセスできる
+- HTML内に `覇気` / `coming soon` が含まれる
