@@ -1,10 +1,13 @@
-import { JibunOsApp } from '@/components/jibun-os-app';
-
-export const metadata = {
-  title: '自分OS',
-  description: '打刻、有料列車、ランチ、趣味をまとめて管理する自分用OS。',
-};
-
 export default function HomePage() {
-  return <JibunOsApp view="home" />;
+  return (
+    <main className="haki-stage" aria-label="覇気.com">
+      <div className="aura aura-one" />
+      <div className="aura aura-two" />
+      <p className="domain">覇気.com</p>
+      <h1 className="haki" aria-label="覇気">
+        覇気
+      </h1>
+      <p className="tagline">coming soon</p>
+    </main>
+  );
 }

@@ -1,17 +1,13 @@
 import Link from 'next/link';
-import { SiteShell } from '@/components/site-shell';
 
 export default function NotFound() {
   return (
-    <SiteShell>
-      <section className="hero-card compact-hero">
-        <p className="eyebrow">404</p>
-        <h1>記録が見つかりません</h1>
-        <p className="hero-summary">探していたページは、観測の外側へ静かに流れていきました。</p>
-        <Link className="inline-link" href="/">
-          ホームへ戻る
-        </Link>
-      </section>
-    </SiteShell>
+    <main className="haki-stage" aria-label="404">
+      <p className="domain">覇気.com</p>
+      <h1 className="not-found-title">404</h1>
+      <Link className="home-link" href="/">
+        覇気へ戻る
+      </Link>
+    </main>
   );
 }

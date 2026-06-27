@@ -2,15 +2,15 @@ import type { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: '自分OS',
-    short_name: '自分OS',
-    description: '打刻、有料列車、ランチ、趣味をまとめて管理する自分用OS。',
+    name: '覇気.com',
+    short_name: '覇気',
+    description: '覇気を、大画面で。',
     start_url: '/',
     scope: '/',
     display: 'standalone',
-    background_color: '#f7fffd',
-    theme_color: '#f7fffd',
-    orientation: 'portrait',
+    background_color: '#050505',
+    theme_color: '#050505',
+    orientation: 'any',
     icons: [
       {
         src: '/icon',

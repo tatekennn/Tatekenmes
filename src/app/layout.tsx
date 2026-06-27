@@ -1,31 +1,30 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
-import { siteData } from '@/content/site-data';
 import './globals.css';
 
-export const viewport = {
+export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  viewportFit: 'cover' as const,
-  themeColor: '#f7fffd',
+  themeColor: '#050505',
 };
 
 export const metadata: Metadata = {
-  title: siteData.metadata.title,
-  description: siteData.metadata.description,
-  applicationName: '自分OS',
-  manifest: '/manifest.webmanifest',
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: 'default',
-    title: '自分OS',
+  metadataBase: new URL('https://xn--7qwx14d.com'),
+  title: '覇気.com',
+  description: '覇気を、大画面で。',
+  applicationName: '覇気.com',
+  openGraph: {
+    title: '覇気.com',
+    description: '覇気を、大画面で。',
+    url: 'https://xn--7qwx14d.com',
+    siteName: '覇気.com',
+    locale: 'ja_JP',
+    type: 'website',
   },
-  formatDetection: {
-    telephone: false,
-  },
-  icons: {
-    icon: [{ url: '/icon', sizes: '512x512', type: 'image/png' }],
-    apple: [{ url: '/apple-icon', sizes: '180x180', type: 'image/png' }],
+  twitter: {
+    card: 'summary_large_image',
+    title: '覇気.com',
+    description: '覇気を、大画面で。',
   },
 };
 

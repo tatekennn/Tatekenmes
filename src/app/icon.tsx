@@ -17,35 +17,14 @@ export default function Icon() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          background: 'linear-gradient(145deg, #f7fffd 0%, #dff6f2 46%, #ffffff 100%)',
+          background: 'radial-gradient(circle at 50% 45%, #3a080c 0%, #090505 62%, #000 100%)',
+          color: '#f7f1df',
+          fontSize: 210,
+          fontWeight: 900,
+          fontFamily: 'serif',
         }}
       >
-        <div
-          style={{
-            width: 360,
-            height: 360,
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: 34,
-            padding: 62,
-            borderRadius: 88,
-            background: 'linear-gradient(135deg, #13bfb6, #83e2dc)',
-            boxShadow: '0 34px 80px rgba(19, 191, 182, 0.32)',
-          }}
-        >
-          {[0, 1, 2, 3].map((dot) => (
-            <div
-              key={dot}
-              style={{
-                width: 101,
-                height: 101,
-                borderRadius: 18,
-                background: '#ffffff',
-                boxShadow: 'inset 0 2px 0 rgba(255,255,255,0.7)',
-              }}
-            />
-          ))}
-        </div>
+        覇気
       </div>
     ),
     size,
