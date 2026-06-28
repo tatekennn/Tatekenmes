@@ -3,9 +3,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 type Phase = 'title' | 'playing' | 'clear' | 'over';
-type Stroke = { x1: number; y1: number; x2: number; y2: number; w: number; tag?: 'safe' | 'goal' };
 type Vec = { x: number; y: number };
-type Enemy = { id: number; stroke: number; t: number; dir: 1 | -1; speed: number; alive: boolean; x: number; y: number };
+type Ripple = { x: number; y: number; age: number };
+
 type Game = {
   phase: Phase;
   player: Vec;
@@ -18,119 +18,191 @@ type Game = {
   lives: number;
   elapsed: number;
   startedAt: number;
-  enemies: Enemy[];
   camera: Vec;
   message: string;
   falling: boolean;
   fallVy: number;
+  ripples: Ripple[];
 };
+
+type GlyphMask = {
+  data: Uint8ClampedArray;
+  width: number;
+  height: number;
+};
+
+type TerrainHit = { point: Vec; d: number };
 
 const WORLD = { w: 2300, h: 1280 };
 const VIEW = { w: 960, h: 540 };
 const PLAYER_R = 12;
-const TAP_PAD = 10;
+const TAP_PAD = 26;
 const MOVE_SPEED = 760;
+const OVERVIEW_PAD = 54;
 const GRAVITY = 1450;
-const GOAL = { x: 2070, y: 1045, w: 120, h: 92 };
+const GOAL = { x: 2034, y: 1036, r: 54 };
 const HAKI_FONT = '900 940px ui-serif, "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif';
 const HAKI_POS = { haX: 60, kiX: 1120, baseY: 930 };
 
-// 太い筆画の集合。全体では「覇気」、カメラ内では巨大な断片に見える比率にする。
-const strokes: Stroke[] = [
-  // 覇 - 雨かんむり
-  { x1: 120, y1: 150, x2: 930, y2: 150, w: 58, tag: 'safe' },
-  { x1: 180, y1: 245, x2: 860, y2: 245, w: 42 },
-  { x1: 230, y1: 90, x2: 230, y2: 330, w: 42 },
-  { x1: 430, y1: 80, x2: 430, y2: 335, w: 38 },
-  { x1: 655, y1: 82, x2: 655, y2: 332, w: 38 },
-  { x1: 850, y1: 96, x2: 850, y2: 310, w: 38 },
-  // 覇 - 本体
-  { x1: 185, y1: 420, x2: 930, y2: 420, w: 54 },
-  { x1: 155, y1: 575, x2: 965, y2: 575, w: 58 },
-  { x1: 210, y1: 740, x2: 880, y2: 740, w: 52 },
-  { x1: 150, y1: 925, x2: 930, y2: 925, w: 62 },
-  { x1: 520, y1: 340, x2: 520, y2: 1075, w: 54 },
-  { x1: 305, y1: 430, x2: 305, y2: 810, w: 38 },
-  { x1: 760, y1: 420, x2: 760, y2: 960, w: 42 },
-  { x1: 320, y1: 1090, x2: 820, y2: 1180, w: 58 },
-  // 文字間の飛び移り筆画
-  { x1: 895, y1: 710, x2: 1160, y2: 600, w: 54 },
-  { x1: 910, y1: 1015, x2: 1240, y2: 895, w: 48 },
-  // 気 - 上部
-  { x1: 1280, y1: 170, x2: 2140, y2: 170, w: 64 },
-  { x1: 1340, y1: 340, x2: 2060, y2: 340, w: 48 },
-  { x1: 1420, y1: 505, x2: 1975, y2: 505, w: 48 },
-  { x1: 1325, y1: 685, x2: 2060, y2: 685, w: 54 },
-  // 気 - 払い・曲がりに相当する斜め/縦画
-  { x1: 1640, y1: 520, x2: 2190, y2: 1040, w: 78 },
-  { x1: 1780, y1: 720, x2: 2100, y2: 1145, w: 58 },
-  { x1: 1320, y1: 1040, x2: 1990, y2: 875, w: 58 },
-  { x1: 1510, y1: 825, x2: 1740, y2: 1040, w: 52 },
-  // 気 - 点・小足場
-  { x1: 1410, y1: 865, x2: 1410, y2: 865, w: 88 },
-  { x1: 1600, y1: 965, x2: 1600, y2: 965, w: 78 },
-  { x1: 1885, y1: 795, x2: 1885, y2: 795, w: 84 },
-  { x1: GOAL.x, y1: GOAL.y + 72, x2: GOAL.x + GOAL.w, y2: GOAL.y + 72, w: 42, tag: 'goal' },
-];
-
-const enemySeeds: Enemy[] = [
-  { id: 1, stroke: 6, t: 0.72, dir: 1, speed: 0.07, alive: true, x: 0, y: 0 },
-  { id: 2, stroke: 8, t: 0.25, dir: -1, speed: 0.09, alive: true, x: 0, y: 0 },
-  { id: 3, stroke: 14, t: 0.5, dir: 1, speed: 0.10, alive: true, x: 0, y: 0 },
-  { id: 4, stroke: 19, t: 0.55, dir: -1, speed: 0.08, alive: true, x: 0, y: 0 },
-  { id: 5, stroke: 21, t: 0.65, dir: 1, speed: 0.08, alive: true, x: 0, y: 0 },
-];
+let glyphMask: GlyphMask | null = null;
 
 function clamp(n: number, min: number, max: number) { return Math.max(min, Math.min(max, n)); }
 function lerp(a: number, b: number, t: number) { return a + (b - a) * t; }
 function dist(a: Vec, b: Vec) { return Math.hypot(a.x - b.x, a.y - b.y); }
-function closestOnStroke(p: Vec, s: Stroke) {
-  const dx = s.x2 - s.x1;
-  const dy = s.y2 - s.y1;
-  const l2 = dx * dx + dy * dy;
-  if (l2 < 1) return { x: s.x1, y: s.y1, t: 0, d: dist(p, { x: s.x1, y: s.y1 }) };
-  const t = clamp(((p.x - s.x1) * dx + (p.y - s.y1) * dy) / l2, 0, 1);
-  const x = s.x1 + dx * t;
-  const y = s.y1 + dy * t;
-  return { x, y, t, d: Math.hypot(p.x - x, p.y - y) };
-}
-type TerrainHit = { stroke: Stroke; point: Vec; d: number; index: number };
-function terrainAt(p: Vec, pad = 0): TerrainHit | null {
-  let best: TerrainHit | null = null;
-  for (let index = 0; index < strokes.length; index += 1) {
-    const s = strokes[index];
-    const c = closestOnStroke(p, s);
-    const limit = s.w / 2 + pad;
-    if (c.d <= limit && (!best || c.d < best.d)) best = { stroke: s, point: { x: c.x, y: c.y }, d: c.d, index };
+
+function drawHakiGlyph(ctx: CanvasRenderingContext2D, glowing = false) {
+  ctx.save();
+  ctx.font = HAKI_FONT;
+  ctx.lineJoin = 'round';
+  if (glowing) {
+    ctx.shadowBlur = 34;
+    ctx.shadowColor = 'rgba(245,221,179,0.72)';
+    ctx.strokeStyle = 'rgba(0,0,0,0.72)';
+    ctx.lineWidth = 58;
+    ctx.strokeText('覇', HAKI_POS.haX, HAKI_POS.baseY);
+    ctx.strokeText('気', HAKI_POS.kiX, HAKI_POS.baseY);
   }
+  ctx.strokeStyle = glowing ? 'rgba(255,246,221,0.95)' : '#ffffff';
+  ctx.lineWidth = 34;
+  ctx.strokeText('覇', HAKI_POS.haX, HAKI_POS.baseY);
+  ctx.strokeText('気', HAKI_POS.kiX, HAKI_POS.baseY);
+
+  if (glowing) {
+    const textGrad = ctx.createLinearGradient(0, 110, WORLD.w, 1080);
+    textGrad.addColorStop(0, '#fff7de');
+    textGrad.addColorStop(0.46, '#d5b56f');
+    textGrad.addColorStop(1, '#fff1c2');
+    ctx.fillStyle = textGrad;
+  } else {
+    ctx.fillStyle = '#ffffff';
+  }
+  ctx.fillText('覇', HAKI_POS.haX, HAKI_POS.baseY);
+  ctx.fillText('気', HAKI_POS.kiX, HAKI_POS.baseY);
+  ctx.restore();
+}
+
+function ensureGlyphMask() {
+  if (glyphMask || typeof document === 'undefined') return glyphMask;
+  const canvas = document.createElement('canvas');
+  canvas.width = WORLD.w;
+  canvas.height = WORLD.h;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  if (!ctx) return null;
+
+  ctx.clearRect(0, 0, WORLD.w, WORLD.h);
+  drawHakiGlyph(ctx, false);
+  glyphMask = {
+    data: ctx.getImageData(0, 0, WORLD.w, WORLD.h).data,
+    width: WORLD.w,
+    height: WORLD.h,
+  };
+  return glyphMask;
+}
+
+function alphaAt(p: Vec) {
+  const mask = ensureGlyphMask();
+  if (!mask) return 0;
+  const x = Math.round(p.x);
+  const y = Math.round(p.y);
+  if (x < 0 || y < 0 || x >= mask.width || y >= mask.height) return 0;
+  return mask.data[(y * mask.width + x) * 4 + 3];
+}
+
+function isGlyphSolid(p: Vec, pad = 0) {
+  const r = Math.max(0, Math.ceil(pad));
+  if (r === 0) return alphaAt(p) > 18;
+  const step = r > 10 ? 4 : 2;
+  for (let y = -r; y <= r; y += step) {
+    for (let x = -r; x <= r; x += step) {
+      if (x * x + y * y <= r * r && alphaAt({ x: p.x + x, y: p.y + y }) > 18) return true;
+    }
+  }
+  return false;
+}
+
+function nearestGlyphPoint(p: Vec, radius: number): TerrainHit | null {
+  if (isGlyphSolid(p)) return { point: p, d: 0 };
+  const maxR = Math.ceil(radius);
+  for (let r = 2; r <= maxR; r += 2) {
+    const samples = Math.max(16, Math.ceil(r * 1.6));
+    for (let i = 0; i < samples; i += 1) {
+      const a = (Math.PI * 2 * i) / samples;
+      const q = { x: p.x + Math.cos(a) * r, y: p.y + Math.sin(a) * r };
+      if (isGlyphSolid(q)) return { point: q, d: r };
+    }
+  }
+  return null;
+}
+
+function terrainAt(p: Vec, pad = 0): TerrainHit | null {
+  return nearestGlyphPoint(p, pad);
+}
+
+function edgeLandingPoint(p: Vec, radius = TAP_PAD): TerrainHit | null {
+  const hit = terrainAt(p, radius);
+  if (!hit) return null;
+
+  // If the user taps inside a thick filled part of the glyph, bias the landing
+  // to the nearest visible rim. The game then feels like walking on the real
+  // outline instead of teleporting into a blob of ink.
+  const origin = hit.point;
+  let best: TerrainHit = hit;
+  const dirs = [
+    { x: 0, y: -1 },
+    { x: 0, y: 1 },
+    { x: -1, y: 0 },
+    { x: 1, y: 0 },
+    { x: -0.72, y: -0.72 },
+    { x: 0.72, y: -0.72 },
+    { x: -0.72, y: 0.72 },
+    { x: 0.72, y: 0.72 },
+  ];
+
+  for (const dir of dirs) {
+    let lastSolid: Vec | null = isGlyphSolid(origin) ? origin : null;
+    for (let d = 2; d <= 58; d += 2) {
+      const q = { x: origin.x + dir.x * d, y: origin.y + dir.y * d };
+      if (isGlyphSolid(q)) {
+        lastSolid = q;
+      } else if (lastSolid) {
+        const candidate = { point: lastSolid, d: dist(p, lastSolid) };
+        if (candidate.d < best.d + 34) best = candidate;
+        break;
+      }
+    }
+  }
+
   return best;
 }
+
 function segmentPointDistance(p: Vec, a: Vec, b: Vec) {
-  const c = closestOnStroke(p, { x1: a.x, y1: a.y, x2: b.x, y2: b.y, w: 1 });
-  return c.d;
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const l2 = dx * dx + dy * dy;
+  if (l2 < 1) return dist(p, a);
+  const t = clamp(((p.x - a.x) * dx + (p.y - a.y) * dy) / l2, 0, 1);
+  return dist(p, { x: a.x + dx * t, y: a.y + dy * t });
 }
+
 function firstBlockingPoint(a: Vec, b: Vec) {
   const distance = dist(a, b);
-  const steps = Math.max(8, Math.ceil(distance / 18));
+  const steps = Math.max(12, Math.ceil(distance / 12));
+  let wasInAir = false;
   for (let i = 1; i < steps; i += 1) {
     const t = i / steps;
     const fromStart = distance * t;
     const toEnd = distance * (1 - t);
-    if (fromStart < 70 || toEnd < 44) continue;
+    if (fromStart < 62 || toEnd < 42) continue;
     const p = { x: lerp(a.x, b.x, t), y: lerp(a.y, b.y, t) };
-    const hit = terrainAt(p, -4);
-    if (hit) return hit.point;
+    const onGlyph = isGlyphSolid(p, 2);
+    if (!onGlyph) wasInAir = true;
+    if (wasInAir && onGlyph) return p;
   }
   return null;
 }
-function initEnemies() {
-  return enemySeeds.map((e) => {
-    const s = strokes[e.stroke];
-    return { ...e, x: lerp(s.x1, s.x2, e.t), y: lerp(s.y1, s.y2, e.t) - s.w / 2 - 16 };
-  });
-}
+
 function makeGame(phase: Phase = 'title'): Game {
-  const start = { x: 185, y: 107 };
+  const start = terrainAt({ x: 188, y: 112 }, 100)?.point ?? { x: 188, y: 112 };
   return {
     phase,
     player: start,
@@ -143,11 +215,11 @@ function makeGame(phase: Phase = 'title'): Game {
     lives: 3,
     elapsed: 0,
     startedAt: 0,
-    enemies: initEnemies(),
     camera: { x: 0, y: 0 },
     message: '',
     falling: false,
     fallVy: 0,
+    ripples: [],
   };
 }
 
@@ -158,7 +230,6 @@ export default function HakiActionGame() {
   const gameRef = useRef<Game>(makeGame());
   const [view, setView] = useState(gameRef.current);
 
-  const worldToScreen = useCallback((p: Vec, cam = gameRef.current.camera) => ({ x: p.x - cam.x, y: p.y - cam.y }), []);
   const screenToWorld = useCallback((x: number, y: number) => {
     const canvas = canvasRef.current;
     const rect = canvas?.getBoundingClientRect();
@@ -170,6 +241,7 @@ export default function HakiActionGame() {
   }, []);
 
   const startGame = useCallback(() => {
+    ensureGlyphMask();
     const g = makeGame('playing');
     g.startedAt = performance.now();
     gameRef.current = g;
@@ -199,14 +271,15 @@ export default function HakiActionGame() {
     const g = gameRef.current;
     if (g.phase !== 'playing' || g.moving || g.falling) return;
     const p = screenToWorld(e.clientX, e.clientY);
-    const hit = terrainAt(p, TAP_PAD);
+    const hit = edgeLandingPoint(p, TAP_PAD);
     if (!hit) {
-      g.message = 'そこは空白';
+      g.message = 'そこは文字ではない';
       setView({ ...g });
       return;
     }
+    g.ripples.push({ x: hit.point.x, y: hit.point.y, age: 0 });
     const blocked = firstBlockingPoint(g.player, hit.point);
-    const destination = blocked ?? hit.point;
+    const destination = blocked ? (edgeLandingPoint(blocked, 34)?.point ?? blocked) : hit.point;
     const d = dist(g.player, destination);
     if (d < 18) return;
     g.start = { ...g.player };
@@ -214,7 +287,7 @@ export default function HakiActionGame() {
     g.moveT = 0;
     g.moveDuration = clamp(d / MOVE_SPEED, 0.14, 1.2);
     g.moving = true;
-    g.message = blocked ? '壁で停止' : '';
+    g.message = blocked ? '文字に着地' : '';
     setView({ ...g });
   }, [screenToWorld]);
 
@@ -223,32 +296,18 @@ export default function HakiActionGame() {
     if (g.phase !== 'playing') return;
     g.elapsed = (now - g.startedAt) / 1000;
 
-    g.enemies.forEach((enemy) => {
-      if (!enemy.alive) return;
-      const s = strokes[enemy.stroke];
-      enemy.t += enemy.dir * enemy.speed * dt;
-      if (enemy.t > 0.96) { enemy.t = 0.96; enemy.dir = -1; }
-      if (enemy.t < 0.04) { enemy.t = 0.04; enemy.dir = 1; }
-      enemy.x = lerp(s.x1, s.x2, enemy.t);
-      enemy.y = lerp(s.y1, s.y2, enemy.t) - s.w / 2 - 17;
-    });
+    g.ripples = g.ripples.map((r) => ({ ...r, age: r.age + dt })).filter((r) => r.age < 0.56);
 
     if (g.moving) {
-      const prev = { ...g.player };
       g.moveT = Math.min(1, g.moveT + dt / g.moveDuration);
       const ease = 1 - Math.pow(1 - g.moveT, 2);
       g.player = { x: lerp(g.start.x, g.target.x, ease), y: lerp(g.start.y, g.target.y, ease) };
-      g.enemies.forEach((enemy) => {
-        if (enemy.alive && segmentPointDistance({ x: enemy.x, y: enemy.y }, prev, g.player) < 34) {
-          enemy.alive = false;
-          g.message = '撃破';
-        }
-      });
       if (g.moveT >= 1) {
         g.moving = false;
-        const ground = terrainAt({ x: g.player.x, y: g.player.y + PLAYER_R + 6 }, 8) || terrainAt(g.player, 4);
+        const ground = terrainAt(g.player, PLAYER_R + 6);
         if (ground) {
-          g.safe = { ...g.player };
+          g.player = ground.point;
+          g.safe = { ...ground.point };
         } else {
           g.falling = true;
           g.fallVy = 0;
@@ -257,21 +316,26 @@ export default function HakiActionGame() {
     } else if (g.falling) {
       g.fallVy += GRAVITY * dt;
       g.player.y += g.fallVy * dt;
+      const landed = terrainAt(g.player, PLAYER_R);
+      if (landed && g.fallVy > 120) {
+        g.player = landed.point;
+        g.safe = { ...landed.point };
+        g.falling = false;
+        g.fallVy = 0;
+      }
       if (g.player.y > WORLD.h + 120) damage();
     } else {
-      const under = terrainAt({ x: g.player.x, y: g.player.y + PLAYER_R + 10 }, 8) || terrainAt(g.player, 2);
+      const under = terrainAt(g.player, PLAYER_R + 4);
       if (under) {
-        g.safe = { ...g.player };
+        g.player = under.point;
+        g.safe = { ...under.point };
       } else {
         g.falling = true;
         g.fallVy = 0;
       }
-      g.enemies.forEach((enemy) => {
-        if (enemy.alive && dist(g.player, enemy) < 30) damage();
-      });
     }
 
-    if (g.player.x > GOAL.x - 10 && g.player.x < GOAL.x + GOAL.w + 20 && g.player.y > GOAL.y - 40 && g.player.y < GOAL.y + GOAL.h + 30) {
+    if (dist(g.player, GOAL) < GOAL.r) {
       g.phase = 'clear';
       g.message = 'CLEAR';
       setView({ ...g });
@@ -285,6 +349,23 @@ export default function HakiActionGame() {
     ctx.save();
     const bob = moving ? 2 : Math.sin(performance.now() / 180) * 1.5;
     ctx.translate(p.x, p.y + bob);
+    ctx.shadowBlur = 18;
+    ctx.shadowColor = '#ff3145';
+    ctx.fillStyle = 'rgba(255,49,69,0.28)';
+    ctx.beginPath();
+    ctx.arc(0, 0, 24, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = 'rgba(0,0,0,0.92)';
+    ctx.lineWidth = 7;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.arc(0, -18, 7, 0, Math.PI * 2);
+    ctx.moveTo(0, -10); ctx.lineTo(0, 8);
+    ctx.moveTo(-10, -3); ctx.lineTo(10, -3);
+    ctx.moveTo(0, 8); ctx.lineTo(-7, 21);
+    ctx.moveTo(0, 8); ctx.lineTo(8, 20);
+    ctx.stroke();
     ctx.lineCap = 'round';
     ctx.strokeStyle = '#f3d2b5';
     ctx.lineWidth = 3;
@@ -304,27 +385,11 @@ export default function HakiActionGame() {
     ctx.restore();
   };
 
-  const drawEnemy = (ctx: CanvasRenderingContext2D, e: Enemy) => {
-    if (!e.alive) return;
-    ctx.save();
-    ctx.translate(e.x, e.y);
-    ctx.fillStyle = '#1a1110';
-    ctx.strokeStyle = '#f0523f';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.roundRect(-18, -18, 36, 36, 8);
-    ctx.fill(); ctx.stroke();
-    ctx.fillStyle = '#f0523f';
-    ctx.font = '900 22px ui-serif, "Yu Mincho", serif';
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText('圧', 0, 1);
-    ctx.restore();
-  };
-
   const draw = useCallback((time: number) => {
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext('2d');
     if (!canvas || !ctx) return;
+    ensureGlyphMask();
     const last = lastRef.current ?? time;
     const dt = Math.min(0.033, (time - last) / 1000);
     lastRef.current = time;
@@ -334,28 +399,22 @@ export default function HakiActionGame() {
     ctx.clearRect(0, 0, VIEW.w, VIEW.h);
     ctx.fillStyle = '#020202';
     ctx.fillRect(0, 0, VIEW.w, VIEW.h);
-    ctx.save();
-    ctx.translate(-g.camera.x, -g.camera.y);
 
-    // 本物の「覇気」をそのまま巨大ステージとして見せる。
+    const overview = g.phase === 'title';
     ctx.save();
-    ctx.font = HAKI_FONT;
-    ctx.lineJoin = 'round';
-    ctx.shadowBlur = 34;
-    ctx.shadowColor = 'rgba(245,221,179,0.72)';
-    ctx.strokeStyle = 'rgba(255,246,221,0.95)';
-    ctx.lineWidth = 34;
-    ctx.strokeText('覇', HAKI_POS.haX, HAKI_POS.baseY);
-    ctx.strokeText('気', HAKI_POS.kiX, HAKI_POS.baseY);
-    const textGrad = ctx.createLinearGradient(0, 110, WORLD.w, 1080);
-    textGrad.addColorStop(0, '#fff7de');
-    textGrad.addColorStop(0.46, '#d5b56f');
-    textGrad.addColorStop(1, '#fff1c2');
-    ctx.fillStyle = textGrad;
-    ctx.fillText('覇', HAKI_POS.haX, HAKI_POS.baseY);
-    ctx.fillText('気', HAKI_POS.kiX, HAKI_POS.baseY);
+    if (overview) {
+      const scale = Math.min((VIEW.w - OVERVIEW_PAD * 2) / WORLD.w, (VIEW.h - OVERVIEW_PAD * 2) / WORLD.h);
+      ctx.translate((VIEW.w - WORLD.w * scale) / 2, (VIEW.h - WORLD.h * scale) / 2);
+      ctx.scale(scale, scale);
+    } else {
+      ctx.translate(-g.camera.x, -g.camera.y);
+    }
+
+    drawHakiGlyph(ctx, true);
+
+    ctx.save();
     ctx.shadowBlur = 0;
-    ctx.globalAlpha = 0.24;
+    ctx.globalAlpha = 0.20;
     ctx.strokeStyle = '#3a250f';
     ctx.lineWidth = 2;
     for (let i = 0; i < 26; i += 1) {
@@ -368,28 +427,18 @@ export default function HakiActionGame() {
     }
     ctx.restore();
 
-    strokes.forEach((s) => {
+    for (const ripple of g.ripples) {
       ctx.save();
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      ctx.shadowBlur = 10;
-      ctx.shadowColor = 'rgba(245,221,179,0.42)';
-      const grad = ctx.createLinearGradient(s.x1, s.y1, s.x2, s.y2);
-      grad.addColorStop(0, 'rgba(255,242,207,0.30)');
-      grad.addColorStop(0.5, 'rgba(217,188,130,0.22)');
-      grad.addColorStop(1, 'rgba(255,246,221,0.30)');
-      ctx.strokeStyle = grad;
-      ctx.lineWidth = Math.max(12, s.w * 0.55);
+      const t = ripple.age / 0.56;
+      ctx.globalAlpha = Math.max(0, 1 - t);
+      ctx.strokeStyle = '#fff4c8';
+      ctx.lineWidth = 4;
       ctx.beginPath();
-      ctx.moveTo(s.x1, s.y1); ctx.lineTo(s.x2, s.y2); ctx.stroke();
-      ctx.shadowBlur = 0;
-      ctx.strokeStyle = 'rgba(255,255,255,0.12)';
-      ctx.lineWidth = Math.max(2, s.w * 0.08);
+      ctx.arc(ripple.x, ripple.y, 18 + t * 54, 0, Math.PI * 2);
       ctx.stroke();
       ctx.restore();
-    });
+    }
 
-    g.enemies.forEach((enemy) => drawEnemy(ctx, enemy));
     if (g.moving) {
       ctx.save();
       ctx.setLineDash([10, 10]);
@@ -398,41 +447,89 @@ export default function HakiActionGame() {
       ctx.beginPath(); ctx.moveTo(g.start.x, g.start.y); ctx.lineTo(g.target.x, g.target.y); ctx.stroke();
       ctx.restore();
     }
+
     ctx.save();
-    ctx.fillStyle = 'rgba(247,209,91,0.14)';
+    ctx.fillStyle = 'rgba(247,209,91,0.20)';
     ctx.strokeStyle = '#f7d15b';
     ctx.lineWidth = 4;
-    ctx.fillRect(GOAL.x, GOAL.y, GOAL.w, GOAL.h);
-    ctx.strokeRect(GOAL.x, GOAL.y, GOAL.w, GOAL.h);
+    ctx.beginPath();
+    ctx.arc(GOAL.x, GOAL.y, GOAL.r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
     ctx.fillStyle = '#fff4c8';
-    ctx.font = '900 28px ui-sans-serif, system-ui';
+    ctx.font = '900 26px ui-sans-serif, system-ui';
     ctx.textAlign = 'center';
-    ctx.fillText('ゴール', GOAL.x + GOAL.w / 2, GOAL.y + 57);
+    ctx.textBaseline = 'middle';
+    ctx.fillText('ゴール', GOAL.x, GOAL.y);
     ctx.restore();
+
     drawPlayer(ctx, g.player, g.moving);
     ctx.restore();
 
-    // HUD
+    if (overview) {
+      ctx.fillStyle = 'rgba(247,241,223,0.76)';
+      ctx.font = '900 15px ui-sans-serif, system-ui';
+      ctx.textAlign = 'center';
+      ctx.fillText('巨大な実文字「覇気」の上をタップで渡る', VIEW.w / 2, VIEW.h - 28);
+    }
+
     ctx.fillStyle = '#f7f1df';
     ctx.font = '800 20px ui-sans-serif, system-ui';
     ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
     ctx.fillText(`LIFE ${'♥'.repeat(Math.max(0, g.lives))}`, 22, 32);
-    ctx.fillText(`TIME ${g.elapsed.toFixed(1)}`, 22, 62);
+    ctx.fillText(`ELAPSED ${g.elapsed.toFixed(1)}`, 22, 62);
     ctx.fillStyle = 'rgba(247,241,223,0.72)';
     ctx.font = '700 14px ui-sans-serif, system-ui';
-    ctx.fillText(`X ${Math.round(g.player.x)} / Y ${Math.round(g.player.y)}`, 22, 88);
+    ctx.fillText(`GLYPH X ${Math.round(g.player.x)} / Y ${Math.round(g.player.y)}`, 22, 88);
+    const goalDx = GOAL.x - g.player.x;
+    const goalDy = GOAL.y - g.player.y;
+    const goalDistance = Math.hypot(goalDx, goalDy);
+    ctx.fillStyle = '#f7d15b';
+    ctx.font = '900 16px ui-sans-serif, system-ui';
+    ctx.fillText(`GOAL ${Math.round(goalDistance)}`, 22, 112);
     if (g.message) {
-      ctx.fillStyle = g.message === '撃破' ? '#f7d15b' : '#f7f1df';
+      ctx.fillStyle = g.message === 'CLEAR' ? '#f7d15b' : '#f7f1df';
       ctx.font = '900 22px ui-sans-serif, system-ui';
-      ctx.fillText(g.message, 22, 122);
+      ctx.fillText(g.message, 22, 146);
     }
 
-    // Mini map
+    if (goalDistance > 420) {
+      const angle = Math.atan2(goalDy, goalDx);
+      const ax = VIEW.w - 86;
+      const ay = VIEW.h - 76;
+      ctx.save();
+      ctx.translate(ax, ay);
+      ctx.rotate(angle);
+      ctx.fillStyle = 'rgba(0,0,0,0.62)';
+      ctx.strokeStyle = 'rgba(247,209,91,0.72)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(-48, -24, 96, 48, 24);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = '#f7d15b';
+      ctx.beginPath();
+      ctx.moveTo(25, 0);
+      ctx.lineTo(-10, -14);
+      ctx.lineTo(-5, 0);
+      ctx.lineTo(-10, 14);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+      ctx.fillStyle = 'rgba(247,241,223,0.76)';
+      ctx.font = '800 12px ui-sans-serif, system-ui';
+      ctx.textAlign = 'center';
+      ctx.fillText('GOAL', ax, ay + 42);
+      ctx.textAlign = 'left';
+    }
+
+    if (!overview) {
     const mx = VIEW.w - 194; const my = 22; const mw = 168; const mh = 94;
     ctx.save();
     ctx.fillStyle = 'rgba(0,0,0,0.58)'; ctx.fillRect(mx - 10, my - 10, mw + 20, mh + 38);
     ctx.strokeStyle = 'rgba(247,209,91,0.52)'; ctx.strokeRect(mx - 10, my - 10, mw + 20, mh + 38);
-    ctx.fillStyle = '#f7f1df'; ctx.font = '800 13px ui-sans-serif, system-ui'; ctx.fillText('STAGE 覇気', mx, my + mh + 24);
+    ctx.fillStyle = '#f7f1df'; ctx.font = '800 13px ui-sans-serif, system-ui'; ctx.fillText('MASK 覇気', mx, my + mh + 24);
     const sx = mw / WORLD.w; const sy = mh / WORLD.h;
     ctx.save();
     ctx.translate(mx, my);
@@ -449,8 +546,10 @@ export default function HakiActionGame() {
     ctx.restore();
     ctx.strokeStyle = '#f7d15b'; ctx.lineWidth = 2;
     ctx.strokeRect(mx + g.camera.x * sx, my + g.camera.y * sy, VIEW.w * sx, VIEW.h * sy);
+    ctx.fillStyle = '#f7d15b'; ctx.beginPath(); ctx.arc(mx + GOAL.x * sx, my + GOAL.y * sy, 4, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = '#ff3145'; ctx.beginPath(); ctx.arc(mx + g.player.x * sx, my + g.player.y * sy, 3, 0, Math.PI * 2); ctx.fill();
     ctx.restore();
+    }
 
     rafRef.current = requestAnimationFrame(draw);
   }, [update]);
@@ -460,6 +559,9 @@ export default function HakiActionGame() {
     if (!canvas) return undefined;
     canvas.width = VIEW.w;
     canvas.height = VIEW.h;
+    ensureGlyphMask();
+    const g = makeGame(gameRef.current.phase);
+    gameRef.current = { ...gameRef.current, player: g.player, safe: g.safe, start: g.start, target: g.target };
     rafRef.current = requestAnimationFrame(draw);
     return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
   }, [draw]);
@@ -468,11 +570,12 @@ export default function HakiActionGame() {
 
   return (
     <main className="haki-action-shell" aria-label="覇気アクション">
-      <canvas ref={canvasRef} className="haki-action-canvas" onPointerDown={onTap} aria-label="巨大な覇気の筆画をタップ移動する2Dアクションゲーム" />
+      <canvas ref={canvasRef} className="haki-action-canvas" onPointerDown={onTap} aria-label="巨大な覇気の実文字マスクをタップ移動する2Dアクションゲーム" />
       {view.phase === 'title' && (
         <section className="haki-action-panel">
-          <p>巨大な一文字が、ステージになる。</p>
+          <p>本物の文字だけが、足場になる。</p>
           <h1>覇気アクション</h1>
+          <p className="haki-action-note">タップした文字の輪郭へ移動。空白は通れない。</p>
           <button type="button" onClick={startGame}>開始</button>
         </section>
       )}
