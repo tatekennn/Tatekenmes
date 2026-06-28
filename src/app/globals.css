@@ -199,7 +199,8 @@ button {
   height: 100%;
 }
 
-.game-shell--arcade {
+.game-shell--arcade,
+.game-shell--arena3d {
   cursor: crosshair;
   background:
     radial-gradient(circle at 50% 38%, rgba(255, 241, 168, 0.13), transparent 0 13rem),
@@ -207,7 +208,15 @@ button {
     linear-gradient(145deg, #060304, #150709 42%, #030305 100%);
 }
 
-.game-canvas--arcade {
+.game-shell--arena3d::before {
+  background:
+    linear-gradient(90deg, rgba(255,255,255,0.026) 1px, transparent 1px),
+    radial-gradient(circle at 50% 38%, transparent 0 24%, rgba(0,0,0,0.58) 78%);
+  background-size: 5rem 5rem, auto;
+}
+
+.game-canvas--arcade,
+.game-canvas--arena3d {
   image-rendering: auto;
 }
 
