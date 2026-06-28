@@ -1,15 +1,4 @@
-import { headers } from 'next/headers';
-import HakiGame from '@/components/HakiGame';
-
-export default async function HomePage() {
-  const headerList = await headers();
-  const host = headerList.get('host') ?? '';
-  const isGameHost = host.startsWith('game.xn--7qwx14d.com') || host.startsWith('game.覇気.com');
-
-  if (isGameHost) {
-    return <HakiGame />;
-  }
-
+export default function HomePage() {
   return (
     <main className="haki-stage" aria-label="覇気.com">
       <div className="aura aura-one" />
