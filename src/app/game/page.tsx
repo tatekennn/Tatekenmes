@@ -1,14 +1,14 @@
 import HakiGame from '@/components/HakiGame';
 
 export const metadata = {
-  title: '覇気ラッシュ | 覇気.com',
-  description: '金色ゾーンでタップ、覇気100で全消し。短時間で遊べる横画面Webゲーム。',
+  title: '覇気スイング | 覇気.com',
+  description: 'ネクタイで巨大な「覇気」にぶら下がる、スマホ向け物理アクションゲーム。',
   alternates: {
     canonical: 'https://game.xn--7qwx14d.com',
   },
   openGraph: {
-    title: '覇気ラッシュ | 覇気.com',
-    description: 'タップ主体、即リトライ、コンボ、ボス、覇王色バースト。人気Webゲームの型に寄せた覇気アクション。',
+    title: '覇気スイング | 覇気.com',
+    description: '長押しで赤いネクタイワイヤーを伸ばし、巨大な「覇気」の線に引っかけて飛ぶ新卒スイングゲーム。',
     url: 'https://game.xn--7qwx14d.com',
     siteName: '覇気.com',
     locale: 'ja_JP',
@@ -16,8 +16,8 @@ export const metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: '覇気ラッシュ | 覇気.com',
-    description: '金色ゾーンでタップ、覇気100で全消し。短時間で遊べる横画面Webゲーム。',
+    title: '覇気スイング | 覇気.com',
+    description: 'ネクタイで巨大な「覇気」にぶら下がる、スマホ向け物理アクションゲーム。',
   },
 };
 
