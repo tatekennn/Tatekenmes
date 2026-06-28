@@ -1,14 +1,14 @@
 import HakiGame from '@/components/HakiGame';
 
 export const metadata = {
-  title: '覇気一閃 | 覇気.com',
-  description: '金色の間に入った瞬間タップ。余裕があればスワイプで一閃。横画面の覇気ゲーム。',
+  title: '覇気ラッシュ | 覇気.com',
+  description: '金色ゾーンでタップ、覇気100で全消し。短時間で遊べる横画面Webゲーム。',
   alternates: {
     canonical: 'https://game.xn--7qwx14d.com',
   },
   openGraph: {
-    title: '覇気一閃 | 覇気.com',
-    description: '迫る相手をタップで止める。余裕があればスワイプでまとめて一閃。',
+    title: '覇気ラッシュ | 覇気.com',
+    description: 'タップ主体、即リトライ、コンボ、ボス、覇王色バースト。人気Webゲームの型に寄せた覇気アクション。',
     url: 'https://game.xn--7qwx14d.com',
     siteName: '覇気.com',
     locale: 'ja_JP',
@@ -16,8 +16,8 @@ export const metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: '覇気一閃 | 覇気.com',
-    description: '金色の間に入った瞬間タップ。余裕があればスワイプで一閃。',
+    title: '覇気ラッシュ | 覇気.com',
+    description: '金色ゾーンでタップ、覇気100で全消し。短時間で遊べる横画面Webゲーム。',
   },
 };
 

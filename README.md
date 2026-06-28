@@ -2,35 +2,47 @@
 
 `覇気.com` 用の最小ランディングページと、`game.覇気.com` / `/game` で遊べるブラウザゲームを含む Next.js プロジェクトです。
 
-## ゲーム: 覇気一閃
+## ゲーム: 覇気ラッシュ
 
-**覇気一閃** は、覇気そのものをテーマにした横画面ブラウザゲームです。
+**覇気ラッシュ** は、人気Webゲームの型を参考にした横画面ブラウザゲームです。
 
-> 金色の間に入った瞬間、タップで覇気を放つ。
+> 金色ゾーンでタップ。覇気100で、画面を黙らせる。
 
-### 現在の方針
+### 参考にしたWebゲームの型
 
-直近のユーザー意見を最優先しています。
+調査時に確認した要素:
 
-- 覇気と直接関係するテーマにする
-- 横画面で遊ぶ
-- 操作の中心は **タップだけ**
-- スラッシュは任意の上級操作として追加する
-- 迫る相手を「覇気の圧 / 一閃」で止めるゲームにする
+- Poki popular: `Subway Surfers`, `Drive Mad`, `Stickman Hook`, `Slice Master`, `Level Devil` など。短い失敗→即リトライ、見た瞬間わかる操作、コンボ/スキル感が強い。
+- CrazyGames hot: `.io`, idle/merge, ragdoll/sandbox, survival/arena系。即座に状況が動き、成長/全消し/ボスの気持ちよさがある。
+- Wordle型: 結果を共有しやすい短いプレイ単位。
 
-### 概要
+このため、前の「ただタイミングを押すだけ」から、以下の中毒性を追加しています。
 
-- 30秒制
-- 迫る相手が金色の判定ゾーンに入った瞬間にタップ
-- タイミングが良いほど高得点
-- 連続成功でコンボ加点
-- 余裕があればスワイプで複数体をまとめて一閃
-- あだ名登録、localStorageランキング、SNS共有対応
+- 45秒の短いラン
+- 即リトライ
+- 金色ゾーンでタップする明快なルール
+- コンボ
+- 覇気100で全消しする **覇王色バースト**
+- たまに出る覇気玉
+- 15秒ごとのボス
+- スワイプ一閃は任意の上級操作
+- localStorageランキングとSNS共有
 
 ### 操作方法
 
-- タップ / Space / Enter: 覇気を放つ
-- スワイプ: 任意の一閃攻撃
+- タップ / Space / Enter: 金色ゾーン内の相手を覇気で止める
+- 覇気100の時にタップ: 画面全体をバーストで一掃
+- スワイプ: 任意の一閃攻撃。使わなくても成立する
+
+### 現在の方針
+
+直近のユーザー意見を最優先します。
+
+- 横画面
+- 覇気と直接関係するテーマ
+- 操作の主軸はタップ
+- スラッシュは可能なら入れる、ただし必須にしない
+- つまらない場合は仕様書よりユーザーの実感を優先して作り直す
 
 ## 技術構成
 
@@ -44,7 +56,7 @@
 ```text
 src/app/
   page.tsx          # トップページ / gameサブドメイン判定
-  game/page.tsx     # 覇気一閃 metadata / page
+  game/page.tsx     # 覇気ラッシュ metadata / page
   globals.css       # 覇気.com の全面ビジュアル / ゲームUI
   layout.tsx        # metadata / viewport
   manifest.ts       # PWA manifest
@@ -52,10 +64,8 @@ src/app/
   apple-icon.tsx    # 180px icon
   not-found.tsx     # 404
 src/components/
-  HakiGame.tsx      # 覇気解放ゲーム本体
+  HakiGame.tsx      # 覇気ラッシュゲーム本体
 ```
-
-旧 Juice=Juice / 天霧澪 / 自分OS 関連のページ・日記・画像・生成スクリプトは削除済みです。
 
 ## Local setup
 
@@ -76,11 +86,9 @@ npm run dev
 
 ```bash
 git add .
-git commit -m "feat: make haki game tap-first"
+git commit -m "feat: rebuild haki game as arcade rush"
 git push origin main
 ```
-
-Vercel 側で GitHubリポジトリと `main` ブランチが接続されていれば、自動で本番反映されます。
 
 ## Domain setup TODO
 
@@ -112,13 +120,8 @@ Vercel標準構成の場合:
 
 ## Verification
 
-DNS設定後に確認するコマンド:
-
 ```bash
 dig xn--7qwx14d.com A +short
 dig game.xn--7qwx14d.com CNAME +short
-dig www.xn--7qwx14d.com CNAME +short
-curl -I https://xn--7qwx14d.com
-curl -L https://xn--7qwx14d.com | grep '覇気'
-curl -L https://game.xn--7qwx14d.com | grep '覇気一閃'
+curl -L https://game.xn--7qwx14d.com | grep '覇気ラッシュ'
 ```
