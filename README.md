@@ -2,11 +2,11 @@
 
 `覇気.com` 用の最小ランディングページと、`game.覇気.com` / `/game` で遊べるブラウザゲームを含む Next.js プロジェクトです。
 
-## ゲーム: 覇気解放
+## ゲーム: 覇気一閃
 
-**覇気解放** は、覇気そのものをテーマにした横画面ブラウザゲームです。
+**覇気一閃** は、覇気そのものをテーマにした横画面ブラウザゲームです。
 
-> 長押しで覇気を溜め、金色の間で離す。それだけです。
+> 金色の間に入った瞬間、タップで覇気を放つ。
 
 ### 現在の方針
 
@@ -14,25 +14,23 @@
 
 - 覇気と直接関係するテーマにする
 - 横画面で遊ぶ
-- 操作を増やさない
-- 操作は **長押し → 離す** の一種類だけ
-- 敵を避ける・斬る・反射する等の複数アクションは使わない
-- 迫る相手を「覇気の圧」で止めるゲームにする
+- 操作の中心は **タップだけ**
+- スラッシュは任意の上級操作として追加する
+- 迫る相手を「覇気の圧 / 一閃」で止めるゲームにする
 
 ### 概要
 
 - 30秒制
-- 迫る相手が赤い危険線に入る前に覇気を解放する
-- 長押しで覇気ゲージが上昇
-- 金色ゾーンで離すと高得点
-- 弱すぎると届かない
-- 強すぎると少し減点
+- 迫る相手が金色の判定ゾーンに入った瞬間にタップ
+- タイミングが良いほど高得点
+- 連続成功でコンボ加点
+- 余裕があればスワイプで複数体をまとめて一閃
 - あだ名登録、localStorageランキング、SNS共有対応
 
 ### 操作方法
 
-- 画面を長押し: 覇気を溜める
-- 指/マウスを離す: 覇気を解放する
+- タップ / Space / Enter: 覇気を放つ
+- スワイプ: 任意の一閃攻撃
 
 ## 技術構成
 
@@ -46,7 +44,7 @@
 ```text
 src/app/
   page.tsx          # トップページ / gameサブドメイン判定
-  game/page.tsx     # 覇気解放 metadata / page
+  game/page.tsx     # 覇気一閃 metadata / page
   globals.css       # 覇気.com の全面ビジュアル / ゲームUI
   layout.tsx        # metadata / viewport
   manifest.ts       # PWA manifest
@@ -78,7 +76,7 @@ npm run dev
 
 ```bash
 git add .
-git commit -m "feat: simplify haki game into pressure release"
+git commit -m "feat: make haki game tap-first"
 git push origin main
 ```
 
@@ -122,5 +120,5 @@ dig game.xn--7qwx14d.com CNAME +short
 dig www.xn--7qwx14d.com CNAME +short
 curl -I https://xn--7qwx14d.com
 curl -L https://xn--7qwx14d.com | grep '覇気'
-curl -L https://game.xn--7qwx14d.com | grep '覇気解放'
+curl -L https://game.xn--7qwx14d.com | grep '覇気一閃'
 ```

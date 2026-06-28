@@ -4,16 +4,16 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 type Phase = 'name' | 'title' | 'playing' | 'result';
 type RankName = '無覇気' | '微覇気' | '武装色' | '見聞色' | '覇王色';
+type EnemyKind = 'normal' | 'heavy' | 'ghost';
 
-type Opponent = {
+type Enemy = {
   id: number;
+  kind: EnemyKind;
   x: number;
   y: number;
   speed: number;
   size: number;
-  hp: number;
-  stunned: boolean;
-  stunLife: number;
+  hit: boolean;
 };
 
 type Particle = {
@@ -26,6 +26,14 @@ type Particle = {
   size: number;
 };
 
+type SlashTrail = {
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+  life: number;
+};
+
 type GameState = {
   phase: Phase;
   score: number;
@@ -34,7 +42,8 @@ type GameState = {
   combo: number;
   maxCombo: number;
   aura: number;
-  releases: number;
+  taps: number;
+  slashes: number;
   perfect: number;
   misses: number;
 };
@@ -49,16 +58,15 @@ type LeaderboardEntry = {
 };
 
 const GAME_SECONDS = 30;
-const STORAGE_BEST = 'haki-pressure-best-score';
-const STORAGE_NAME = 'haki-pressure-nickname';
-const STORAGE_BOARD = 'haki-pressure-leaderboard';
-const PLAYER_X = 128;
-const PLAYER_Y = 258;
-const DANGER_X = 178;
-const PERFECT_MIN = 68;
-const PERFECT_MAX = 84;
+const STORAGE_BEST = 'haki-tap-best-score';
+const STORAGE_NAME = 'haki-tap-nickname';
+const STORAGE_BOARD = 'haki-tap-leaderboard';
 const CANVAS_W = 960;
 const CANVAS_H = 540;
+const PLAYER_X = 136;
+const PLAYER_Y = 274;
+const STRIKE_X = 344;
+const ZONE_WIDTH = 92;
 
 const initialState: GameState = {
   phase: 'name',
@@ -68,7 +76,8 @@ const initialState: GameState = {
   combo: 0,
   maxCombo: 0,
   aura: 0,
-  releases: 0,
+  taps: 0,
+  slashes: 0,
   perfect: 0,
   misses: 0,
 };
@@ -82,11 +91,11 @@ function sanitizeName(name: string) {
 }
 
 function rankFor(score: number): { name: RankName; line: string } {
-  if (score >= 9000) return { name: '覇王色', line: '近づく前に全員が進路を譲りました。' };
-  if (score >= 6500) return { name: '見聞色', line: '相手が踏み込む前に、空気が少し曲がっています。' };
-  if (score >= 4200) return { name: '武装色', line: '覇気として成立しています。乱用には向きません。' };
-  if (score >= 1800) return { name: '微覇気', line: 'まだ圧ですが、会議室なら効きます。' };
-  return { name: '無覇気', line: '今のところ、ただ静かな人です。' };
+  if (score >= 12000) return { name: '覇王色', line: 'タップ一つで場の空気が変わりました。' };
+  if (score >= 8500) return { name: '見聞色', line: '相手が踏み込む瞬間をほぼ読めています。' };
+  if (score >= 5600) return { name: '武装色', line: '覇気として十分に実用域です。' };
+  if (score >= 2400) return { name: '微覇気', line: 'たまに圧が出ています。会議室なら効きます。' };
+  return { name: '無覇気', line: '今はまだ、ただのタップです。' };
 }
 
 function readBoard(): LeaderboardEntry[] {
@@ -99,10 +108,18 @@ function readBoard(): LeaderboardEntry[] {
   }
 }
 
-function particle(x: number, y: number, color: string): Particle {
+function distanceToSegment(px: number, py: number, ax: number, ay: number, bx: number, by: number) {
+  const dx = bx - ax;
+  const dy = by - ay;
+  const len = dx * dx + dy * dy || 1;
+  const t = clamp(((px - ax) * dx + (py - ay) * dy) / len, 0, 1);
+  return Math.hypot(px - (ax + dx * t), py - (ay + dy * t));
+}
+
+function makeParticle(x: number, y: number, color: string): Particle {
   const angle = Math.random() * Math.PI * 2;
-  const speed = 80 + Math.random() * 260;
-  return { x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, life: 0.4 + Math.random() * 0.5, color, size: 2 + Math.random() * 4 };
+  const speed = 80 + Math.random() * 300;
+  return { x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, life: 0.35 + Math.random() * 0.55, color, size: 2 + Math.random() * 4 };
 }
 
 export default function HakiGame() {
@@ -110,10 +127,11 @@ export default function HakiGame() {
   const frameRef = useRef<number | null>(null);
   const lastTimeRef = useRef<number | null>(null);
   const gameRef = useRef<GameState>({ ...initialState });
-  const opponentsRef = useRef<Opponent[]>([]);
+  const enemiesRef = useRef<Enemy[]>([]);
   const particlesRef = useRef<Particle[]>([]);
-  const spawnRef = useRef({ next: 0.8, id: 1 });
-  const holdRef = useRef(false);
+  const trailsRef = useRef<SlashTrail[]>([]);
+  const spawnRef = useRef({ next: 0.6, id: 1 });
+  const pointerStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
   const savedRef = useRef(false);
   const nameRef = useRef('');
   const boardRef = useRef<LeaderboardEntry[]>([]);
@@ -147,7 +165,7 @@ export default function HakiGame() {
     const game = gameRef.current;
     if (game.phase === 'result') return;
     game.phase = 'result';
-    game.score = Math.round(game.score + game.combo * 90 + game.perfect * 140);
+    game.score = Math.round(game.score + game.combo * 80 + game.perfect * 140 + game.slashes * 90);
     if (game.score > game.best) {
       game.best = game.score;
       window.localStorage.setItem(STORAGE_BEST, String(game.score));
@@ -172,10 +190,11 @@ export default function HakiGame() {
     setNickname(clean);
     window.localStorage.setItem(STORAGE_NAME, clean);
     gameRef.current = { ...initialState, best: gameRef.current.best, phase: 'playing' };
-    opponentsRef.current = [];
+    enemiesRef.current = [];
     particlesRef.current = [];
-    spawnRef.current = { next: 0.55, id: 1 };
-    holdRef.current = false;
+    trailsRef.current = [];
+    spawnRef.current = { next: 0.35, id: 1 };
+    pointerStartRef.current = null;
     savedRef.current = false;
     lastTimeRef.current = null;
     setCopied(false);
@@ -191,45 +210,87 @@ export default function HakiGame() {
     setView({ ...gameRef.current });
   }, [nickname]);
 
-  const releaseHaki = useCallback(() => {
+  const emit = (x: number, y: number, color: string, count = 12) => {
+    for (let i = 0; i < count; i += 1) particlesRef.current.push(makeParticle(x, y, color));
+  };
+
+  const strikeTap = useCallback(() => {
     const game = gameRef.current;
-    if (game.phase !== 'playing' || !holdRef.current) return;
-    holdRef.current = false;
-    game.releases += 1;
-    const aura = game.aura;
-    const range = 96 + aura * 4.8;
-    const perfectPower = aura >= PERFECT_MIN && aura <= PERFECT_MAX;
-    const tooWeak = aura < 34;
-    const over = aura > 94;
-    let hit = 0;
-    let closest = Infinity;
+    if (game.phase !== 'playing') return;
+    game.taps += 1;
+    const candidates = enemiesRef.current.filter((enemy) => !enemy.hit && Math.abs(enemy.x - STRIKE_X) < ZONE_WIDTH);
+    const target = candidates.sort((a, b) => Math.abs(a.x - STRIKE_X) - Math.abs(b.x - STRIKE_X))[0];
 
-    opponentsRef.current = opponentsRef.current.filter((opponent) => {
-      const distance = opponent.x - PLAYER_X;
-      closest = Math.min(closest, distance);
-      if (distance > 0 && distance < range) {
-        hit += 1;
-        for (let i = 0; i < (perfectPower ? 16 : 9); i += 1) particlesRef.current.push(particle(opponent.x, opponent.y, perfectPower ? '#f6d15d' : '#f4e8d0'));
-        return false;
+    if (!target) {
+      game.combo = 0;
+      game.misses += 1;
+      game.aura = Math.max(0, game.aura - 10);
+      game.score = Math.max(0, game.score - 90);
+      emit(STRIKE_X, PLAYER_Y, '#b94b3e', 8);
+      setView({ ...game });
+      return;
+    }
+
+    const accuracy = 1 - clamp(Math.abs(target.x - STRIKE_X) / ZONE_WIDTH, 0, 1);
+    const perfect = accuracy > 0.72;
+    target.hit = true;
+    game.combo += 1;
+    game.maxCombo = Math.max(game.maxCombo, game.combo);
+    if (perfect) game.perfect += 1;
+    game.aura = clamp(game.aura + (perfect ? 16 : 9), 0, 100);
+    game.score += Math.round((perfect ? 620 : 380) + game.combo * (perfect ? 72 : 38) + accuracy * 260);
+    emit(target.x, target.y, perfect ? '#f6d15d' : '#f4e8d0', perfect ? 18 : 11);
+    setView({ ...game });
+  }, []);
+
+  const strikeSlash = useCallback((x1: number, y1: number, x2: number, y2: number) => {
+    const game = gameRef.current;
+    if (game.phase !== 'playing') return;
+    game.slashes += 1;
+    trailsRef.current.push({ x1, y1, x2, y2, life: 0.22 });
+    let hits = 0;
+    enemiesRef.current.forEach((enemy) => {
+      if (enemy.hit) return;
+      const d = distanceToSegment(enemy.x, enemy.y, x1, y1, x2, y2);
+      if (d < enemy.size * 1.35 && enemy.x > STRIKE_X - 80 && enemy.x < CANVAS_W - 60) {
+        enemy.hit = true;
+        hits += enemy.kind === 'heavy' ? 2 : 1;
+        emit(enemy.x, enemy.y, '#f6d15d', 12);
       }
-      return true;
     });
-
-    if (hit > 0 && !tooWeak) {
-      game.combo += hit;
+    if (hits > 0) {
+      game.combo += hits;
       game.maxCombo = Math.max(game.maxCombo, game.combo);
-      if (perfectPower) game.perfect += 1;
-      game.score += hit * (perfectPower ? 720 : 420) + game.combo * (perfectPower ? 90 : 45);
-      if (over) game.score = Math.max(0, game.score - 180);
+      game.aura = clamp(game.aura + 6 + hits * 4, 0, 100);
+      game.score += hits * 330 + game.combo * 28;
     } else {
       game.combo = 0;
       game.misses += 1;
-      game.score = Math.max(0, game.score - (closest < 120 ? 160 : 80));
-      for (let i = 0; i < 8; i += 1) particlesRef.current.push(particle(PLAYER_X + 58, PLAYER_Y, '#b94b3e'));
+      game.score = Math.max(0, game.score - 120);
     }
-    game.aura = over ? 10 : 0;
     setView({ ...game });
   }, []);
+
+  const pointFromEvent = (clientX: number, clientY: number) => {
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (!rect) return { x: STRIKE_X, y: PLAYER_Y };
+    return { x: ((clientX - rect.left) / rect.width) * CANVAS_W, y: ((clientY - rect.top) / rect.height) * CANVAS_H };
+  };
+
+  const handlePointerDown = useCallback((event: React.PointerEvent<HTMLElement>) => {
+    if (gameRef.current.phase !== 'playing') return;
+    const p = pointFromEvent(event.clientX, event.clientY);
+    pointerStartRef.current = { ...p, time: performance.now() };
+  }, []);
+
+  const handlePointerUp = useCallback((event: React.PointerEvent<HTMLElement>) => {
+    if (gameRef.current.phase !== 'playing') return;
+    const start = pointerStartRef.current;
+    const end = pointFromEvent(event.clientX, event.clientY);
+    pointerStartRef.current = null;
+    if (start && Math.hypot(end.x - start.x, end.y - start.y) > 70) strikeSlash(start.x, start.y, end.x, end.y);
+    else strikeTap();
+  }, [strikeSlash, strikeTap]);
 
   const draw = useCallback((time: number) => {
     const canvas = canvasRef.current;
@@ -242,47 +303,44 @@ export default function HakiGame() {
 
     if (game.phase === 'playing') {
       game.timeLeft = Math.max(0, game.timeLeft - dt);
-      if (holdRef.current) game.aura = clamp(game.aura + dt * (46 + game.combo * 0.9), 0, 100);
-      else game.aura = clamp(game.aura - dt * 24, 0, 100);
-
+      game.aura = clamp(game.aura - dt * 5, 0, 100);
       const elapsed = GAME_SECONDS - game.timeLeft;
       const difficulty = clamp(elapsed / GAME_SECONDS, 0, 1);
       spawnRef.current.next -= dt;
       if (spawnRef.current.next <= 0) {
-        opponentsRef.current.push({
+        const roll = Math.random();
+        const kind: EnemyKind = difficulty > 0.62 && roll < 0.18 ? 'heavy' : difficulty > 0.35 && roll < 0.28 ? 'ghost' : 'normal';
+        enemiesRef.current.push({
           id: spawnRef.current.id++,
-          x: CANVAS_W + 60,
-          y: PLAYER_Y + 40 + Math.sin(spawnRef.current.id * 1.8) * 28,
-          speed: 118 + difficulty * 142 + Math.random() * 42,
-          size: 28 + Math.random() * 12,
-          hp: 1,
-          stunned: false,
-          stunLife: 0,
+          kind,
+          x: CANVAS_W + 70,
+          y: PLAYER_Y + 42 + Math.sin(spawnRef.current.id * 1.7) * 58,
+          speed: 145 + difficulty * 175 + Math.random() * 35 + (kind === 'ghost' ? 40 : 0),
+          size: kind === 'heavy' ? 38 : 28,
+          hit: false,
         });
-        spawnRef.current.next = Math.max(0.42, 1.15 - difficulty * 0.58);
+        spawnRef.current.next = Math.max(0.42, 0.92 - difficulty * 0.38);
       }
 
-      opponentsRef.current.forEach((opponent) => {
-        opponent.x -= opponent.speed * dt;
-        opponent.y += Math.sin(time / 220 + opponent.id) * 0.35;
+      enemiesRef.current.forEach((enemy) => {
+        enemy.x -= enemy.speed * dt;
+        enemy.y += Math.sin(time / 190 + enemy.id) * (enemy.kind === 'ghost' ? 0.8 : 0.35);
       });
-
-      opponentsRef.current = opponentsRef.current.filter((opponent) => {
-        if (opponent.x < DANGER_X) {
+      enemiesRef.current = enemiesRef.current.filter((enemy) => {
+        if (enemy.hit) return false;
+        if (enemy.x < PLAYER_X + 52) {
           game.combo = 0;
           game.misses += 1;
-          game.score = Math.max(0, game.score - 260);
-          for (let i = 0; i < 10; i += 1) particlesRef.current.push(particle(DANGER_X, opponent.y, '#b94b3e'));
+          game.aura = Math.max(0, game.aura - 18);
+          game.score = Math.max(0, game.score - 240);
+          emit(PLAYER_X + 42, enemy.y, '#b94b3e', 12);
           return false;
         }
-        return true;
+        return enemy.x > -80;
       });
-
-      particlesRef.current = particlesRef.current
-        .map((p) => ({ ...p, x: p.x + p.vx * dt, y: p.y + p.vy * dt, vy: p.vy + 80 * dt, life: p.life - dt }))
-        .filter((p) => p.life > 0);
-
-      game.score += dt * (18 + game.combo * 5);
+      particlesRef.current = particlesRef.current.map((p) => ({ ...p, x: p.x + p.vx * dt, y: p.y + p.vy * dt, vy: p.vy + 80 * dt, life: p.life - dt })).filter((p) => p.life > 0);
+      trailsRef.current = trailsRef.current.map((t) => ({ ...t, life: t.life - dt })).filter((t) => t.life > 0);
+      game.score += dt * (16 + game.combo * 4);
       if (game.timeLeft <= 0) finish();
       if (Math.floor(time / 80) !== Math.floor(last / 80)) setView({ ...game });
     }
@@ -293,48 +351,60 @@ export default function HakiGame() {
     ctx.fillRect(0, 350, CANVAS_W, 190);
     ctx.strokeStyle = '#5a4636';
     ctx.lineWidth = 3;
-    for (let x = 0; x < CANVAS_W; x += 48) {
+    for (let x = 0; x < CANVAS_W; x += 52) {
       ctx.beginPath();
-      ctx.moveTo(x, 366);
-      ctx.lineTo(x - 120, CANVAS_H);
+      ctx.moveTo(x, 368);
+      ctx.lineTo(x - 150, CANVAS_H);
       ctx.stroke();
     }
-    ctx.fillStyle = '#0b0908';
-    ctx.fillRect(0, 384, CANVAS_W, 12);
 
-    ctx.fillStyle = 'rgba(246, 209, 93, 0.08)';
+    ctx.fillStyle = 'rgba(246, 209, 93, 0.09)';
     ctx.beginPath();
-    ctx.arc(PLAYER_X, PLAYER_Y, 96 + game.aura * 4.8, 0, Math.PI * 2);
+    ctx.arc(PLAYER_X, PLAYER_Y, 96 + game.aura * 2.6, 0, Math.PI * 2);
     ctx.fill();
-    ctx.strokeStyle = game.aura >= PERFECT_MIN && game.aura <= PERFECT_MAX ? '#f6d15d' : 'rgba(244,232,208,0.38)';
+    ctx.strokeStyle = game.aura > 70 ? '#f6d15d' : 'rgba(244,232,208,0.45)';
     ctx.lineWidth = 6;
     ctx.beginPath();
-    ctx.arc(PLAYER_X, PLAYER_Y, 64 + game.aura * 2.15, -0.7, 0.7);
+    ctx.arc(PLAYER_X, PLAYER_Y, 78 + Math.sin(time / 120) * 6 + game.aura * 0.7, -0.95, 0.95);
     ctx.stroke();
+
+    ctx.fillStyle = 'rgba(246,209,93,0.14)';
+    ctx.fillRect(STRIKE_X - ZONE_WIDTH, 126, ZONE_WIDTH * 2, 308);
+    ctx.strokeStyle = '#f6d15d';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(STRIKE_X - ZONE_WIDTH, 126, ZONE_WIDTH * 2, 308);
+    ctx.fillStyle = 'rgba(185,75,62,0.72)';
+    ctx.fillRect(STRIKE_X - 3, 112, 6, 336);
 
     ctx.fillStyle = '#f4e8d0';
     ctx.fillRect(PLAYER_X - 18, PLAYER_Y - 58, 36, 48);
-    ctx.fillRect(PLAYER_X - 26, PLAYER_Y - 10, 52, 78);
+    ctx.fillRect(PLAYER_X - 27, PLAYER_Y - 10, 54, 80);
     ctx.fillStyle = '#130f0c';
     ctx.fillRect(PLAYER_X + 6, PLAYER_Y - 43, 5, 5);
     ctx.fillStyle = '#f6d15d';
     ctx.fillRect(PLAYER_X - 8, PLAYER_Y - 78, 16, 20);
     ctx.fillRect(PLAYER_X - 3, PLAYER_Y - 96, 8, 20);
 
-    ctx.strokeStyle = 'rgba(185,75,62,0.68)';
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.moveTo(DANGER_X, 156);
-    ctx.lineTo(DANGER_X, 430);
-    ctx.stroke();
-
-    opponentsRef.current.forEach((opponent) => {
-      ctx.fillStyle = '#2b211a';
-      ctx.fillRect(opponent.x - opponent.size, opponent.y - opponent.size * 1.4, opponent.size * 2, opponent.size * 2.8);
-      ctx.fillStyle = '#b94b3e';
-      ctx.fillRect(opponent.x - opponent.size * 0.55, opponent.y - opponent.size * 1.85, opponent.size * 1.1, opponent.size * 0.7);
+    enemiesRef.current.forEach((enemy) => {
+      ctx.globalAlpha = enemy.kind === 'ghost' ? 0.72 : 1;
+      ctx.fillStyle = enemy.kind === 'heavy' ? '#3a2a20' : '#2b211a';
+      ctx.fillRect(enemy.x - enemy.size, enemy.y - enemy.size * 1.35, enemy.size * 2, enemy.size * 2.7);
+      ctx.fillStyle = enemy.kind === 'ghost' ? '#d7c8a8' : '#b94b3e';
+      ctx.fillRect(enemy.x - enemy.size * 0.55, enemy.y - enemy.size * 1.78, enemy.size * 1.1, enemy.size * 0.68);
       ctx.fillStyle = '#f4e8d0';
-      ctx.fillRect(opponent.x - opponent.size * 0.2, opponent.y - opponent.size * 0.6, opponent.size * 0.4, opponent.size * 0.18);
+      ctx.fillRect(enemy.x - enemy.size * 0.22, enemy.y - enemy.size * 0.56, enemy.size * 0.44, enemy.size * 0.16);
+      ctx.globalAlpha = 1;
+    });
+
+    trailsRef.current.forEach((trail) => {
+      ctx.globalAlpha = clamp(trail.life / 0.22, 0, 1);
+      ctx.strokeStyle = '#f6d15d';
+      ctx.lineWidth = 10;
+      ctx.beginPath();
+      ctx.moveTo(trail.x1, trail.y1);
+      ctx.lineTo(trail.x2, trail.y2);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
     });
 
     particlesRef.current.forEach((p) => {
@@ -347,17 +417,15 @@ export default function HakiGame() {
     ctx.fillStyle = '#f4e8d0';
     ctx.font = '700 24px ui-monospace, Menlo, monospace';
     ctx.fillText(`SCORE ${Math.round(game.score)}`, 26, 34);
-    ctx.fillText(`TIME ${Math.ceil(game.timeLeft)}`, 410, 34);
+    ctx.fillText(`TIME ${Math.ceil(game.timeLeft)}`, 420, 34);
     ctx.fillText(`COMBO ${game.combo}`, 748, 34);
     ctx.fillStyle = '#0b0908';
     ctx.fillRect(26, 64, 280, 20);
-    ctx.fillStyle = game.aura >= PERFECT_MIN && game.aura <= PERFECT_MAX ? '#f6d15d' : '#f4e8d0';
+    ctx.fillStyle = game.aura > 70 ? '#f6d15d' : '#f4e8d0';
     ctx.fillRect(30, 68, 2.72 * game.aura, 12);
-    ctx.strokeStyle = '#f6d15d';
-    ctx.strokeRect(30 + PERFECT_MIN * 2.72, 64, (PERFECT_MAX - PERFECT_MIN) * 2.72, 20);
     ctx.fillStyle = '#d7c8a8';
     ctx.font = '700 18px ui-monospace, Menlo, monospace';
-    ctx.fillText(holdRef.current ? 'RELEASE IN GOLD ZONE' : 'HOLD TO RAISE HAKI', 26, 112);
+    ctx.fillText('TAP IN GOLD ZONE / SWIPE TO SLASH', 26, 112);
 
     frameRef.current = requestAnimationFrame(draw);
   }, [finish]);
@@ -368,25 +436,22 @@ export default function HakiGame() {
     canvas.width = CANVAS_W;
     canvas.height = CANVAS_H;
     frameRef.current = requestAnimationFrame(draw);
+    const key = (event: KeyboardEvent) => {
+      if ((event.key === ' ' || event.key === 'Enter') && gameRef.current.phase === 'playing') strikeTap();
+    };
+    window.addEventListener('keydown', key);
     return () => {
+      window.removeEventListener('keydown', key);
       if (frameRef.current) cancelAnimationFrame(frameRef.current);
     };
-  }, [draw]);
-
-  const pointerDown = useCallback(() => {
-    if (gameRef.current.phase === 'playing') holdRef.current = true;
-  }, []);
-
-  const pointerUp = useCallback(() => {
-    releaseHaki();
-  }, [releaseHaki]);
+  }, [draw, strikeTap]);
 
   const rank = useMemo(() => rankFor(view.score), [view.score]);
   const shareText = useMemo(() => `${sanitizeName(nickname)}の覇気は「${rank.name}」${Math.round(view.score)}点。${rank.line}\n#覇気チャレンジ https://game.xn--7qwx14d.com`, [nickname, rank.line, rank.name, view.score]);
 
   const share = useCallback(async () => {
     try {
-      if (navigator.share) await navigator.share({ title: '覇気解放', text: shareText, url: 'https://game.xn--7qwx14d.com' });
+      if (navigator.share) await navigator.share({ title: '覇気一閃', text: shareText, url: 'https://game.xn--7qwx14d.com' });
       else {
         await navigator.clipboard.writeText(shareText);
         setCopied(true);
@@ -397,16 +462,26 @@ export default function HakiGame() {
     }
   }, [shareText]);
 
+  const leaderboard = board.length > 0 && (
+    <ol className="pressure-board">
+      {board.slice(0, 5).map((entry, index) => (
+        <li className={entry.score === Math.round(view.score) && entry.name === sanitizeName(nickname) ? 'current' : ''} key={`${entry.playedAt}-${index}`}>
+          <span>{index + 1}. {entry.name}</span><strong>{entry.score}</strong>
+        </li>
+      ))}
+    </ol>
+  );
+
   return (
-    <main className="pressure-shell" aria-label="覇気解放" onPointerDown={pointerDown} onPointerUp={pointerUp} onPointerCancel={pointerUp}>
+    <main className="pressure-shell" aria-label="覇気一閃" onPointerDown={handlePointerDown} onPointerUp={handlePointerUp} onPointerCancel={handlePointerUp}>
       <div className="pressure-frame">
         <canvas ref={canvasRef} className="pressure-canvas" aria-hidden="true" />
 
         {view.phase === 'name' && (
           <section className="pressure-panel" onPointerDown={(event) => event.stopPropagation()}>
             <p className="pressure-kicker">game.覇気.com</p>
-            <h1>覇気解放</h1>
-            <p>長押しで覇気を溜め、金色の間で離す。それだけです。</p>
+            <h1>覇気一閃</h1>
+            <p>金色の間に入った瞬間、タップで覇気を放つ。</p>
             <input value={nickname} maxLength={12} placeholder="あだ名" onChange={(event) => { setNickname(event.target.value); nameRef.current = event.target.value; }} />
             <button type="button" onClick={submitName}>登録</button>
           </section>
@@ -414,17 +489,13 @@ export default function HakiGame() {
 
         {view.phase === 'title' && (
           <section className="pressure-panel" onPointerDown={(event) => event.stopPropagation()}>
-            <p className="pressure-kicker">HOLD / RELEASE</p>
-            <h1>覇気解放</h1>
-            <p>迫る相手を、覇気の圧だけで止める横画面ゲーム。</p>
-            <p className="pressure-rule">操作は一つ。長押しして、金色で離す。</p>
+            <p className="pressure-kicker">TAP MAIN / SLASH OPTIONAL</p>
+            <h1>覇気一閃</h1>
+            <p>迫る相手が金色の間に入ったらタップ。それだけです。</p>
+            <p className="pressure-rule">余裕があれば、横スワイプでまとめて一閃。</p>
             <button type="button" onClick={startGame}>開始</button>
             <button type="button" className="sub" onClick={() => { gameRef.current.phase = 'name'; setView({ ...gameRef.current }); }}>あだ名変更</button>
-            {board.length > 0 && (
-              <ol className="pressure-board">
-                {board.slice(0, 5).map((entry, index) => <li key={`${entry.playedAt}-${index}`}><span>{index + 1}. {entry.name}</span><strong>{entry.score}</strong></li>)}
-              </ol>
-            )}
+            {leaderboard}
           </section>
         )}
 
@@ -434,11 +505,8 @@ export default function HakiGame() {
             <h1>{rank.name}</h1>
             <p>{rank.line}</p>
             <p className="pressure-score">{Math.round(view.score)}点 / BEST {Math.round(view.best)} / MAX {view.maxCombo} COMBO</p>
-            {board.length > 0 && (
-              <ol className="pressure-board">
-                {board.slice(0, 5).map((entry, index) => <li className={entry.score === Math.round(view.score) && entry.name === sanitizeName(nickname) ? 'current' : ''} key={`${entry.playedAt}-${index}`}><span>{index + 1}. {entry.name}</span><strong>{entry.score}</strong></li>)}
-              </ol>
-            )}
+            <p className="pressure-rule">TAP {view.taps} / SLASH {view.slashes} / PERFECT {view.perfect}</p>
+            {leaderboard}
             <div className="pressure-actions">
               <button type="button" onClick={startGame}>もう一度</button>
               <button type="button" className="sub" onClick={share}>{copied ? 'コピー済み' : 'シェア'}</button>
