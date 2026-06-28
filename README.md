@@ -3,6 +3,7 @@
 `覇気.com` 用の最小ランディングページです。
 
 - 表示内容: 大きく「覇気」、下部に `coming soon`
+- ゲーム: `game.覇気.com` / `/game` で遊べる「覇気チャレンジ」
 - 技術構成: Next.js 15 App Router / TypeScript
 - デプロイ: GitHub `main` への push を契機に Vercel が自動デプロイ
 - 現在確認済みの公開URL: <https://tatekenmes.vercel.app>
@@ -12,13 +13,16 @@
 
 ```text
 src/app/
-  page.tsx          # トップページ
-  globals.css       # 覇気.com の全面ビジュアル
+  page.tsx          # トップページ / gameサブドメイン判定
+  game/page.tsx     # 覇気チャレンジ
+  globals.css       # 覇気.com の全面ビジュアル / ゲームUI
   layout.tsx        # metadata / viewport
   manifest.ts       # PWA manifest
   icon.tsx          # 512px icon
   apple-icon.tsx    # 180px icon
   not-found.tsx     # 404
+src/components/
+  HakiGame.tsx      # 長押し覇気ゲーム本体
 ```
 
 旧 Juice=Juice / 天霧澪 / 自分OS 関連のページ・日記・画像・生成スクリプトは削除済みです。
@@ -65,7 +69,8 @@ Vercel標準構成の場合:
 
 | Host | Type | Value |
 | --- | --- | --- |
-| `@` | `A` | `76.76.21.21` |
+| `@` | `A` | `216.198.79.1` |
+| `game` | `CNAME` | `cname.vercel-dns.com` |
 | `www` | `CNAME` | `cname.vercel-dns.com` |
 
 注意:
@@ -80,14 +85,17 @@ DNS設定後に確認するコマンド:
 
 ```bash
 dig xn--7qwx14d.com A +short
+dig game.xn--7qwx14d.com CNAME +short
 dig www.xn--7qwx14d.com CNAME +short
 curl -I https://xn--7qwx14d.com
 curl -L https://xn--7qwx14d.com | grep '覇気'
+curl -L https://game.xn--7qwx14d.com | grep '覇気チャレンジ'
 ```
 
 期待値:
 
-- apex `xn--7qwx14d.com` が Vercel の `76.76.21.21` へ向く
-- `www` が `cname.vercel-dns.com` へ向く
+- apex `xn--7qwx14d.com` が Vercel の `216.198.79.1` へ向く
+- `game` / `www` が `cname.vercel-dns.com` へ向く
 - HTTPSでアクセスできる
-- HTML内に `覇気` / `coming soon` が含まれる
+- apex HTML内に `覇気` / `coming soon` が含まれる
+- `game.xn--7qwx14d.com` または `/game` HTML内に `覇気チャレンジ` が含まれる
