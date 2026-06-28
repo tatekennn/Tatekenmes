@@ -32,6 +32,8 @@ const TAP_PAD = 10;
 const MOVE_SPEED = 760;
 const GRAVITY = 1450;
 const GOAL = { x: 2070, y: 1045, w: 120, h: 92 };
+const HAKI_FONT = '900 940px ui-serif, "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif';
+const HAKI_POS = { haX: 60, kiX: 1120, baseY: 930 };
 
 // 太い筆画の集合。全体では「覇気」、カメラ内では巨大な断片に見える比率にする。
 const strokes: Stroke[] = [
@@ -106,6 +108,20 @@ function terrainAt(p: Vec, pad = 0): TerrainHit | null {
 function segmentPointDistance(p: Vec, a: Vec, b: Vec) {
   const c = closestOnStroke(p, { x1: a.x, y1: a.y, x2: b.x, y2: b.y, w: 1 });
   return c.d;
+}
+function firstBlockingPoint(a: Vec, b: Vec) {
+  const distance = dist(a, b);
+  const steps = Math.max(8, Math.ceil(distance / 18));
+  for (let i = 1; i < steps; i += 1) {
+    const t = i / steps;
+    const fromStart = distance * t;
+    const toEnd = distance * (1 - t);
+    if (fromStart < 70 || toEnd < 44) continue;
+    const p = { x: lerp(a.x, b.x, t), y: lerp(a.y, b.y, t) };
+    const hit = terrainAt(p, -4);
+    if (hit) return hit.point;
+  }
+  return null;
 }
 function initEnemies() {
   return enemySeeds.map((e) => {
@@ -189,7 +205,8 @@ export default function HakiActionGame() {
       setView({ ...g });
       return;
     }
-    const destination = hit.point;
+    const blocked = firstBlockingPoint(g.player, hit.point);
+    const destination = blocked ?? hit.point;
     const d = dist(g.player, destination);
     if (d < 18) return;
     g.start = { ...g.player };
@@ -197,7 +214,7 @@ export default function HakiActionGame() {
     g.moveT = 0;
     g.moveDuration = clamp(d / MOVE_SPEED, 0.14, 1.2);
     g.moving = true;
-    g.message = '';
+    g.message = blocked ? '壁で停止' : '';
     setView({ ...g });
   }, [screenToWorld]);
 
@@ -320,42 +337,55 @@ export default function HakiActionGame() {
     ctx.save();
     ctx.translate(-g.camera.x, -g.camera.y);
 
-    // 背景に薄い全体文字。筆画は別途太線で物理地形として描く。
+    // 本物の「覇気」をそのまま巨大ステージとして見せる。
     ctx.save();
-    ctx.globalAlpha = 0.08;
-    ctx.fillStyle = '#f5ddb3';
-    ctx.font = '900 820px ui-serif, "Hiragino Mincho ProN", "Yu Mincho", serif';
-    ctx.fillText('覇', 80, 845);
-    ctx.fillText('気', 1245, 845);
+    ctx.font = HAKI_FONT;
+    ctx.lineJoin = 'round';
+    ctx.shadowBlur = 34;
+    ctx.shadowColor = 'rgba(245,221,179,0.72)';
+    ctx.strokeStyle = 'rgba(255,246,221,0.95)';
+    ctx.lineWidth = 34;
+    ctx.strokeText('覇', HAKI_POS.haX, HAKI_POS.baseY);
+    ctx.strokeText('気', HAKI_POS.kiX, HAKI_POS.baseY);
+    const textGrad = ctx.createLinearGradient(0, 110, WORLD.w, 1080);
+    textGrad.addColorStop(0, '#fff7de');
+    textGrad.addColorStop(0.46, '#d5b56f');
+    textGrad.addColorStop(1, '#fff1c2');
+    ctx.fillStyle = textGrad;
+    ctx.fillText('覇', HAKI_POS.haX, HAKI_POS.baseY);
+    ctx.fillText('気', HAKI_POS.kiX, HAKI_POS.baseY);
+    ctx.shadowBlur = 0;
+    ctx.globalAlpha = 0.24;
+    ctx.strokeStyle = '#3a250f';
+    ctx.lineWidth = 2;
+    for (let i = 0; i < 26; i += 1) {
+      const x = 120 + i * 82;
+      const y = 210 + ((i * 137) % 760);
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x + 44, y + 18);
+      ctx.stroke();
+    }
     ctx.restore();
 
     strokes.forEach((s) => {
       ctx.save();
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
-      ctx.shadowBlur = 20;
-      ctx.shadowColor = 'rgba(245,221,179,0.75)';
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = 'rgba(245,221,179,0.42)';
       const grad = ctx.createLinearGradient(s.x1, s.y1, s.x2, s.y2);
-      grad.addColorStop(0, '#fff2cf');
-      grad.addColorStop(0.5, '#d9bc82');
-      grad.addColorStop(1, '#fff6dd');
+      grad.addColorStop(0, 'rgba(255,242,207,0.30)');
+      grad.addColorStop(0.5, 'rgba(217,188,130,0.22)');
+      grad.addColorStop(1, 'rgba(255,246,221,0.30)');
       ctx.strokeStyle = grad;
-      ctx.lineWidth = s.w;
+      ctx.lineWidth = Math.max(12, s.w * 0.55);
       ctx.beginPath();
       ctx.moveTo(s.x1, s.y1); ctx.lineTo(s.x2, s.y2); ctx.stroke();
       ctx.shadowBlur = 0;
-      ctx.strokeStyle = 'rgba(42,25,11,0.22)';
+      ctx.strokeStyle = 'rgba(255,255,255,0.12)';
       ctx.lineWidth = Math.max(2, s.w * 0.08);
       ctx.stroke();
-      // 墨/石のひび割れ風ノイズを固定パターンで少量
-      ctx.strokeStyle = 'rgba(60,37,20,0.20)';
-      ctx.lineWidth = 1.4;
-      for (let i = 0; i < 3; i += 1) {
-        const t = ((i + 1) * 0.23 + (s.x1 % 13) * 0.01) % 1;
-        const x = lerp(s.x1, s.x2, t);
-        const y = lerp(s.y1, s.y2, t);
-        ctx.beginPath(); ctx.moveTo(x - 16, y - 7); ctx.lineTo(x + 10, y + 8); ctx.stroke();
-      }
       ctx.restore();
     });
 
@@ -404,12 +434,19 @@ export default function HakiActionGame() {
     ctx.strokeStyle = 'rgba(247,209,91,0.52)'; ctx.strokeRect(mx - 10, my - 10, mw + 20, mh + 38);
     ctx.fillStyle = '#f7f1df'; ctx.font = '800 13px ui-sans-serif, system-ui'; ctx.fillText('STAGE 覇気', mx, my + mh + 24);
     const sx = mw / WORLD.w; const sy = mh / WORLD.h;
-    strokes.forEach((s) => {
-      ctx.strokeStyle = 'rgba(245,221,179,0.82)';
-      ctx.lineWidth = Math.max(1, s.w * sx * 0.55);
-      ctx.lineCap = 'round';
-      ctx.beginPath(); ctx.moveTo(mx + s.x1 * sx, my + s.y1 * sy); ctx.lineTo(mx + s.x2 * sx, my + s.y2 * sy); ctx.stroke();
-    });
+    ctx.save();
+    ctx.translate(mx, my);
+    ctx.scale(sx, sy);
+    ctx.font = HAKI_FONT;
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = 'rgba(245,221,179,0.9)';
+    ctx.lineWidth = 34;
+    ctx.strokeText('覇', HAKI_POS.haX, HAKI_POS.baseY);
+    ctx.strokeText('気', HAKI_POS.kiX, HAKI_POS.baseY);
+    ctx.fillStyle = 'rgba(245,221,179,0.52)';
+    ctx.fillText('覇', HAKI_POS.haX, HAKI_POS.baseY);
+    ctx.fillText('気', HAKI_POS.kiX, HAKI_POS.baseY);
+    ctx.restore();
     ctx.strokeStyle = '#f7d15b'; ctx.lineWidth = 2;
     ctx.strokeRect(mx + g.camera.x * sx, my + g.camera.y * sy, VIEW.w * sx, VIEW.h * sy);
     ctx.fillStyle = '#ff3145'; ctx.beginPath(); ctx.arc(mx + g.player.x * sx, my + g.player.y * sy, 3, 0, Math.PI * 2); ctx.fill();
