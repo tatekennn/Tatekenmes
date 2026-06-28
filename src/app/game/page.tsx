@@ -1,14 +1,14 @@
 import HakiGame from '@/components/HakiGame';
 
 export const metadata = {
-  title: '覇気ドライブ | 覇気.com',
-  description: '避けて、集めて、撃ち落とす。28秒を生き残る高難度アーケード覇気ゲーム。',
+  title: '覇気二十試練 | 覇気.com',
+  description: '二十の試練を突破し、覇王門を割れ。残機3で挑むインディー風ブラウザゲーム。',
   alternates: {
     canonical: 'https://game.xn--7qwx14d.com',
   },
   openGraph: {
-    title: '覇気ドライブ | 覇気.com',
-    description: '左右に避けて覇気核を回収。満タンで覇王バースト。後半ほど激しくなるSNS向けアーケードゲーム。',
+    title: '覇気二十試練 | 覇気.com',
+    description: '二十の試練を突破し、覇王門を割れ。残機3で挑むインディー風ブラウザゲーム。',
     url: 'https://game.xn--7qwx14d.com',
     siteName: '覇気.com',
     locale: 'ja_JP',
@@ -16,8 +16,8 @@ export const metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: '覇気ドライブ | 覇気.com',
-    description: '避けて、集めて、撃ち落とす。28秒を生き残る高難度アーケード覇気ゲーム。',
+    title: '覇気二十試練 | 覇気.com',
+    description: '二十の試練を突破し、覇王門を割れ。残機3で挑むインディー風ブラウザゲーム。',
   },
 };
 
