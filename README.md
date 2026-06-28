@@ -2,42 +2,37 @@
 
 `覇気.com` 用の最小ランディングページと、`game.覇気.com` / `/game` で遊べるブラウザゲームを含む Next.js プロジェクトです。
 
-## ゲーム: 覇気二十試練
+## ゲーム: 覇気解放
 
-**覇気二十試練** は、インストール不要で遊べるインディー風 Canvas ゲームです。
+**覇気解放** は、覇気そのものをテーマにした横画面ブラウザゲームです。
 
-> 二十の試練を越え、覇王門を割れ。
+> 長押しで覇気を溜め、金色の間で離す。それだけです。
+
+### 現在の方針
+
+直近のユーザー意見を最優先しています。
+
+- 覇気と直接関係するテーマにする
+- 横画面で遊ぶ
+- 操作を増やさない
+- 操作は **長押し → 離す** の一種類だけ
+- 敵を避ける・斬る・反射する等の複数アクションは使わない
+- 迫る相手を「覇気の圧」で止めるゲームにする
 
 ### 概要
 
-- 20ステージ制
-- 残機3で開始
-- ステージ失敗で残機が減り、残機が残っていれば同じステージを再挑戦
-- 残機0なら必ず STAGE 01 からやり直し
-- STAGE 01〜03 はチュートリアル扱い
-- 後半ほど難度が上がり、STAGE 18〜20 は高難度
-- 敵や障害物は文字ではなく、色・形・動きで判断
+- 30秒制
+- 迫る相手が赤い危険線に入る前に覇気を解放する
+- 長押しで覇気ゲージが上昇
+- 金色ゾーンで離すと高得点
+- 弱すぎると届かない
+- 強すぎると少し減点
 - あだ名登録、localStorageランキング、SNS共有対応
 
 ### 操作方法
 
-ステージごとに操作が変わります。画面下部に短いヒントが出ます。
-
-- `TAP`: タップ / Space / Enter でジャンプ
-- `SLASH`: ドラッグまたはスワイプで斬撃ライン
-- `DODGE`: 指/マウスで左右移動
-- `REFLECT`: 円が重なる瞬間にタップ
-- `HOLD`: 長押しして金色ゾーンで離す
-- `FINAL`: TAP / DODGE / HOLD / TIMING の複合
-
-### ランキング
-
-ランキングは現在 `localStorage` 保存です。
-
-- `haki_twenty_trials_nickname`: あだ名
-- `haki_twenty_trials_ranking`: TOP5ランキング
-
-将来的に Supabase / Vercel KV などへ移行しやすいよう、保存処理は `saveRanking()` / `loadRanking()` に分離しています。
+- 画面を長押し: 覇気を溜める
+- 指/マウスを離す: 覇気を解放する
 
 ## 技術構成
 
@@ -51,7 +46,7 @@
 ```text
 src/app/
   page.tsx          # トップページ / gameサブドメイン判定
-  game/page.tsx     # 覇気二十試練 metadata / page
+  game/page.tsx     # 覇気解放 metadata / page
   globals.css       # 覇気.com の全面ビジュアル / ゲームUI
   layout.tsx        # metadata / viewport
   manifest.ts       # PWA manifest
@@ -59,7 +54,7 @@ src/app/
   apple-icon.tsx    # 180px icon
   not-found.tsx     # 404
 src/components/
-  HakiGame.tsx      # 覇気二十試練ゲーム本体
+  HakiGame.tsx      # 覇気解放ゲーム本体
 ```
 
 旧 Juice=Juice / 天霧澪 / 自分OS 関連のページ・日記・画像・生成スクリプトは削除済みです。
@@ -83,11 +78,11 @@ npm run dev
 
 ```bash
 git add .
-git commit -m "feat: implement haki twenty trials"
+git commit -m "feat: simplify haki game into pressure release"
 git push origin main
 ```
 
-Vercel 側で GitHub リポジトリと `main` ブランチが接続されていれば、自動で本番反映されます。
+Vercel 側で GitHubリポジトリと `main` ブランチが接続されていれば、自動で本番反映されます。
 
 ## Domain setup TODO
 
@@ -127,13 +122,5 @@ dig game.xn--7qwx14d.com CNAME +short
 dig www.xn--7qwx14d.com CNAME +short
 curl -I https://xn--7qwx14d.com
 curl -L https://xn--7qwx14d.com | grep '覇気'
-curl -L https://game.xn--7qwx14d.com | grep '覇気二十試練'
+curl -L https://game.xn--7qwx14d.com | grep '覇気解放'
 ```
-
-期待値:
-
-- apex `xn--7qwx14d.com` が Vercel の `216.198.79.1` へ向く
-- `game` / `www` が `cname.vercel-dns.com` へ向く
-- HTTPSでアクセスできる
-- apex HTML内に `覇気` / `coming soon` が含まれる
-- `game.xn--7qwx14d.com` または `/game` HTML内に `覇気二十試練` が含まれる

@@ -1,14 +1,14 @@
 import HakiGame from '@/components/HakiGame';
 
 export const metadata = {
-  title: '覇気二十試練 | 覇気.com',
-  description: '二十の試練を突破し、覇王門を割れ。残機3で挑むインディー風ブラウザゲーム。',
+  title: '覇気解放 | 覇気.com',
+  description: '長押しで覇気を溜め、金色の間で離す。操作ひとつの横画面ブラウザゲーム。',
   alternates: {
     canonical: 'https://game.xn--7qwx14d.com',
   },
   openGraph: {
-    title: '覇気二十試練 | 覇気.com',
-    description: '二十の試練を突破し、覇王門を割れ。残機3で挑むインディー風ブラウザゲーム。',
+    title: '覇気解放 | 覇気.com',
+    description: '迫る相手を覇気の圧だけで止める。長押しして、金色で離す横画面ゲーム。',
     url: 'https://game.xn--7qwx14d.com',
     siteName: '覇気.com',
     locale: 'ja_JP',
@@ -16,8 +16,8 @@ export const metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: '覇気二十試練 | 覇気.com',
-    description: '二十の試練を突破し、覇王門を割れ。残機3で挑むインディー風ブラウザゲーム。',
+    title: '覇気解放 | 覇気.com',
+    description: '長押しで覇気を溜め、金色の間で離す。操作ひとつの横画面ブラウザゲーム。',
   },
 };
 
