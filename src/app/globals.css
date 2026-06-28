@@ -167,3 +167,84 @@ button {
     letter-spacing: -0.14em;
   }
 }
+
+.haki-action-shell {
+  position: relative;
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  padding: max(0.6rem, env(safe-area-inset-top)) max(0.6rem, env(safe-area-inset-right)) max(0.6rem, env(safe-area-inset-bottom)) max(0.6rem, env(safe-area-inset-left));
+  background:
+    radial-gradient(circle at 50% 42%, rgba(215, 169, 46, 0.16), transparent 0 18rem),
+    #020202;
+  color: #f7f1df;
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  overflow: hidden;
+  touch-action: none;
+  user-select: none;
+}
+
+.haki-action-canvas {
+  width: min(100vw - 1.2rem, 1180px);
+  max-height: calc(100svh - 1.2rem);
+  aspect-ratio: 16 / 9;
+  border: 1px solid rgba(247, 209, 91, 0.28);
+  background: #020202;
+  box-shadow: 0 24px 90px rgba(0, 0, 0, 0.72), 0 0 40px rgba(215, 169, 46, 0.12);
+  cursor: crosshair;
+}
+
+.haki-action-panel {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 5;
+  width: min(88vw, 34rem);
+  transform: translate(-50%, -50%);
+  display: grid;
+  gap: 0.85rem;
+  padding: clamp(1.1rem, 3vw, 1.6rem);
+  text-align: center;
+  border: 1px solid rgba(247, 209, 91, 0.42);
+  background: rgba(3, 3, 3, 0.86);
+  box-shadow: 0 22px 80px rgba(0, 0, 0, 0.58), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+}
+
+.haki-action-panel.compact {
+  width: min(84vw, 26rem);
+}
+
+.haki-action-panel h1 {
+  margin: 0;
+  color: #fff1c7;
+  font-family: ui-serif, 'Hiragino Mincho ProN', 'Yu Mincho', serif;
+  font-size: clamp(3.2rem, 11vw, 7rem);
+  line-height: 0.9;
+  letter-spacing: -0.08em;
+  text-shadow: 0 0 32px rgba(247, 209, 91, 0.58), 0 12px 38px rgba(0, 0, 0, 0.88);
+}
+
+.haki-action-panel p {
+  margin: 0;
+  color: rgba(247, 241, 223, 0.84);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.haki-action-panel button {
+  min-height: 3.1rem;
+  border: 0;
+  border-radius: 999px;
+  color: #120b05;
+  background: linear-gradient(135deg, #fff3cf, #d7a92e 62%, #b31928);
+  box-shadow: 0 16px 44px rgba(179, 25, 40, 0.28), 0 0 30px rgba(215, 169, 46, 0.26);
+  font: inherit;
+  font-weight: 950;
+  cursor: pointer;
+}
+
+.haki-action-panel button:active {
+  transform: scale(0.985);
+}
+
