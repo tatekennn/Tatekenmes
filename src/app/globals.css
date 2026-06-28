@@ -232,6 +232,13 @@ button {
   letter-spacing: 0.08em;
 }
 
+.haki-action-panel .haki-action-note {
+  color: rgba(247, 241, 223, 0.62);
+  font-size: 0.88rem;
+  line-height: 1.65;
+  letter-spacing: 0.03em;
+}
+
 .haki-action-panel button {
   min-height: 3.1rem;
   border: 0;
