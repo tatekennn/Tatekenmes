@@ -5,6 +5,15 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 type Phase = 'title' | 'playing' | 'ended';
 type RankName = '無言の圧' | '町内会の覇気' | '社内チャットの覇気' | '取締役会の覇気' | '覇王色スタンプ';
 
+type LeaderboardEntry = {
+  name: string;
+  score: number;
+  rank: RankName;
+  perfect: number;
+  maxCombo: number;
+  playedAt: string;
+};
+
 type Nuisance = {
   id: number;
   text: string;
@@ -38,6 +47,8 @@ type GameState = {
 
 const GAME_SECONDS = 15;
 const STORAGE_KEY = 'haki-stamp-best-score';
+const NAME_STORAGE_KEY = 'haki-stamp-nickname';
+const LEADERBOARD_STORAGE_KEY = 'haki-stamp-leaderboard';
 const TARGET_X = 0.5;
 const ZONE_WIDTH = 0.18;
 const PERFECT_WIDTH = 0.07;
@@ -70,6 +81,23 @@ function rankFor(score: number): { name: RankName; line: string } {
   return { name: '無言の圧', line: 'まだ覇気というより、ちょっとした圧です。' };
 }
 
+function sanitizeName(name: string) {
+  return name.trim().replace(/\s+/g, ' ').slice(0, 12) || '名無しの覇気';
+}
+
+function readLeaderboard(): LeaderboardEntry[] {
+  try {
+    const parsed = JSON.parse(window.localStorage.getItem(LEADERBOARD_STORAGE_KEY) ?? '[]') as LeaderboardEntry[];
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter((entry) => typeof entry.name === 'string' && Number.isFinite(entry.score))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 10);
+  } catch {
+    return [];
+  }
+}
+
 function spawnNuisance(id: number, width: number, height: number, speedBoost: number): Nuisance {
   return {
     id,
@@ -92,20 +120,43 @@ export default function HakiGame() {
   const lastTimeRef = useRef<number | null>(null);
   const spawnRef = useRef({ next: 0, id: 1 });
   const uiTimeRef = useRef(0);
+  const nicknameRef = useRef('');
+  const leaderboardRef = useRef<LeaderboardEntry[]>([]);
+  const resultSavedRef = useRef(false);
   const [view, setView] = useState<GameState>(gameRef.current);
   const [copied, setCopied] = useState(false);
+  const [nickname, setNickname] = useState('');
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
 
   useEffect(() => {
     const stored = Number(window.localStorage.getItem(STORAGE_KEY) ?? '0');
     if (Number.isFinite(stored)) {
       gameRef.current.best = stored;
-      setView({ ...gameRef.current });
     }
+    const storedName = sanitizeName(window.localStorage.getItem(NAME_STORAGE_KEY) ?? '');
+    nicknameRef.current = storedName;
+    setNickname(storedName);
+    const storedLeaderboard = readLeaderboard();
+    leaderboardRef.current = storedLeaderboard;
+    setLeaderboard(storedLeaderboard);
+    setView({ ...gameRef.current });
+  }, []);
+
+  const persistLeaderboard = useCallback((entries: LeaderboardEntry[]) => {
+    const ranked = entries.sort((a, b) => b.score - a.score).slice(0, 10);
+    leaderboardRef.current = ranked;
+    window.localStorage.setItem(LEADERBOARD_STORAGE_KEY, JSON.stringify(ranked));
+    setLeaderboard(ranked);
   }, []);
 
   const restart = useCallback(() => {
     const best = gameRef.current.best;
+    const cleanName = sanitizeName(nicknameRef.current);
+    nicknameRef.current = cleanName;
+    setNickname(cleanName);
+    window.localStorage.setItem(NAME_STORAGE_KEY, cleanName);
     gameRef.current = { ...initialState, best, phase: 'playing' };
+    resultSavedRef.current = false;
     itemsRef.current = [];
     stampsRef.current = [];
     spawnRef.current = { next: 0, id: 1 };
@@ -198,6 +249,19 @@ export default function HakiGame() {
         if (game.score > game.best) {
           game.best = game.score;
           window.localStorage.setItem(STORAGE_KEY, String(game.score));
+        }
+        if (!resultSavedRef.current) {
+          resultSavedRef.current = true;
+          const cleanName = sanitizeName(nicknameRef.current);
+          const entry: LeaderboardEntry = {
+            name: cleanName,
+            score: Math.round(game.score),
+            rank: rankFor(game.score).name,
+            perfect: game.perfect,
+            maxCombo: game.maxCombo,
+            playedAt: new Date().toISOString(),
+          };
+          persistLeaderboard([...leaderboardRef.current, entry]);
         }
       }
     }
@@ -311,7 +375,7 @@ export default function HakiGame() {
     }
 
     frameRef.current = requestAnimationFrame(draw);
-  }, [view.phase]);
+  }, [persistLeaderboard, view.phase]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -340,8 +404,8 @@ export default function HakiGame() {
 
   const rank = useMemo(() => rankFor(view.score), [view.score]);
   const shareText = useMemo(
-    () => `覇気仕分け ${view.score}点「${rank.name}」。${rank.line}\n${view.perfect}件を完璧に承認しました。 #覇気チャレンジ https://game.xn--7qwx14d.com`,
-    [rank.line, rank.name, view.perfect, view.score],
+    () => `${sanitizeName(nickname)}の覇気仕分け ${view.score}点「${rank.name}」。${rank.line}\n${view.perfect}件を完璧に承認しました。 #覇気チャレンジ https://game.xn--7qwx14d.com`,
+    [nickname, rank.line, rank.name, view.perfect, view.score],
   );
 
   const share = useCallback(async () => {
@@ -384,11 +448,36 @@ export default function HakiGame() {
         )}
 
         {view.phase === 'title' && (
-          <div className="result-card arcade-card">
+          <form className="result-card arcade-card player-card" onSubmit={(event) => { event.preventDefault(); event.stopPropagation(); restart(); }} onPointerDown={(event) => event.stopPropagation()}>
+            <label className="nickname-label" htmlFor="nickname">最初にあだ名を登録</label>
+            <input
+              id="nickname"
+              className="nickname-input"
+              value={nickname}
+              maxLength={12}
+              placeholder="例：たてけん"
+              onChange={(event) => {
+                setNickname(event.target.value);
+                nicknameRef.current = event.target.value;
+              }}
+            />
             <p className="result-rank">現実を、押印で黙らせろ。</p>
             <p>「月曜」「なるはや」「通知99+」が中央に来た瞬間にタップ。近いほど高得点です。</p>
-            <button type="button" className="primary-action" onClick={(event) => { event.stopPropagation(); restart(); }}>仕分け開始</button>
-          </div>
+            <button type="submit" className="primary-action">仕分け開始</button>
+            {leaderboard.length > 0 && (
+              <div className="leaderboard" aria-label="ローカルランキング">
+                <p className="leaderboard-title">LOCAL RANKING</p>
+                <ol>
+                  {leaderboard.slice(0, 5).map((entry, index) => (
+                    <li key={`${entry.playedAt}-${index}`}>
+                      <span>{index + 1}. {entry.name}</span>
+                      <strong>{entry.score}</strong>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            )}
+          </form>
         )}
 
         {view.phase === 'playing' && (
@@ -405,7 +494,20 @@ export default function HakiGame() {
           <div className="result-card arcade-card">
             <p className="result-rank">{rank.name}</p>
             <p>{rank.line}</p>
-            <p className="best-score">SCORE {Math.round(view.score)} / BEST {Math.round(view.best)} / MAX {view.maxCombo} COMBO</p>
+            <p className="best-score">{sanitizeName(nickname)} / SCORE {Math.round(view.score)} / BEST {Math.round(view.best)} / MAX {view.maxCombo} COMBO</p>
+            {leaderboard.length > 0 && (
+              <div className="leaderboard leaderboard--result" aria-label="ローカルランキング">
+                <p className="leaderboard-title">LOCAL RANKING</p>
+                <ol>
+                  {leaderboard.slice(0, 5).map((entry, index) => (
+                    <li className={entry.score === Math.round(view.score) && entry.name === sanitizeName(nickname) ? 'is-current' : ''} key={`${entry.playedAt}-${index}`}>
+                      <span>{index + 1}. {entry.name}</span>
+                      <strong>{entry.score}</strong>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            )}
             <div className="game-actions">
               <button type="button" className="primary-action" onClick={(event) => { event.stopPropagation(); restart(); }}>もう一度仕分ける</button>
               <button type="button" className="ghost-action" onClick={(event) => { event.stopPropagation(); share(); }}>{copied ? 'コピー済み' : '結果をシェア'}</button>
