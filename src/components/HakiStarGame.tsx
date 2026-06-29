@@ -31,10 +31,18 @@ interface GameState {
   maxHp: number;
   xp: number;
   xpNeed: number;
+  score: number;
+  combo: number;
+  burstMeter: number;
   shake: number;
   flash: number;
   messageTitle: string;
   messageSub: string;
+}
+
+interface GameControls {
+  start: () => void;
+  burst: () => void;
 }
 
 interface EnemyObj {
@@ -168,7 +176,14 @@ function sfxWarning() {
 /* ------------------------------------------------------------------ */
 /*  Scene                                                              */
 /* ------------------------------------------------------------------ */
-function Scene({ gameRef }: { gameRef: React.MutableRefObject<GameState> }) {
+function Scene({
+  gameRef,
+  controlsRef,
+}: {
+  gameRef: React.MutableRefObject<GameState>;
+  controlsRef: React.MutableRefObject<GameControls | null>;
+}) {
+  const { camera, size } = useThree();
   const groupEnemy = useRef<THREE.Group>(null);
   const groupProj = useRef<THREE.Group>(null);
   const groupBurst = useRef<THREE.Group>(null);
@@ -194,10 +209,23 @@ function Scene({ gameRef }: { gameRef: React.MutableRefObject<GameState> }) {
   const hpRef = useRef(RANKS[0].maxHp);
   const maxHpRef = useRef(RANKS[0].maxHp);
   const xpRef = useRef(0);
+  const scoreRef = useRef(0);
+  const comboRef = useRef(1);
+  const comboTimerRef = useRef(0);
+  const burstMeterRef = useRef(0);
   const flashRef = useRef(0);
   const shakeRef = useRef(0);
 
   const tempVec = useRef(new THREE.Vector3());
+
+  useEffect(() => {
+    const perspective = camera as THREE.PerspectiveCamera;
+    const isPortrait = size.height > size.width;
+    perspective.position.set(0, isPortrait ? 28 : 22, isPortrait ? 34 : 26);
+    perspective.fov = isPortrait ? 58 : 48;
+    perspective.lookAt(0, 0, 0);
+    perspective.updateProjectionMatrix();
+  }, [camera, size.height, size.width]);
 
   /* ---------------------------------------------------------------- */
   const initGame = useCallback(() => {
@@ -222,6 +250,10 @@ function Scene({ gameRef }: { gameRef: React.MutableRefObject<GameState> }) {
     hpRef.current = RANKS[0].maxHp;
     maxHpRef.current = RANKS[0].maxHp;
     xpRef.current = 0;
+    scoreRef.current = 0;
+    comboRef.current = 1;
+    comboTimerRef.current = 0;
+    burstMeterRef.current = 0;
     flashRef.current = 0;
     shakeRef.current = 0;
     autoTimer.current = 0;
@@ -254,6 +286,7 @@ function Scene({ gameRef }: { gameRef: React.MutableRefObject<GameState> }) {
       phase: 'playing', wave: 1, rankIdx: 0,
       hp: hpRef.current, maxHp: maxHpRef.current,
       xp: 0, xpNeed: RANKS[0].xpNeed,
+      score: 0, combo: 1, burstMeter: 0,
       shake: 0, flash: 0, messageTitle: '', messageSub: '',
     };
   }, [gameRef]);
@@ -267,13 +300,14 @@ function Scene({ gameRef }: { gameRef: React.MutableRefObject<GameState> }) {
       [1, 2, 2, 3, 3];
     const dur = Math.max(3.2, 8.8 - wave * 0.28);
     const count = Math.floor(7 + wave * 2.1);
-    spawner.current = { count, spawned: 0, interval: dur / count, last: performance.now(), types };
+    const interval = dur / count;
+    spawner.current = { count, spawned: 0, interval, last: performance.now() - interval * 1000, types };
   }
 
   /* ---------------------------------------------------------------- */
   function spawnEnemy() {
     const angle = Math.random() * Math.PI * 2;
-    const dist = 22 + Math.random() * 4;
+    const dist = 15 + Math.random() * 6;
     const x = Math.cos(angle) * dist;
     const z = Math.sin(angle) * dist;
     const y = 0.5 + (Math.random() - 0.5) * 2.5;
@@ -283,7 +317,8 @@ function Scene({ gameRef }: { gameRef: React.MutableRefObject<GameState> }) {
     const hpScale = 1 + waveRef.current * 0.075;
 
     const mat = new THREE.MeshStandardMaterial({
-      color: d.matColor, roughness: 0.85, metalness: 0.1, flatShading: true,
+      color: d.matColor, emissive: d.matColor, emissiveIntensity: 0.22,
+      roughness: 0.85, metalness: 0.1, flatShading: true,
     });
     const mesh = new THREE.Mesh(ENEMY_GEOM, mat);
     mesh.position.set(x, y, z);
@@ -313,7 +348,7 @@ function Scene({ gameRef }: { gameRef: React.MutableRefObject<GameState> }) {
     return best;
   }
 
-  function launchProjectile(target: THREE.Vector3) {
+  function launchProjectile(target: THREE.Vector3, powerScale = 1) {
     const rank = RANKS[rankRef.current];
     const mesh = new THREE.Mesh(PROJ_GEOM, PROJ_MAT);
     mesh.position.set(0, 0.5, 0);
@@ -325,7 +360,7 @@ function Scene({ gameRef }: { gameRef: React.MutableRefObject<GameState> }) {
       mesh,
       vel: dir.multiplyScalar(22),
       life: 2.8,
-      power: rank.tapPower,
+      power: rank.tapPower * powerScale,
     });
     sfxShoot();
   }
@@ -362,11 +397,18 @@ function Scene({ gameRef }: { gameRef: React.MutableRefObject<GameState> }) {
     }
   }
 
-  function killEnemy(e: EnemyObj, big: boolean) {
+  function killEnemy(e: EnemyObj, big: boolean, reward = true) {
     spawnParticles(e.mesh.position, ENEMY_TYPES[e.type].matColor, big ? 18 : 8);
     groupEnemy.current!.remove(e.mesh);
     e.mat.dispose();
-    xpRef.current += e.value;
+    if (reward) {
+      const combo = comboRef.current;
+      scoreRef.current += Math.round(e.value * 100 * combo);
+      xpRef.current += e.value;
+      burstMeterRef.current = Math.min(100, burstMeterRef.current + e.value * 0.65);
+      comboRef.current = Math.min(99, comboRef.current + 1);
+      comboTimerRef.current = 2.35;
+    }
     sfxExplode();
   }
 
@@ -375,9 +417,74 @@ function Scene({ gameRef }: { gameRef: React.MutableRefObject<GameState> }) {
     e.stopPropagation();
     if (gameRef.current.phase !== 'playing') return;
     const point = e.point as THREE.Vector3;
-    launchProjectile(point);
-    createBurst(point, RANKS[rankRef.current].auraRadius * 0.8);
+    let closest: EnemyObj | null = null;
+    let closestD = 9;
+    for (const enemy of enemies.current) {
+      const d = enemy.mesh.position.distanceToSquared(point);
+      if (d < closestD) {
+        closest = enemy;
+        closestD = d;
+      }
+    }
+    const target = closest?.mesh.position ?? point;
+    const isPrecision = closest !== null;
+    launchProjectile(target, isPrecision ? 1.35 : 1);
+    createBurst(point, RANKS[rankRef.current].auraRadius * (isPrecision ? 0.95 : 0.62));
+    if (isPrecision) {
+      scoreRef.current += 25 * comboRef.current;
+      burstMeterRef.current = Math.min(100, burstMeterRef.current + 1.8);
+    }
   }, [gameRef]);
+
+  const triggerHakiBurst = useCallback(() => {
+    if (gameRef.current.phase !== 'playing' || burstMeterRef.current < 100) return;
+    const rank = RANKS[rankRef.current];
+    burstMeterRef.current = 0;
+    flashRef.current = 1.4;
+    shakeRef.current = 1.4;
+    createBurst(new THREE.Vector3(0, 0.5, 0), 32);
+    for (let i = enemies.current.length - 1; i >= 0; i--) {
+      const enemy = enemies.current[i];
+      enemy.hp -= rank.tapPower * 3.6 + 400;
+      enemy.flash = 0.35;
+      const dir = enemy.mesh.position.clone().normalize();
+      enemy.mesh.position.addScaledVector(dir, 3.4);
+      if (enemy.hp <= 0) {
+        killEnemy(enemy, true);
+        enemies.current.splice(i, 1);
+      }
+    }
+    scoreRef.current += 2000 + waveRef.current * 150;
+    sfxLevelUp();
+  }, [gameRef]);
+
+  useEffect(() => {
+    controlsRef.current = { start: initGame, burst: triggerHakiBurst };
+    return () => {
+      controlsRef.current = null;
+    };
+  }, [controlsRef, initGame, triggerHakiBurst]);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.code === 'Enter') {
+        if (gameRef.current.phase !== 'playing') {
+          controlsRef.current?.start();
+        }
+        return;
+      }
+      if (event.code === 'Space') {
+        event.preventDefault();
+        if (gameRef.current.phase === 'playing') {
+          controlsRef.current?.burst();
+        } else {
+          controlsRef.current?.start();
+        }
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [controlsRef, gameRef]);
 
   /* ---------------------------------------------------------------- */
   function checkLevelUp() {
@@ -423,7 +530,7 @@ function Scene({ gameRef }: { gameRef: React.MutableRefObject<GameState> }) {
 
     // kill all enemies spectacularly
     for (const e of enemies.current) {
-      killEnemy(e, true);
+      killEnemy(e, true, false);
     }
     enemies.current = [];
 
@@ -470,6 +577,10 @@ function Scene({ gameRef }: { gameRef: React.MutableRefObject<GameState> }) {
 
     const rank = RANKS[rankRef.current];
     const ts = performance.now();
+    if (comboTimerRef.current > 0) {
+      comboTimerRef.current = Math.max(0, comboTimerRef.current - dt);
+      if (comboTimerRef.current === 0) comboRef.current = 1;
+    }
 
     // core rotation
     if (coreRef.current) coreRef.current.rotation.y += dt * 0.7;
@@ -589,8 +700,8 @@ function Scene({ gameRef }: { gameRef: React.MutableRefObject<GameState> }) {
         e.mat.emissive.setHex(0xffffff);
         e.mat.emissiveIntensity = Math.max(0, e.flash * 12);
       } else {
-        e.mat.emissive.setHex(0x000000);
-        e.mat.emissiveIntensity = 0;
+        e.mat.emissive.setHex(ENEMY_TYPES[e.type].matColor);
+        e.mat.emissiveIntensity = 0.22;
       }
 
       // aura damage
@@ -649,6 +760,9 @@ function Scene({ gameRef }: { gameRef: React.MutableRefObject<GameState> }) {
     g.maxHp = maxHpRef.current;
     g.xp = xpRef.current;
     g.xpNeed = rank.xpNeed;
+    g.score = scoreRef.current;
+    g.combo = comboRef.current;
+    g.burstMeter = burstMeterRef.current;
     updateEffects(dt);
 
     // core light flicker when low hp
@@ -734,7 +848,13 @@ function Scene({ gameRef }: { gameRef: React.MutableRefObject<GameState> }) {
 /* ------------------------------------------------------------------ */
 /*  Overlay                                                            */
 /* ------------------------------------------------------------------ */
-function Overlay({ gameRef }: { gameRef: React.MutableRefObject<GameState> }) {
+function Overlay({
+  gameRef,
+  controlsRef,
+}: {
+  gameRef: React.MutableRefObject<GameState>;
+  controlsRef: React.MutableRefObject<GameControls | null>;
+}) {
   const [tick, setTick] = useState(0);
   useEffect(() => {
     const id = setInterval(() => setTick(t => t + 1), 80);
@@ -767,9 +887,14 @@ function Overlay({ gameRef }: { gameRef: React.MutableRefObject<GameState> }) {
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontSize: '0.6rem', opacity: 0.5, letterSpacing: '0.18em' }}>RANK</div>
           <div style={{ fontSize: '1.05rem', fontWeight: 900, color: rank.cssColor }}>{rank.name}</div>
+          <div style={{ marginTop: 4, fontSize: '0.72rem', color: g.combo > 1 ? '#ffe0a0' : 'rgba(247,241,223,0.42)', fontWeight: 800 }}>
+            {g.combo > 1 ? `COMBO x${g.combo}` : 'COMBO READY'}
+          </div>
         </div>
         <div style={{ textAlign: 'right' }}>
-          <div style={{ fontSize: '0.6rem', opacity: 0.5, letterSpacing: '0.18em' }}>CORE HP</div>
+          <div style={{ fontSize: '0.6rem', opacity: 0.5, letterSpacing: '0.18em' }}>SCORE</div>
+          <div style={{ fontSize: '1.05rem', fontWeight: 950, color: '#fceeb5' }}>{Math.round(g.score).toLocaleString('ja-JP')}</div>
+          <div style={{ marginTop: 6, fontSize: '0.6rem', opacity: 0.5, letterSpacing: '0.18em' }}>CORE HP</div>
           <div style={{ fontSize: '1.05rem', fontWeight: 900, color: g.hp / g.maxHp < 0.3 ? '#ff4444' : '#f7f1df' }}>
             {Math.ceil((g.hp / g.maxHp) * 100)}%
           </div>
@@ -786,6 +911,35 @@ function Overlay({ gameRef }: { gameRef: React.MutableRefObject<GameState> }) {
             transition: 'width 150ms linear',
           }} />
         </div>
+        {phase === 'playing' && (
+          <button
+            type="button"
+            onPointerDown={(event) => {
+              event.stopPropagation();
+              controlsRef.current?.burst();
+            }}
+            disabled={g.burstMeter < 100}
+            style={{
+              pointerEvents: 'auto',
+              display: 'block',
+              width: 'min(440px, 100%)',
+              margin: '0.7rem auto 0',
+              minHeight: 42,
+              border: '1px solid rgba(247,241,223,0.16)',
+              borderRadius: 999,
+              color: g.burstMeter >= 100 ? '#0c0a08' : 'rgba(247,241,223,0.56)',
+              background: g.burstMeter >= 100
+                ? 'linear-gradient(135deg, #ffe0a0, #ff3048)'
+                : 'rgba(255,255,255,0.06)',
+              boxShadow: g.burstMeter >= 100 ? '0 0 42px rgba(255,48,72,0.34)' : 'none',
+              fontWeight: 950,
+              letterSpacing: '0.08em',
+              touchAction: 'none',
+            }}
+          >
+            覇王バースト {Math.floor(g.burstMeter)}%
+          </button>
+        )}
       </div>
 
       {/* Flash overlay */}
@@ -797,10 +951,17 @@ function Overlay({ gameRef }: { gameRef: React.MutableRefObject<GameState> }) {
 
       {/* Phase overlays */}
       {(phase === 'lobby' || phase === 'lose' || phase === 'win' || phase === 'levelup') && (
-        <div style={{
-          position: 'fixed', inset: 0, display: 'grid', placeItems: 'center',
-          zIndex: 20, background: 'rgba(5,5,5,0.72)', backdropFilter: 'blur(6px)', pointerEvents: 'auto',
-        }}>
+        <div
+          onPointerDown={(event) => {
+            if (phase === 'levelup') return;
+            event.stopPropagation();
+            controlsRef.current?.start();
+          }}
+          style={{
+            position: 'fixed', inset: 0, display: 'grid', placeItems: 'center',
+            zIndex: 20, background: 'rgba(5,5,5,0.72)', backdropFilter: 'blur(6px)', pointerEvents: 'auto',
+          }}
+        >
           <div style={{
             display: 'grid', gap: '0.8rem', textAlign: 'center', padding: '2.2rem 2.6rem',
             border: `1px solid ${phase === 'win' ? 'rgba(215,169,46,0.55)' : phase === 'lose' ? 'rgba(179,25,40,0.45)' : 'rgba(255,255,255,0.12)'}`,
@@ -824,6 +985,7 @@ function Overlay({ gameRef }: { gameRef: React.MutableRefObject<GameState> }) {
                 <p style={{ margin: 0, fontSize: '0.82rem', color: 'rgba(247,241,223,0.7)', lineHeight: 1.6, maxWidth: 290 }}>
                   宇宙の中心に浮かぶ「覇気の星」を守れ。<br />
                   タップで追尾弾と衝撃波を放つ。<br />
+                  敵を連続で倒してコンボ、100%で覇王バースト。<br />
                   20ウェーブ、星を高めろ。
                 </p>
                 <div style={{
@@ -882,8 +1044,10 @@ export default function HakiStarGame() {
     phase: 'lobby', wave: 1, rankIdx: 0,
     hp: RANKS[0].maxHp, maxHp: RANKS[0].maxHp,
     xp: 0, xpNeed: RANKS[0].xpNeed,
+    score: 0, combo: 1, burstMeter: 0,
     shake: 0, flash: 0, messageTitle: '', messageSub: '',
   });
+  const controlsRef = useRef<GameControls | null>(null);
 
   if (!ready) {
     return (
@@ -901,9 +1065,9 @@ export default function HakiStarGame() {
         gl={{ antialias: true, alpha: false }}
         onCreated={({ gl }) => { gl.setClearColor('#050302'); }}
       >
-        <Scene gameRef={gameRef} />
+        <Scene gameRef={gameRef} controlsRef={controlsRef} />
       </Canvas>
-      <Overlay gameRef={gameRef} />
+      <Overlay gameRef={gameRef} controlsRef={controlsRef} />
       <style>{`
         @keyframes popIn {
           0% { transform: scale(0.85); opacity: 0; }
