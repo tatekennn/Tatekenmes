@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import type { CSSProperties, KeyboardEvent } from 'react';
 
 // クリック何回で MAX まで到達するか（連打感を出すため多め）
@@ -22,6 +22,18 @@ type Confetti = {
   height: number;
   round: boolean;
 };
+
+type Bolt = {
+  id: number;
+  left: number; // % 落雷の水平位置
+  mirror: boolean; // 形の左右反転でバリエーション
+};
+
+function prefersReducedMotion(): boolean {
+  return (
+    typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  );
+}
 
 // 左右のクラッカー口から内側・上向きに吹き出す紙吹雪を生成する
 function makeConfetti(): Confetti[] {
@@ -54,6 +66,9 @@ function makeConfetti(): Confetti[] {
 export default function TatekenCharge() {
   const [level, setLevel] = useState(0);
   const [confetti, setConfetti] = useState<Confetti[]>([]);
+  const [shakeId, setShakeId] = useState(0);
+  const [bolts, setBolts] = useState<Bolt[]>([]);
+  const boltSeq = useRef(0);
 
   const charge = level / MAX_LEVEL;
   const maxed = level >= MAX_LEVEL;
@@ -61,7 +76,27 @@ export default function TatekenCharge() {
   const stage =
     level === 0 ? 'haki-charge--idle' : maxed ? 'haki-charge--max' : 'haki-charge--active';
 
+  // 落雷を1発落として一定時間後に消す
+  const spawnBolt = useCallback(() => {
+    const id = boltSeq.current;
+    boltSeq.current += 1;
+    setBolts((prev) => [...prev, { id, left: 8 + Math.random() * 84, mirror: Math.random() < 0.5 }]);
+    window.setTimeout(() => {
+      setBolts((prev) => prev.filter((b) => b.id !== id));
+    }, 650);
+  }, []);
+
   const boost = useCallback(() => {
+    // 覇気が高まるほど「ぐらつき」「落雷」が起きやすくなる（MAX前のみ）
+    if (!maxed && !prefersReducedMotion()) {
+      if (Math.random() < 0.15 + charge * 0.25) {
+        setShakeId((n) => n + 1);
+      }
+      if (Math.random() < 0.08 + charge * 0.2) {
+        spawnBolt();
+      }
+    }
+
     setLevel((current) => {
       const next = Math.min(current + 1, MAX_LEVEL);
       // MAX に到達した瞬間だけクラッカーを打ち上げる
@@ -70,7 +105,7 @@ export default function TatekenCharge() {
       }
       return next;
     });
-  }, []);
+  }, [charge, maxed, spawnBolt]);
 
   const onKeyDown = useCallback(
     (event: KeyboardEvent<HTMLElement>) => {
@@ -97,9 +132,15 @@ export default function TatekenCharge() {
       <div className="aura aura-two" />
       <div className="haki-ring" aria-hidden="true" />
 
-      <h1 className="haki haki--name" aria-label="たてけん">
-        たてけん
-      </h1>
+      {/* key が変わるたびに揺れアニメーションを再生する */}
+      <div
+        key={shakeId}
+        className={`haki-shakebox${shakeId > 0 ? ' haki-shakebox--jolt' : ''}`}
+      >
+        <h1 className="haki haki--name" aria-label="たてけん">
+          たてけん
+        </h1>
+      </div>
 
       {maxed ? (
         <p className="haki-cta haki-cta--max">覇 気 全 開</p>
@@ -112,6 +153,24 @@ export default function TatekenCharge() {
       </div>
 
       {maxed && <div className="haki-flash" aria-hidden="true" />}
+
+      {/* たまに降る落雷 */}
+      {bolts.map((b) => (
+        <div className="thunder" key={b.id} aria-hidden="true">
+          <div className="thunder-flash" style={{ '--x': `${b.left}%` } as CSSProperties} />
+          <svg
+            className="thunder-bolt"
+            style={{
+              left: `${b.left}%`,
+              transform: `translateX(-50%)${b.mirror ? ' scaleX(-1)' : ''}`,
+            }}
+            viewBox="0 0 100 300"
+            preserveAspectRatio="none"
+          >
+            <polyline points="52,0 38,92 64,104 30,196 58,206 26,300" />
+          </svg>
+        </div>
+      ))}
 
       {/* MAX 到達時のクラッカー（紙吹雪） */}
       {confetti.length > 0 && (
