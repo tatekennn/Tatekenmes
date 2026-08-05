@@ -284,7 +284,7 @@ button {
   margin: 0;
   font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
   font-weight: 900;
-  font-size: clamp(1.2rem, 5vw, 2.4rem);
+  font-size: clamp(2rem, 9vw, 4.2rem);
   letter-spacing: 0.12em;
   color: #f7f1df;
   transform: rotate(-8deg);
@@ -295,12 +295,13 @@ button {
 }
 
 .haki-cta--max {
+  font-size: clamp(2.6rem, 12vw, 6rem);
   color: #fff;
-  letter-spacing: 0.5em;
+  letter-spacing: 0.4em;
   transform: rotate(-4deg);
   text-shadow:
-    0 0 20px rgba(215, 169, 46, 1),
-    0 0 60px rgba(179, 25, 40, 0.9);
+    0 0 24px rgba(215, 169, 46, 1),
+    0 0 70px rgba(179, 25, 40, 0.9);
   animation: cta-blink 0.4s steps(2, jump-none) infinite;
 }
 
