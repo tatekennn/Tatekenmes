@@ -15,6 +15,9 @@ html,
 body {
   min-height: 100%;
   margin: 0;
+  overflow-x: hidden;
+  /* スマホでの引っぱり更新・バウンスを抑える */
+  overscroll-behavior: none;
 }
 
 body {
@@ -29,6 +32,7 @@ body {
     Georgia,
     serif;
   overflow: hidden;
+  -webkit-text-size-adjust: 100%;
 }
 
 button {
@@ -168,6 +172,8 @@ button {
   cursor: pointer;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
+  /* 連打時のダブルタップズーム遅延をなくす */
+  touch-action: manipulation;
   background:
     radial-gradient(
       circle at 50% 45%,
@@ -292,6 +298,9 @@ button {
   animation: cta-blink 0.85s steps(2, jump-none) infinite;
   pointer-events: none;
   z-index: 3;
+  max-width: 94vw;
+  text-align: center;
+  white-space: nowrap;
 }
 
 .haki-cta--max {
@@ -732,9 +741,27 @@ button {
     letter-spacing: -0.14em;
   }
 
+  /* たてけんは縦画面でも横並びのまま、画面幅に収まるよう縮める */
   .haki--name {
-    font-size: 22vw;
-    letter-spacing: -0.1em;
+    writing-mode: horizontal-tb;
+    font-size: 17vw;
+    letter-spacing: -0.06em;
+  }
+
+  .haki-cta {
+    font-size: clamp(1.5rem, 8vw, 3rem);
+    bottom: clamp(2.4rem, 12vh, 5rem);
+  }
+
+  .haki-cta--max {
+    font-size: clamp(1.9rem, 10vw, 3.4rem);
+    letter-spacing: 0.24em;
+  }
+
+  /* パチンコ電飾は小さめの球でスマホ幅に馴染ませる */
+  .jackpot-bulbs {
+    height: 20px;
+    background-size: 26px 26px;
   }
 }
 
