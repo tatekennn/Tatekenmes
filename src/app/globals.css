@@ -343,6 +343,114 @@ button {
   animation: flash-once 900ms ease-out forwards;
 }
 
+/* 名前を包む揺れボックス（charge のスケールとは別レイヤーで揺らす） */
+.haki-shakebox {
+  display: grid;
+  place-items: center;
+}
+
+.haki-shakebox--jolt {
+  animation: haki-jolt 0.5s ease-in-out;
+}
+
+@keyframes haki-jolt {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  15% {
+    transform: translate(-7px, 3px) rotate(-2deg);
+  }
+  30% {
+    transform: translate(6px, -3px) rotate(2deg);
+  }
+  45% {
+    transform: translate(-5px, 2px) rotate(-1.4deg);
+  }
+  60% {
+    transform: translate(4px, -2px) rotate(1deg);
+  }
+  75% {
+    transform: translate(-2px, 1px) rotate(-0.5deg);
+  }
+}
+
+/* たまに降る落雷 */
+.thunder {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.thunder-flash {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at var(--x, 50%) 18%,
+    rgba(200, 225, 255, 0.55),
+    transparent 60%
+  );
+  mix-blend-mode: screen;
+  animation: thunder-flash 0.5s ease-out forwards;
+}
+
+.thunder-bolt {
+  position: absolute;
+  top: -2%;
+  width: clamp(60px, 12vw, 160px);
+  height: 64vh;
+  filter: drop-shadow(0 0 8px rgba(180, 220, 255, 0.9))
+    drop-shadow(0 0 22px rgba(120, 180, 255, 0.7));
+  animation: thunder-bolt 0.55s steps(1, jump-none) forwards;
+}
+
+.thunder-bolt polyline {
+  fill: none;
+  stroke: #eaf3ff;
+  stroke-width: 3;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+
+@keyframes thunder-flash {
+  0% {
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  30% {
+    opacity: 0.3;
+  }
+  45% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes thunder-bolt {
+  0% {
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  22% {
+    opacity: 0.2;
+  }
+  36% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
 /* MAX 到達時のクラッカー（紙吹雪） */
 .cracker {
   position: absolute;
