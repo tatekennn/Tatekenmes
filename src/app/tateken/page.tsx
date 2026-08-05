@@ -21,10 +21,12 @@ export const metadata = {
 
 export default function TatekenPage() {
   return (
-    <main className="haki-stage" aria-label="たてけん | 覇気.com">
+    <main className="haki-stage haki-stage--charged" aria-label="たてけん | 覇気.com">
+      <div className="aura-burst" aria-hidden="true" />
       <div className="aura aura-one" />
       <div className="aura aura-two" />
-      <h1 className="haki haki--name" aria-label="たてけん">
+      <div className="haki-ring" aria-hidden="true" />
+      <h1 className="haki haki--name" aria-label="たてけん" data-text="たてけん">
         たてけん
       </h1>
     </main>

@@ -160,6 +160,130 @@ button {
   letter-spacing: -0.04em;
 }
 
+/* ===== たてけんページ専用: 覇気マシマシ演出 ===== */
+/* 背景の赤金グラデを一段濃くして闘気感を増す */
+.haki-stage--charged {
+  background:
+    radial-gradient(circle at 50% 45%, rgba(215, 169, 46, 0.3), transparent 0 20rem),
+    radial-gradient(circle at 18% 20%, rgba(179, 25, 40, 0.42), transparent 0 20rem),
+    radial-gradient(circle at 82% 74%, rgba(215, 169, 46, 0.28), transparent 0 18rem),
+    linear-gradient(145deg, #0b0707 0%, #050505 46%, #14090a 100%);
+}
+
+/* 中央から放射する闘気ライン（オーラを噴き出しているような表現） */
+.aura-burst {
+  position: absolute;
+  z-index: -2;
+  width: 150vmax;
+  height: 150vmax;
+  border-radius: 999px;
+  background: repeating-conic-gradient(
+    from 0deg,
+    rgba(215, 169, 46, 0.18) 0deg 1.4deg,
+    transparent 1.4deg 8deg
+  );
+  mask-image: radial-gradient(circle at center, transparent 16%, black 32%, transparent 66%);
+  mix-blend-mode: screen;
+  opacity: 0.85;
+  animation: burst-spin 16s linear infinite;
+}
+
+/* 収束していく闘気リング */
+.haki-ring {
+  position: absolute;
+  z-index: -1;
+  width: min(72vmin, 40rem);
+  height: min(72vmin, 40rem);
+  border-radius: 999px;
+  border: 2px solid rgba(215, 169, 46, 0.35);
+  box-shadow:
+    0 0 60px rgba(215, 169, 46, 0.35),
+    inset 0 0 60px rgba(179, 25, 40, 0.3);
+  mix-blend-mode: screen;
+  animation: ring-charge 3.4s ease-out infinite;
+}
+
+/* 名前本体を脈打たせて闘気を放出する */
+.haki-stage--charged .haki--name {
+  animation: haki-pulse 2.6s ease-in-out infinite;
+  will-change: transform, text-shadow;
+}
+
+/* オーラをより激しく呼吸させる */
+.haki-stage--charged .aura {
+  animation: aura-breathe 3.4s ease-in-out infinite;
+}
+
+.haki-stage--charged .aura-two {
+  animation-delay: -1.7s;
+}
+
+@keyframes burst-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+@keyframes ring-charge {
+  0% {
+    transform: scale(1.35);
+    opacity: 0;
+  }
+  55% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(0.72);
+    opacity: 0;
+  }
+}
+
+@keyframes haki-pulse {
+  0%,
+  100% {
+    transform: translateX(-0.02em) scale(1);
+    text-shadow:
+      0 0 2px #fff,
+      0 0 34px rgba(215, 169, 46, 0.85),
+      0 0 96px rgba(179, 25, 40, 0.6),
+      0 24px 70px rgba(0, 0, 0, 0.9);
+  }
+  50% {
+    transform: translateX(-0.02em) scale(1.05);
+    text-shadow:
+      0 0 3px #fff,
+      0 0 64px rgba(215, 169, 46, 1),
+      0 0 150px rgba(179, 25, 40, 0.85),
+      0 0 230px rgba(215, 169, 46, 0.5),
+      0 24px 70px rgba(0, 0, 0, 0.9);
+  }
+}
+
+@keyframes aura-breathe {
+  0%,
+  100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+    filter: blur(58px);
+  }
+}
+
+/* 動きを抑える設定のユーザーには静的表示にする */
+@media (prefers-reduced-motion: reduce) {
+  .aura-burst,
+  .haki-ring,
+  .haki-stage--charged .haki--name,
+  .haki-stage--charged .aura {
+    animation: none;
+  }
+  .haki-ring {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+}
+
 @keyframes rotate-aura {
   to {
     transform: rotate(1turn);
