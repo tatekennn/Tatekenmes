@@ -154,6 +154,12 @@ button {
   transform: translateX(-0.04em);
 }
 
+/* 4文字の名前は「覇気」1文字より小さめに収める（同じ発光演出は流用） */
+.haki--name {
+  font-size: clamp(3.2rem, 15vw, 15rem);
+  letter-spacing: -0.04em;
+}
+
 @keyframes rotate-aura {
   to {
     transform: rotate(1turn);
@@ -165,6 +171,11 @@ button {
     font-size: 34vw;
     writing-mode: vertical-rl;
     letter-spacing: -0.14em;
+  }
+
+  .haki--name {
+    font-size: 22vw;
+    letter-spacing: -0.1em;
   }
 }
 
