@@ -4,7 +4,7 @@ import { useCallback, useState } from 'react';
 import type { CSSProperties, KeyboardEvent } from 'react';
 
 // クリック何回で MAX まで到達するか（連打感を出すため多め）
-const MAX_LEVEL = 40;
+const MAX_LEVEL = 100;
 
 // クラッカーの紙吹雪の色
 const CONFETTI_COLORS = ['#d7a92e', '#b31928', '#f7f1df', '#ffd700', '#ff5a5f', '#6fd0ff', '#8bff7a'];
