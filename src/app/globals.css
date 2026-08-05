@@ -343,6 +343,44 @@ button {
   animation: flash-once 900ms ease-out forwards;
 }
 
+/* MAX 到達時のクラッカー（紙吹雪） */
+.cracker {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.cracker-piece {
+  position: absolute;
+  border-radius: 2px;
+  opacity: 0;
+  will-change: transform, opacity;
+  animation: cracker-fly 1.7s cubic-bezier(0.15, 0.6, 0.35, 1) forwards;
+}
+
+.cracker-piece--round {
+  border-radius: 999px;
+}
+
+@keyframes cracker-fly {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  8% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) rotate(var(--rot));
+  }
+}
+
 @keyframes burst-spin {
   to {
     transform: rotate(1turn);
@@ -437,7 +475,8 @@ button {
   .haki-charge--max .haki--name,
   .haki-charge--active .aura,
   .haki-cta,
-  .haki-flash {
+  .haki-flash,
+  .cracker-piece {
     animation: none;
   }
 }
