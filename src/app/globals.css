@@ -39,6 +39,45 @@ button {
   font: inherit;
 }
 
+/* トップの控えめなサブドメイン作成誘導（クリックで薄れて消える） */
+.home-cta {
+  position: absolute;
+  bottom: clamp(1.4rem, 4vh, 2.6rem);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+  padding: 0.55rem 1.1rem;
+  border: 1px solid rgba(215, 169, 46, 0.3);
+  border-radius: 999px;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  color: rgba(247, 241, 223, 0.62);
+  text-decoration: none;
+  background: rgba(0, 0, 0, 0.28);
+  transition:
+    opacity 400ms ease,
+    color 160ms ease,
+    border-color 160ms ease;
+}
+
+.home-cta:hover {
+  color: var(--gold);
+  border-color: rgba(215, 169, 46, 0.7);
+}
+
+.home-cta--dim {
+  opacity: 0.35;
+}
+
+@media (max-width: 640px) {
+  .home-cta {
+    font-size: 0.72rem;
+    max-width: 92vw;
+  }
+}
+
 /* ===== 申込フォーム（/apply） ===== */
 .apply-stage {
   position: relative;
