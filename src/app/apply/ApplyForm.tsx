@@ -1,30 +1,62 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import type { FormEvent } from 'react';
 
-// 名前として許可する最大長
 const MAX_NAME = 20;
+
+type Phase = 'idle' | 'creating' | 'waiting' | 'done' | 'error';
 
 export default function ApplyForm() {
   const [name, setName] = useState('');
-  const router = useRouter();
+  const [phase, setPhase] = useState<Phase>('idle');
+  const [message, setMessage] = useState('');
+  const [targetUrl, setTargetUrl] = useState('');
 
   const trimmed = name.trim().slice(0, MAX_NAME);
   const valid = trimmed.length > 0;
+  const busy = phase === 'creating' || phase === 'waiting';
 
-  // 生成される（予定の）サブドメイン表記
-  const previewDomain = useMemo(() => (valid ? `${trimmed}の.覇気.com` : '〇〇の.覇気.com'), [
-    trimmed,
-    valid,
-  ]);
+  const previewDomain = useMemo(
+    () => (valid ? `${trimmed}の.覇気.com` : '〇〇の.覇気.com'),
+    [trimmed, valid],
+  );
 
-  const onSubmit = (event: FormEvent) => {
+  const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
-    if (!valid) return;
-    // ※ 現時点では体験プレビュー。将来はここで /api/create を叩いて実サブドメインを生成する
-    router.push(`/generated?name=${encodeURIComponent(trimmed)}`);
+    if (!valid || busy) return;
+    setPhase('creating');
+    setMessage('覇気を注入中…');
+    try {
+      const res = await fetch('/api/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: trimmed }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setPhase('error');
+        setMessage(data?.error ?? '生成に失敗しました');
+        return;
+      }
+      setTargetUrl(data.url);
+      if (data.status === 'exists') {
+        setPhase('done');
+        setMessage('もう存在します。開きます…');
+        window.location.href = data.url;
+        return;
+      }
+      // 証明書発行を待ってから遷移
+      setPhase('waiting');
+      setMessage('ページを生成中…（証明書発行を待っています）');
+      window.setTimeout(() => {
+        setPhase('done');
+        window.location.href = data.url;
+      }, 12_000);
+    } catch {
+      setPhase('error');
+      setMessage('通信に失敗しました。時間をおいて再度お試しください');
+    }
   };
 
   return (
@@ -48,17 +80,32 @@ export default function ApplyForm() {
             onChange={(e) => setName(e.target.value)}
             placeholder="例：たてけん"
             maxLength={MAX_NAME}
+            disabled={busy}
             autoFocus
           />
         </label>
 
-        <button className="apply-button" type="submit" disabled={!valid}>
-          覇気を放つ ⚡
+        <button className="apply-button" type="submit" disabled={!valid || busy}>
+          {busy ? '生成中…' : '覇気を放つ ⚡'}
         </button>
 
-        <p className="apply-note">
-          ※ いまは体験版。押すと <strong>{trimmed || '〇〇'}覇気全開</strong> ページが開きます。
-        </p>
+        {phase !== 'idle' && (
+          <p className={`apply-status apply-status--${phase}`}>
+            {message}
+            {targetUrl && phase !== 'error' && (
+              <>
+                {' '}
+                <a className="apply-link" href={targetUrl}>
+                  {targetUrl.replace('https://', '')}
+                </a>
+              </>
+            )}
+          </p>
+        )}
+
+        {phase === 'idle' && (
+          <p className="apply-note">※ 送信すると本物のサブドメインが生成されます。</p>
+        )}
       </form>
     </main>
   );
