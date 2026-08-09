@@ -39,42 +39,67 @@ button {
   font: inherit;
 }
 
-/* トップの控えめなサブドメイン作成誘導（クリックで薄れて消える） */
+/* トップのサブドメイン作成誘導。最初はしっかり見せて、クリックで薄れて消える */
 .home-cta {
   position: absolute;
-  bottom: clamp(1.4rem, 4vh, 2.6rem);
+  bottom: clamp(1.6rem, 5vh, 3rem);
   left: 50%;
   transform: translateX(-50%);
   z-index: 3;
-  padding: 0.55rem 1.1rem;
-  border: 1px solid rgba(215, 169, 46, 0.3);
+  padding: 0.8rem 1.6rem;
+  border: 1px solid rgba(215, 169, 46, 0.55);
   border-radius: 999px;
   font-family: ui-sans-serif, system-ui, sans-serif;
-  font-size: 0.8rem;
+  font-weight: 700;
+  font-size: 1rem;
   letter-spacing: 0.08em;
   white-space: nowrap;
-  color: rgba(247, 241, 223, 0.62);
+  color: rgba(247, 241, 223, 0.92);
   text-decoration: none;
-  background: rgba(0, 0, 0, 0.28);
+  background: rgba(0, 0, 0, 0.35);
+  box-shadow: 0 0 22px rgba(215, 169, 46, 0.28);
+  animation: cta-glow 2.4s ease-in-out infinite;
   transition:
     opacity 400ms ease,
     color 160ms ease,
-    border-color 160ms ease;
+    border-color 160ms ease,
+    box-shadow 160ms ease;
 }
 
 .home-cta:hover {
   color: var(--gold);
-  border-color: rgba(215, 169, 46, 0.7);
+  border-color: rgba(215, 169, 46, 0.9);
+  box-shadow: 0 0 34px rgba(215, 169, 46, 0.5);
 }
 
+/* 一度クリックしたら主張を引っ込める（発光も止める） */
 .home-cta--dim {
-  opacity: 0.35;
+  opacity: 0.3;
+  animation: none;
+  box-shadow: none;
+}
+
+@keyframes cta-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 18px rgba(215, 169, 46, 0.22);
+  }
+  50% {
+    box-shadow: 0 0 34px rgba(215, 169, 46, 0.5);
+  }
 }
 
 @media (max-width: 640px) {
   .home-cta {
-    font-size: 0.72rem;
+    font-size: 0.82rem;
+    padding: 0.7rem 1.2rem;
     max-width: 92vw;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-cta {
+    animation: none;
   }
 }
 
