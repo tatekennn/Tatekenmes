@@ -39,6 +39,139 @@ button {
   font: inherit;
 }
 
+/* ===== 申込フォーム（/apply） ===== */
+.apply-stage {
+  position: relative;
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+  overflow: hidden;
+  isolation: isolate;
+  background:
+    radial-gradient(circle at 50% 30%, rgba(215, 169, 46, 0.16), transparent 0 22rem),
+    radial-gradient(circle at 15% 85%, rgba(179, 25, 40, 0.28), transparent 0 20rem),
+    linear-gradient(150deg, #0b0707 0%, #050505 50%, #12090a 100%);
+}
+
+.apply-card {
+  position: relative;
+  z-index: 1;
+  width: min(92vw, 30rem);
+  padding: clamp(1.6rem, 5vw, 2.6rem);
+  border: 1px solid rgba(247, 241, 223, 0.14);
+  border-radius: 1.25rem;
+  background: rgba(20, 12, 10, 0.55);
+  backdrop-filter: blur(10px);
+  box-shadow:
+    0 0 0 1px rgba(215, 169, 46, 0.12),
+    0 30px 80px rgba(0, 0, 0, 0.65);
+  text-align: center;
+}
+
+.apply-kicker {
+  margin: 0 0 0.4rem;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  color: rgba(215, 169, 46, 0.9);
+}
+
+.apply-title {
+  margin: 0 0 0.6rem;
+  font-size: clamp(1.7rem, 6vw, 2.4rem);
+  font-weight: 900;
+  color: var(--fg);
+  text-shadow: 0 0 24px rgba(215, 169, 46, 0.4);
+}
+
+.apply-lead {
+  margin: 0 0 1.6rem;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: rgba(247, 241, 223, 0.72);
+}
+
+.apply-lead strong {
+  color: var(--gold);
+  word-break: break-all;
+}
+
+.apply-field {
+  display: block;
+  text-align: left;
+  margin-bottom: 1.2rem;
+}
+
+.apply-label {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.78rem;
+  letter-spacing: 0.16em;
+  color: rgba(247, 241, 223, 0.6);
+}
+
+.apply-input {
+  width: 100%;
+  padding: 0.95rem 1.1rem;
+  border: 1px solid rgba(247, 241, 223, 0.2);
+  border-radius: 0.75rem;
+  background: rgba(0, 0, 0, 0.35);
+  color: var(--fg);
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: 1.15rem;
+  outline: none;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.apply-input::placeholder {
+  color: rgba(247, 241, 223, 0.35);
+}
+
+.apply-input:focus {
+  border-color: rgba(215, 169, 46, 0.7);
+  box-shadow: 0 0 0 3px rgba(215, 169, 46, 0.18);
+}
+
+.apply-button {
+  width: 100%;
+  padding: 1rem 1.2rem;
+  border: none;
+  border-radius: 0.75rem;
+  font-weight: 900;
+  font-size: 1.1rem;
+  letter-spacing: 0.08em;
+  color: #1a1208;
+  background: linear-gradient(135deg, #f0c65a, #d7a92e);
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 160ms ease, opacity 160ms ease;
+  box-shadow: 0 10px 30px rgba(215, 169, 46, 0.35);
+}
+
+.apply-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 40px rgba(215, 169, 46, 0.5);
+}
+
+.apply-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.apply-note {
+  margin: 1.2rem 0 0;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.78rem;
+  color: rgba(247, 241, 223, 0.5);
+}
+
+.apply-note strong {
+  color: rgba(247, 241, 223, 0.8);
+}
+
 .haki-stage {
   position: relative;
   min-height: 100svh;
