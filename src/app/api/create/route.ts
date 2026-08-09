@@ -61,6 +61,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ status: 'provisioning', name: v.name, url });
   } catch (err) {
     console.error('[api/create]', err);
-    return NextResponse.json({ error: '生成に失敗しました。時間をおいて再度お試しください' }, { status: 502 });
+    return NextResponse.json(
+      { error: '生成に失敗しました。時間をおいて再度お試しください' },
+      { status: 502 },
+    );
   }
 }

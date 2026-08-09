@@ -6,7 +6,12 @@ import { MUU_API_BASE, MUU_DOMAIN_ID, VERCEL_A_IP } from './config';
 function headers(): HeadersInit {
   const token = process.env.MUU_API_TOKEN;
   if (!token) throw new Error('MUU_API_TOKEN is not set');
-  return { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
+  return {
+    Authorization: `Bearer ${token}`,
+    'Content-Type': 'application/json',
+    Accept: 'application/json',
+    'User-Agent': 'tatekenmes/1.0 (+https://xn--7qwx14d.com)',
+  };
 }
 
 function withDot(fqdn: string): string {
@@ -21,7 +26,12 @@ export async function listRecords(fqdn: string): Promise<DnsRecord[]> {
     withDot(fqdn),
   )}`;
   const res = await fetch(url, { headers: headers() });
-  if (!res.ok) throw new Error(`muu listRecords failed: ${res.status} ${await res.text()}`);
+  const ct = res.headers.get('content-type') ?? '';
+  if (!res.ok || !ct.includes('json')) {
+    throw new Error(
+      `muu listRecords failed: status=${res.status} finalUrl=${res.url} ct=${ct} body=${(await res.text()).slice(0, 120)}`,
+    );
+  }
   const json = await res.json();
   return (json?.data ?? []) as DnsRecord[];
 }
