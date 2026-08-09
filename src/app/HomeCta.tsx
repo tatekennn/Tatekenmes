@@ -19,7 +19,7 @@ export default function HomeCta() {
 
   return (
     <a href="/apply" className={`home-cta${clicks > 0 ? ' home-cta--dim' : ''}`}>
-      あなたの「〇〇の.覇気.com」をつくる
+      ⚡ あなたの「〇〇の.覇気.com」をつくる
     </a>
   );
 }
