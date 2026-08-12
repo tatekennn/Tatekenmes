@@ -4,9 +4,11 @@ import { BASE_ZONE_ASCII, SUFFIX, MAX_NAME_LEN, RESERVED } from './config';
 // 許可文字：英数字・ひらがな・カタカナ・漢字・長音/々
 const NAME_RE = /^[0-9A-Za-z぀-ゟ゠-ヿ一-鿿々〆]+$/u;
 
-/** 表示名 → DNSラベル(Unicode)「<name>の」 */
+/** 表示名 → DNSラベル(Unicode)「<name>の」。
+ * DNSラベルは大文字小文字を区別せず正規形は小文字なので、必ず小文字化する。
+ * （小文字化しないと `Yours` が `xn--Yours-...` という不正な punycode になり DNS/Vercel API に弾かれる） */
 function label(name: string): string {
-  return `${name}${SUFFIX}`;
+  return `${name.toLowerCase()}${SUFFIX}`;
 }
 
 /** 表示名 → FQDN(ASCII, 末尾ドット無し)「xn--….xn--7qwx14d.com」 */
