@@ -18,4 +18,16 @@ export const RESERVED = new Set([
   'www', 'api', 'mail', 'admin', 'root', 'ftp', 'ns', 'ns1', 'ns2', 'smtp', 'pop', 'imap',
   'dev', 'staging', 'stg', 'app', 'vercel', 'test', 'null', 'undefined',
   'たてけん', 'たてけんの',
+  // LT デモ用に予約（分譲フォームからは作らせない）
+  'shop', 'evil', 'alice', 'bob',
 ]);
+
+// LT デモ用サブドメイン（「の」を付けない固定ラベル）。
+// site/origin の非対称を、実際に生きた別サブドメインとして体験させる。
+// 分譲フォーム経由では作れず、レコードは運用側が手動で用意する。
+export const DEMO_HOSTS: Record<string, string> = {
+  shop: '/demo/shop', // 本物っぽい店（セッションを持つ被害者）
+  evil: '/demo/evil', // 悪意あるテナント（Cookie tossing を仕掛ける）
+  alice: '/demo/alice', // origin/site 非対称の実験台 A
+  bob: '/demo/bob', // origin/site 非対称の実験台 B
+};
