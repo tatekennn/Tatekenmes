@@ -9,6 +9,11 @@ export const VERCEL_PROJECT_ID = 'prj_mZV8UcEzozEL3gAQqjm8UZK3t6D7';
 export const VERCEL_TEAM_ID = 'team_ntiQk3x8KYG4oV5U7ealWvzl';
 export const VERCEL_A_IP = '76.76.21.21'; // Vercel を指す A レコード
 
+// サブドメイン提供（新規作成）の受付を一時停止するフラグ。
+// true にすると /apply のフォーム・トップの誘導・/api/create をまとめて停止する。
+// 既存サブドメインの表示・middleware・generated は影響を受けない。
+export const PROVISIONING_ENABLED = false;
+
 // コスト・暴走対策のハード上限（生成できるサブドメイン総数）
 export const MAX_SUBDOMAINS = 30;
 export const MAX_NAME_LEN = 20;
