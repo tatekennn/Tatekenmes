@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { validateName, fqdnFor } from '../../../lib/name';
 import { parseTarget } from '../../../lib/target';
-import { MAX_SUBDOMAINS, SUFFIX, BASE_ZONE_ASCII } from '../../../lib/config';
+import { MAX_SUBDOMAINS, SUFFIX, BASE_ZONE_ASCII, PROVISIONING_ENABLED } from '../../../lib/config';
 import { ensureARecord, createRecord, hasAnyRecord, countSubdomainNames } from '../../../lib/muu';
 import { addDomain, domainExists } from '../../../lib/vercel';
 
@@ -21,6 +21,14 @@ function rateLimited(ip: string): boolean {
 }
 
 export async function POST(req: Request) {
+  // 提供停止中は新規作成を一切受け付けない（直接叩かれても弾く）
+  if (!PROVISIONING_ENABLED) {
+    return NextResponse.json(
+      { error: 'ただいまサブドメインの新規発行を停止しています', status: 'suspended' },
+      { status: 503 },
+    );
+  }
+
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
   if (rateLimited(ip)) {
     return NextResponse.json({ error: '少し時間を置いてから試してください' }, { status: 429 });
