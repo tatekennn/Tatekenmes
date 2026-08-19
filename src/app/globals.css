@@ -1132,3 +1132,50 @@ button {
 .demo-evil .demo-title { color: #c9a6f0; }
 .demo-alice .demo-title { color: #9ec9f0; }
 .demo-bob .demo-title { color: #f0cf9e; }
+
+/* トップの日英切り替えトグル（右上に控えめ） */
+.lang-toggle {
+  position: absolute;
+  top: clamp(1rem, 3vw, 1.8rem);
+  right: clamp(1rem, 3vw, 1.8rem);
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+  color: rgba(247, 241, 223, 0.5);
+  user-select: none;
+}
+
+.lang-toggle__btn {
+  background: none;
+  border: none;
+  padding: 0.2rem 0.35rem;
+  color: rgba(247, 241, 223, 0.45);
+  cursor: pointer;
+  font: inherit;
+  letter-spacing: inherit;
+  transition: color 160ms ease;
+}
+
+.lang-toggle__btn:hover {
+  color: rgba(247, 241, 223, 0.8);
+}
+
+.lang-toggle__btn.is-active {
+  color: var(--gold);
+  font-weight: 700;
+}
+
+.lang-toggle__sep {
+  opacity: 0.4;
+}
+
+/* 英語表記は横書きの太いサンセリフで見せる */
+.haki--en {
+  font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  writing-mode: horizontal-tb;
+  letter-spacing: -0.03em;
+}
