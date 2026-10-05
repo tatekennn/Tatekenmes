@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { nameFromHost } from './lib/name';
-import { BASE_ZONE_ASCII, DEMO_HOSTS } from './lib/config';
+import { BASE_ZONE_ASCII, DEMO_HOSTS, FIXED_HOSTS } from './lib/config';
 
 // たてけんは従来どおり専用ページ（xn--08j1av7a2n = たてけんの）
 const TATEKEN_HOST = `xn--08j1av7a2n.${BASE_ZONE_ASCII}`;
@@ -21,9 +21,10 @@ export function middleware(request: NextRequest) {
     : host.endsWith('.localhost')
       ? host.slice(0, -'.localhost'.length)
       : null;
-  if (label && DEMO_HOSTS[label]) {
+  const fixedPath = label ? (DEMO_HOSTS[label] ?? FIXED_HOSTS[label]) : undefined;
+  if (fixedPath) {
     const url = request.nextUrl.clone();
-    url.pathname = DEMO_HOSTS[label];
+    url.pathname = fixedPath;
     return NextResponse.rewrite(url);
   }
 
