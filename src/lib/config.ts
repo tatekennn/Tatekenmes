@@ -25,6 +25,8 @@ export const RESERVED = new Set([
   'たてけん', 'たてけんの',
   // LT デモ用に予約（分譲フォームからは作らせない）
   'shop', 'evil', 'alice', 'bob',
+  // 固定ページ用
+  'tukki',
 ]);
 
 // LT デモ用サブドメイン（「の」を付けない固定ラベル）。
@@ -35,4 +37,9 @@ export const DEMO_HOSTS: Record<string, string> = {
   evil: '/demo/evil', // 悪意あるテナント（Cookie tossing を仕掛ける）
   alice: '/demo/alice', // origin/site 非対称の実験台 A
   bob: '/demo/bob', // origin/site 非対称の実験台 B
+};
+
+// 「の」を付けない固定ラベルの専用ページ。レコードは運用側が手動で用意する。
+export const FIXED_HOSTS: Record<string, string> = {
+  tukki: '/tukki', // ツッキーくんが3D空間を飛び回るページ
 };
