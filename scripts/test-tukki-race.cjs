@@ -125,3 +125,27 @@ test('changing from forward to strafe removes forward drift and release brakes p
   advance(game, 0.3);
   assert(Math.abs(player.vx) < 0.1); assert(player.x - releaseX < 0.7);
 });
+
+
+test('race ends at exactly sixty seconds and freezes movement, pickups and refills', () => {
+  const game = createRace();
+  advance(game, 59.95);
+  stepRace(game, 0.1, { x: 1, z: 0, jump: true });
+  assert.equal(game.elapsed, 60);
+  const finished = JSON.stringify(game, (key, value) => value instanceof Set ? [...value] : value);
+  advance(game, 5, { x: 1, z: 1, jump: true });
+  assert.equal(JSON.stringify(game, (key, value) => value instanceof Set ? [...value] : value), finished);
+  assert(game.actors.every((actor) => actor.vx === 0 && actor.vy === 0 && actor.vz === 0));
+  const fresh = createRace(); assert.equal(fresh.elapsed, 0); assert.equal(fresh.pickups, 0);
+});
+
+
+test('slow frames advance the real race clock while physics steps stay bounded', () => {
+  const game = createRace(); isolate(game);
+  const player = game.actors[0]; Object.assign(player, { x: 0, z: 0, y: groundHeight(0, 0), stoppedUntil: 0 });
+  stepRace(game, 3, { x: 1, z: 0, jump: false });
+  assert(Math.abs(game.elapsed - 3) < 1e-8);
+  assert(player.x > 0 && player.x <= 1);
+  stepRace(game, 100, idle);
+  assert.equal(game.elapsed, 60);
+});

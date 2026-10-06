@@ -286,7 +286,7 @@ function FollowLight({ target }: { target: React.MutableRefObject<THREE.Vector3>
 /*  画面                                                               */
 /* ------------------------------------------------------------------ */
 export default function TukkiWorld() {
-  const [phase, setPhase] = useState<'intro' | 'countdown' | 'playing' | 'instructions'>('intro');
+  const [phase, setPhase] = useState<'intro' | 'countdown' | 'playing' | 'instructions' | 'finished'>('intro');
   const [countdown, setCountdown] = useState(3);
   const { input, setStick, setButton } = useInput(phase === 'playing');
   useEffect(() => {
@@ -312,7 +312,9 @@ export default function TukkiWorld() {
   const [stickUi, setStickUi] = useState<{ x: number; y: number; dx: number; dy: number } | null>(null);
 
   const onUpdate = (race: Race) => {
-    setHud(raceSnapshot(race));
+    const snapshot = raceSnapshot(race);
+    setHud(snapshot);
+    if (snapshot.finished && phase === 'playing') setPhase('finished');
     if (Math.hypot(race.actors[0].vx, race.actors[0].vz) > 2) setShowHelp(false);
   };
   const ranking = RACERS.map((racer, i) => ({ ...racer, score: hud.actors[i].score, index: i })).sort((a, b) => b.score - a.score || a.index - b.index);
@@ -385,6 +387,7 @@ export default function TukkiWorld() {
           .tukki-score { font-size: 20px !important; margin-top: 0 !important; }
           .tukki-status-idle { display: none !important; }
           .tukki-pause { top: max(12px, env(safe-area-inset-top)) !important; right: 12px !important; bottom: auto !important; width: 44px; height: 44px; padding: 0 !important; font-size: 22px; }
+          .tukki-timer { top: max(12px, env(safe-area-inset-top)) !important; left: auto !important; right: 66px; transform: none !important; width: 76px !important; padding: 8px !important; font-size: 23px !important; }
           .tukki-pause-icon { display: inline !important; }
           .tukki-map { bottom: max(12px, env(safe-area-inset-bottom)) !important; left: 12px !important; }
           .tukki-jump { bottom: max(22px, env(safe-area-inset-bottom)) !important; right: 16px !important; width: 68px !important; height: 68px !important; padding: 0 !important; font-size: 12px !important; white-space: nowrap; }
@@ -402,6 +405,7 @@ export default function TukkiWorld() {
       </Canvas>
 
       <div style={{ display: phase === 'playing' ? 'contents' : 'none' }}>
+      <div className="tukki-timer" role="timer" aria-label="残り時間" style={{ position: 'absolute', top: 16, left: '50%', transform: 'translateX(-50%)', width: 100, boxSizing: 'border-box', padding: '10px 12px', borderRadius: 14, background: hud.timeLeft <= 10 ? '#fff0dd' : '#fffbea', color: hud.timeLeft <= 10 ? '#bf4c21' : '#43532e', fontSize: 28, fontWeight: 800, textAlign: 'center', fontVariantNumeric: 'tabular-nums', fontFamily: 'system-ui, sans-serif', pointerEvents: 'none' }}>{Math.floor(hud.timeLeft / 60)}:{String(hud.timeLeft % 60).padStart(2, '0')}</div>
       <div className="tukki-hud" style={hudStyle}>
         <div className="tukki-hud-title" style={{ fontSize: 13, letterSpacing: 1 }}>ツッキーくんの覇気レース</div>
         <div className="tukki-score" style={{ fontSize: 27, fontWeight: 800, marginTop: 4 }}>あなたの覇気 {hud.actors[0].score}</div>
@@ -488,10 +492,11 @@ export default function TukkiWorld() {
           style={{ width: '100%', maxWidth: 520, maxHeight: '100%', overflowY: 'auto', background: '#fffbea', color: '#43532e', border: '3px solid #fff', borderRadius: 28, padding: 'clamp(20px, 4vw, 34px)', boxShadow: '0 20px 70px #142e3955', fontFamily: 'system-ui, sans-serif', boxSizing: 'border-box' }}>
           <div style={{ color: '#8e7028', letterSpacing: 3, fontSize: 12, fontWeight: 800 }}>HAKI RACE</div>
           <h1 id="tukki-intro-title" style={{ fontSize: 'clamp(25px, 5vw, 36px)', lineHeight: 1.25, margin: '10px 0 12px' }}>ツッキーくんの<br />覇気レース</h1>
-          <p style={{ margin: '0 0 20px', lineHeight: 1.7 }}>明るい草原で、仲間8人と早取り勝負！<br />金色に光る覇気を集めて、1位を目指そう。</p>
+          <p style={{ margin: '0 0 20px', lineHeight: 1.7 }}>明るい草原で、仲間8人と1分間の早取り勝負！<br />金色に光る覇気を集めて、1位を目指そう。</p>
           <div style={{ background: '#edf2d9', borderRadius: 16, padding: '14px 18px', fontSize: 14, lineHeight: 1.8 }}>
             <strong>あそびのルール</strong>
             <ul style={{ paddingLeft: 20, margin: '6px 0 0' }}>
+              <li>制限時間は1分！ 集めた覇気の数で順位が決まるよ。</li>
               <li>覇気に近づくと自動で獲得。仲間も集めるよ！</li>
               <li>8秒ごとに最大6個の覇気が増えるよ。</li>
               <li>ぶつかるとお互い一瞬ストップ。覇気は減らないよ。</li>
@@ -510,6 +515,19 @@ export default function TukkiWorld() {
           <button autoFocus onClick={() => { if (phase === 'instructions') setPhase('playing'); else { setCountdown(3); setPhase('countdown'); } }}
             style={{ width: '100%', border: 0, borderRadius: 16, padding: '16px 20px', background: '#e7b839', color: '#493611', fontSize: 19, fontWeight: 800, cursor: 'pointer', boxShadow: '0 4px 0 #b58b22' }}>{phase === 'instructions' ? 'レースに戻る' : 'ゲームスタート'}</button>
           {phase === 'instructions' && <button onClick={reset} style={{ display: 'block', margin: '16px auto 0', border: 0, background: 'transparent', color: '#59733d', textDecoration: 'underline', cursor: 'pointer', padding: 8 }}>最初からやり直す</button>}
+        </section>
+      </div>}
+      {phase === 'finished' && <div style={{ position: 'absolute', inset: 0, zIndex: 10, background: '#15391f99', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, overflowY: 'auto' }} onPointerDown={(e) => e.stopPropagation()}>
+        <section role="dialog" aria-modal="true" aria-labelledby="tukki-result-title" style={{ width: '100%', maxWidth: 420, maxHeight: '100%', overflowY: 'auto', padding: 26, boxSizing: 'border-box', background: '#fffbea', borderRadius: 26, color: '#43532e', fontFamily: 'system-ui, sans-serif' }}>
+          <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: 3, color: '#987322' }}>TIME UP!</div>
+          <h2 id="tukki-result-title" style={{ margin: '8px 0' }}>レース終了！</h2>
+          <div style={{ fontSize: 40, fontWeight: 900, color: rank === 1 ? '#b88614' : '#43532e' }}>{rank}位 <span style={{ fontSize: 16 }}>/ 9人</span></div>
+          <p style={{ marginTop: 6 }}>あなたの覇気：<strong>{hud.actors[0].score}個</strong><br />{rank === 1 ? 'おめでとう！ 草原の覇気チャンピオン！' : 'おつかれさま！ 次はもっと集めてみよう。'}</p>
+          <ol aria-label="最終順位" style={{ listStyle: 'none', padding: 0, margin: '18px 0' }}>{ranking.map((racer) => <li key={racer.color} style={{ display: 'flex', gap: 10, padding: '6px 10px', borderRadius: 8, background: racer.index === 0 ? '#e4edcd' : 'transparent', fontWeight: racer.index === 0 ? 800 : 400 }}>
+            <span>{1 + ranking.filter((other) => other.score > racer.score).length}位</span><span style={{ flex: 1 }}>{racer.name}</span><span>{racer.score}個</span>
+          </li>)}</ol>
+          <button autoFocus onClick={() => { reset(); setPhase('countdown'); }} style={{ width: '100%', border: 0, borderRadius: 14, padding: 16, fontSize: 18, fontWeight: 800, background: '#e7b839', color: '#493611', cursor: 'pointer' }}>もう一度遊ぶ</button>
+          <button onClick={reset} style={{ display: 'block', margin: '12px auto 0', padding: 8, border: 0, background: 'transparent', color: '#59733d', cursor: 'pointer' }}>説明画面に戻る</button>
         </section>
       </div>}
       {phase === 'countdown' && <div role="status" aria-live="assertive" style={{ position: 'absolute', inset: 0, zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#244d3933', pointerEvents: 'auto', color: '#fffbea', textAlign: 'center', fontFamily: 'system-ui, sans-serif', textShadow: '0 5px 0 #486535' }}>
