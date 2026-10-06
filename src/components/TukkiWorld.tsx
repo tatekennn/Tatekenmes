@@ -105,8 +105,6 @@ function RaceScene({ input, game, onUpdate, playerPos, running }: {
       jump: inp.jump,
     });
     const player = game.actors[0], floor = groundHeight(player.x, player.z);
-    // The player faces the viewing direction even when strafing or backing up.
-    player.facing = yaw.current + Math.PI;
     playerPos.current.set(player.x, player.y, player.z);
     const offset = new THREE.Vector3(Math.sin(yaw.current) * Math.cos(pitch.current), Math.sin(pitch.current), Math.cos(yaw.current) * Math.cos(pitch.current)).multiplyScalar(12);
     const target = new THREE.Vector3(player.x, floor + 1.2, player.z).add(offset);
