@@ -102,6 +102,8 @@ function RaceScene({ input, game, onUpdate, playerPos }: {
       jump: inp.jump,
     });
     const player = game.actors[0], floor = groundHeight(player.x, player.z);
+    // The player faces the viewing direction even when strafing or backing up.
+    player.facing = yaw.current + Math.PI;
     playerPos.current.set(player.x, player.y, player.z);
     const offset = new THREE.Vector3(Math.sin(yaw.current) * Math.cos(pitch.current), Math.sin(pitch.current), Math.cos(yaw.current) * Math.cos(pitch.current)).multiplyScalar(12);
     const target = new THREE.Vector3(player.x, floor + 1.2, player.z).add(offset);
@@ -384,10 +386,18 @@ export default function TukkiWorld() {
       {showHelp && <div className="tukki-help" style={helpStyle}>
         <div style={{ fontWeight: 700, marginBottom: 5 }}>仲間8人と覇気の早取りレース！</div>
         <div>覇気は{REFILL_SECONDS}秒ごとに補充。ぶつかると両方が一瞬止まるよ</div>
-        <div style={{ fontSize: 12, marginTop: 5 }}>WASD / 矢印で歩く · Space / Eでジャンプ · ドラッグで見回す</div>
+        <div style={{ fontSize: 12, marginTop: 5 }}>WASD / 矢印で歩く · Space / Eでジャンプ · ドラッグ / 視点ボタンで見回す</div>
         <div style={{ fontSize: 12 }}>スマホ：左半分で歩く・右半分で見回す</div>
       </div>}
 
+      <div aria-label="視点操作" style={{ position: 'absolute', right: 20, bottom: 164, display: 'flex', gap: 6 }} onPointerDown={(e) => e.stopPropagation()}>
+        {([
+          ['左を見る', '↶', -Math.PI / 6, 0], ['右を見る', '↷', Math.PI / 6, 0],
+          ['上を見る', '↑', 0, -0.12], ['下を見る', '↓', 0, 0.12],
+        ] as const).map(([label, icon, yaw, pitch]) => <button key={label} aria-label={label}
+          onClick={() => { input.current.yawDelta += yaw; input.current.pitchDelta += pitch; }}
+          style={{ width: 38, height: 38, borderRadius: 12, border: '1px solid #bdd0a0', background: '#fffbea', color: '#43532e', fontSize: 22, cursor: 'pointer' }}>{icon}</button>)}
+      </div>
       <button onPointerDown={(e) => e.stopPropagation()} onClick={reset} style={{ position: 'absolute', right: 20, bottom: 120, padding: '8px 13px', borderRadius: 20, background: '#fffbea', border: '1px solid #bdd0a0', color: '#43532e', fontSize: 12, cursor: 'pointer' }}>やり直す</button>
 
       <button style={{ ...btnStyle, position: 'absolute', right: 20, bottom: 24 }}
