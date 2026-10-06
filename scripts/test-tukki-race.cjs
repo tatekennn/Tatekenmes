@@ -110,3 +110,18 @@ test('a three-racer pileup separates bodies without changing scores', () => {
     }
   }
 });
+
+
+test('changing from forward to strafe removes forward drift and release brakes promptly', () => {
+  const game = createRace(); isolate(game);
+  const player = game.actors[0]; Object.assign(player, { x: 0, z: 0, y: groundHeight(0, 0), stoppedUntil: 0 });
+  advance(game, 0.5, { x: 0, z: -1, jump: false });
+  assert(player.vz < -9);
+  const startX = player.x;
+  advance(game, 0.4, { x: 1, z: 0, jump: false });
+  assert(player.x > startX + 2);
+  assert(player.vx > 9); assert(Math.abs(player.vz) < 0.2);
+  const releaseX = player.x;
+  advance(game, 0.3);
+  assert(Math.abs(player.vx) < 0.1); assert(player.x - releaseX < 0.7);
+});
