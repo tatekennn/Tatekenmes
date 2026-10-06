@@ -183,6 +183,10 @@ const TukkiModel = forwardRef<TukkiHandle, Props>(function TukkiModel({ color, s
   const armR = useRef<THREE.Group>(null!);
   const legL = useRef<THREE.Group>(null!);
   const legR = useRef<THREE.Group>(null!);
+  const footL = useRef<THREE.Group>(null!);
+  const footR = useRef<THREE.Group>(null!);
+  const sitBlend = useRef(0);
+  const lastAnimationTime = useRef(0);
 
   const geo = useMemo(
     () => ({
@@ -243,22 +247,29 @@ const TukkiModel = forwardRef<TukkiHandle, Props>(function TukkiModel({ color, s
   useImperativeHandle(ref, () => ({
     group: group.current,
     animate: (walk, amount, lean, t, sideways = 0, seated = false) => {
-      const swing = Math.sin(walk) * 0.7 * amount;
+      const dt = Math.min(0.1, Math.max(0, t - lastAnimationTime.current));
+      lastAnimationTime.current = t;
+      sitBlend.current = THREE.MathUtils.damp(sitBlend.current, seated ? 1 : 0, 10, dt);
+      const sit = sitBlend.current;
+      const swing = Math.sin(walk) * 0.7 * amount * (1 - sit);
       // 腕は基本「お腹の前で合わせる」構え。歩くとそこから前後に揺れる
       armL.current.rotation.x = -0.3 + swing * 0.35;
       armR.current.rotation.x = color === 'orange' ? -0.35 + Math.sin(t * 3) * 0.1 : -0.3 - swing * 0.35;
       armR.current.rotation.z = color === 'orange' ? 2.3 + Math.sin(t * 3) * 0.15 : -0.95;
-      legL.current.rotation.x = seated ? -0.95 : -swing * 0.9 * (1 - Math.abs(sideways));
-      legR.current.rotation.x = seated ? -0.95 : swing * 0.9 * (1 - Math.abs(sideways));
+      legL.current.rotation.x = -1.3 * sit - swing * 0.9 * (1 - Math.abs(sideways));
+      legR.current.rotation.x = -1.3 * sit + swing * 0.9 * (1 - Math.abs(sideways));
       legL.current.rotation.z = 0.12 + swing * sideways * 0.65;
       legR.current.rotation.z = -0.12 - swing * sideways * 0.65;
+      legL.current.position.set(-0.74 - sit * 0.08, 0.58 - sit * 0.22, 0.02 + sit * 0.63);
+      legR.current.position.set(0.74 + sit * 0.08, 0.58 - sit * 0.22, 0.02 + sit * 0.63);
+      footL.current.rotation.x = footR.current.rotation.x = 1.3 * sit;
       torso.current.rotation.z = -sideways * amount * 0.1;
       // 体の前傾と弾み
-      torso.current.rotation.x = lean;
-      torso.current.position.y = Math.abs(Math.sin(walk)) * 0.1 * amount + Math.sin(t * 2.2) * 0.025;
+      torso.current.rotation.x = lean * (1 - sit) - sit * 0.04;
+      torso.current.position.y = -0.38 * sit + Math.abs(Math.sin(walk)) * 0.1 * amount + Math.sin(t * 2.2) * 0.025;
       // 呼吸と首振り
       const breath = 1 + Math.sin(t * 2.2) * 0.012;
-      torso.current.scale.set(breath, 1 / breath, breath);
+      torso.current.scale.set(breath * (1 + 0.035 * sit), (1 - 0.12 * sit) / breath, breath);
       head.current.rotation.z = Math.sin(walk * 0.5) * 0.06 * amount + Math.sin(t * 1.3) * 0.025;
       head.current.rotation.y = Math.sin(t * 0.9) * 0.08 * (1 - amount);
     },
@@ -371,25 +382,27 @@ const TukkiModel = forwardRef<TukkiHandle, Props>(function TukkiModel({ color, s
 
         {/* 脚: 短く太く、やや外に開いた立ち方 */}
         {[
-          { r: legL, s: -1 },
-          { r: legR, s: 1 },
-        ].map(({ r, s }) => (
+          { r: legL, foot: footL, s: -1 },
+          { r: legR, foot: footR, s: 1 },
+        ].map(({ r, foot, s }) => (
           <group key={s} ref={r} position={[s * 0.74, 0.58, 0.02]} rotation={[0, 0, s * -0.12]}>
             <Part geometry={geo.capsule} material={mats.body} outline={O} position={[0, -0.15, 0]} scale={[0.36, 0.2, 0.36]} width={1.06} />
-            <Part geometry={S} material={mats.body} outline={O} position={[0, -0.38, 0.12]} scale={[0.38, 0.22, 0.46]} width={1.06} />
+            <group ref={foot} position={[0, -0.38, 0.12]}>
+            <Part geometry={S} material={mats.body} outline={O} scale={[0.38, 0.22, 0.46]} width={1.06} />
             {[-1, 0, 1].map((k) => (
               <Part
                 key={k}
                 geometry={geo.cone}
                 material={mats.claw}
                 outline={O}
-                position={[k * 0.16, -0.45, 0.56]}
+                position={[k * 0.16, -0.07, 0.44]}
                 rotation={[Math.PI / 2, 0, 0]}
                 scale={[0.05, 0.12, 0.05]}
                 width={1.2}
                 castShadow={false}
               />
             ))}
+            </group>
           </group>
         ))}
       </group>
