@@ -128,7 +128,10 @@ function RacerModel({ game, index }: { game: Race; index: number }) {
     if (!m) return;
     m.group.position.set(actor.x, actor.y, actor.z); m.group.rotation.y = actor.facing;
     const speed = Math.hypot(actor.vx, actor.vz);
-    m.animate(actor.walk, Math.min(1, speed / 7), speed / 10 * 0.18, game.elapsed + index);
+    const forwardSpeed = actor.vx * Math.sin(actor.facing) + actor.vz * Math.cos(actor.facing);
+    const sideSpeed = -actor.vx * Math.cos(actor.facing) + actor.vz * Math.sin(actor.facing);
+    m.animate(actor.walk, Math.min(1, speed / 7), forwardSpeed / 10 * 0.18, game.elapsed + index,
+      speed > 0.2 ? sideSpeed / speed : 0);
     ring.current.position.set(actor.x, groundHeight(actor.x, actor.z) + 0.08, actor.z);
     ring.current.visible = game.elapsed < actor.stoppedUntil;
   });
@@ -390,6 +393,16 @@ export default function TukkiWorld() {
         <div style={{ fontSize: 12 }}>スマホ：左半分で歩く・右半分で見回す</div>
       </div>}
 
+      <div aria-label="移動操作" style={{ position: 'absolute', left: 22, bottom: 180, display: 'grid', gridTemplateColumns: 'repeat(3, 40px)', gap: 4 }}>
+        {([
+          ['前に歩く', '↑', 0, -1, 2, 1], ['左に歩く', '←', -1, 0, 1, 2],
+          ['後ろに歩く', '↓', 0, 1, 2, 2], ['右に歩く', '→', 1, 0, 3, 2],
+        ] as const).map(([label, icon, x, y, column, row]) => <button key={label} aria-label={label}
+          onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); e.currentTarget.setPointerCapture(e.pointerId); setStick(x, y); }}
+          onPointerUp={(e) => { e.stopPropagation(); setStick(0, 0); }}
+          onPointerCancel={() => setStick(0, 0)} onLostPointerCapture={() => setStick(0, 0)}
+          style={{ gridColumn: column, gridRow: row, height: 40, borderRadius: 12, border: '1px solid #bdd0a0', background: '#fffbea', color: '#43532e', fontSize: 22, touchAction: 'none' }}>{icon}</button>)}
+      </div>
       <div aria-label="視点操作" style={{ position: 'absolute', right: 20, bottom: 164, display: 'flex', gap: 6 }} onPointerDown={(e) => e.stopPropagation()}>
         {([
           ['左を見る', '↶', -Math.PI / 6, 0], ['右を見る', '↷', Math.PI / 6, 0],

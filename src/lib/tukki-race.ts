@@ -104,10 +104,10 @@ export function stepRace(race: Race, seconds: number, input: RaceInput) {
       const length = Math.hypot(wish.x, wish.z), factor = length > 1 ? 1 / length : 1;
       if (stopped) { actor.vx = 0; actor.vz = 0; }
       else if (index === 0) {
-        actor.vx += wish.x * factor * 32 * dt; actor.vz += wish.z * factor * 32 * dt;
-        if (length < 0.01) { actor.vx *= Math.exp(-6 * dt); actor.vz *= Math.exp(-6 * dt); }
-        const speed = Math.hypot(actor.vx, actor.vz);
-        if (speed > 10) { actor.vx *= 10 / speed; actor.vz *= 10 / speed; }
+        // Steer both axes toward the current input so a turn does not retain old sideways drift.
+        const blend = 1 - Math.exp(-(length < 0.01 ? 16 : 12) * dt);
+        actor.vx += (wish.x * factor * 10 - actor.vx) * blend;
+        actor.vz += (wish.z * factor * 10 - actor.vz) * blend;
       } else {
         const speed = 6 + index % 4 * 0.45, blend = 1 - Math.exp(-8 * dt);
         actor.vx += (wish.x * factor * speed - actor.vx) * blend;
