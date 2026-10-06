@@ -309,6 +309,11 @@ export default function TukkiWorld() {
   };
   const ranking = RACERS.map((racer, i) => ({ ...racer, score: hud.actors[i].score, index: i })).sort((a, b) => b.score - a.score || a.index - b.index);
   const rank = 1 + hud.actors.filter((actor) => actor.score > hud.actors[0].score).length;
+  const nearestHaki = HAKI_SPOTS.reduce<{ x: number; z: number; distance: number } | null>((nearest, spot, i) => {
+    if (!hud.active[i]) return nearest;
+    const distance = Math.hypot(spot.x - hud.actors[0].x, spot.z - hud.actors[0].z);
+    return !nearest || distance < nearest.distance ? { ...spot, distance } : nearest;
+  }, null);
   const reset = () => {
     setPhase('intro'); setCountdown(3);
     setStick(0, 0); setButton(false); input.current.yawDelta = input.current.pitchDelta = 0;
@@ -365,7 +370,7 @@ export default function TukkiWorld() {
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerUp}
     >
-      <style>{`@media (max-width: 600px) { .tukki-ranking { top: 184px !important; padding: 8px 10px !important; min-width: 114px !important; } .tukki-help { bottom: 132px !important; font-size: 12px !important; } }`}</style>
+      <style>{`@media (max-width: 600px) { .tukki-ranking { top: 184px !important; padding: 8px 10px !important; min-width: 114px !important; } .tukki-help { display: none !important; } }`}</style>
       <Canvas shadows camera={{ position: [0, 5, 12], fov: 55, near: 0.1, far: 500 }} dpr={[1, 2]}>
         <fog attach="fog" args={[SKY_BOTTOM, 65, 150]} />
         <Sky />
@@ -405,7 +410,7 @@ export default function TukkiWorld() {
         <div style={{ fontSize: 12 }}>スマホ：左半分で歩く・右半分で見回す</div>
       </div>}
 
-      <div aria-label="移動操作" style={{ position: 'absolute', left: 22, bottom: 180, display: 'grid', gridTemplateColumns: 'repeat(3, 40px)', gap: 4 }}>
+      <div aria-label="移動操作" style={{ position: 'absolute', left: 22, bottom: 268, display: 'grid', gridTemplateColumns: 'repeat(3, 40px)', gap: 4 }}>
         {([
           ['前に歩く', '↑', 0, -1, 2, 1], ['左に歩く', '←', -1, 0, 1, 2],
           ['後ろに歩く', '↓', 0, 1, 2, 2], ['右に歩く', '→', 1, 0, 3, 2],
@@ -432,13 +437,21 @@ export default function TukkiWorld() {
         onPointerUp={(e) => { e.stopPropagation(); setButton(false); }}
         onPointerCancel={() => setButton(false)} onLostPointerCapture={() => setButton(false)} aria-label="ジャンプ">ジャンプ</button>
 
-      <div style={{ position: 'absolute', bottom: 20, left: 16, pointerEvents: 'none', width: 'clamp(100px, 15vw, 150px)' }}>
-        <svg viewBox="-64 -64 128 128" role="img" aria-label="覇気の地図。金色の点が残りの覇気、色の点が9人のキャラ" style={{ width: '100%', display: 'block', background: 'rgba(255,253,239,.88)', borderRadius: '50%', boxShadow: '0 3px 14px #48653522' }}>
+      <div style={{ position: 'absolute', bottom: 16, left: 16, pointerEvents: 'none', width: 'clamp(164px, 17vw, 190px)', background: '#fffbea', padding: 8, boxSizing: 'border-box', borderRadius: 18, boxShadow: '0 3px 14px #48653533', color: '#43532e', fontFamily: 'system-ui, sans-serif' }}>
+        <div style={{ fontSize: 12, fontWeight: 800, marginBottom: 4 }}>覇気マップ <span style={{ float: 'right', fontSize: 10 }}>↑ 北</span></div>
+        <svg viewBox="-64 -64 128 128" role="img" aria-label="覇気マップ。金色のひし形が覇気、青い矢印があなた、小さな丸が仲間。点線は最寄りの覇気" style={{ width: '100%', display: 'block', background: '#dceacb', borderRadius: '50%' }}>
           <circle r={WORLD_RADIUS} fill="#d6e5bd" stroke="#91aa70" strokeWidth="1" />
           <path d="M0 -58V58M-50 -29L50 29M-50 29L50 -29" stroke="#f5e5b9" strokeWidth="4" />
-          {HAKI_SPOTS.map((spot, i) => hud.active[i] && <circle key={i} cx={spot.x} cy={spot.z} r="2.3" fill="#eab029" stroke="#9d741c" strokeWidth="0.5" />)}
-          {hud.actors.map((actor, i) => <circle key={i} cx={actor.x} cy={actor.z} r={i === 0 ? 3.5 : 2.8} fill={TUKKI_COLORS[RACERS[i].color].body} stroke={i === 0 ? 'white' : '#765329'} strokeWidth={i === 0 ? 1.5 : 0.6} />)}
+          {nearestHaki && <line x1={hud.actors[0].x} y1={hud.actors[0].z} x2={nearestHaki.x} y2={nearestHaki.z} stroke="#805a0c" strokeWidth="1.2" strokeDasharray="2 2" />}
+          {hud.actors.slice(1).map((actor, i) => <circle key={i} cx={actor.x} cy={actor.z} r="2" fill={TUKKI_COLORS[RACERS[i + 1].color].body} stroke="#765329" strokeWidth="0.7" />)}
+          {HAKI_SPOTS.map((spot, i) => hud.active[i] && <path key={i} transform={`translate(${spot.x} ${spot.z})`} d="M0 -3.8L3.8 0L0 3.8L-3.8 0Z" fill="#ffd336" stroke="#795207" strokeWidth="1" />)}
+          <g transform={`translate(${hud.actors[0].x} ${hud.actors[0].z})`}>
+            <circle r="5.8" fill="white" stroke="#1265ac" strokeWidth="1" />
+            <path transform={`rotate(${hud.actors[0].facing * 180 / Math.PI + 180})`} d="M0 -5L3.5 3.5L0 1.8L-3.5 3.5Z" fill="#1265ac" />
+          </g>
         </svg>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, fontWeight: 700, marginTop: 5 }}><span style={{ color: '#94610a' }}>◆ 覇気</span><span style={{ color: '#1265ac' }}>▲ あなた</span><span>● 仲間</span></div>
+        <div style={{ fontSize: 11, textAlign: 'center', marginTop: 3 }}>{nearestHaki ? `近くの覇気まで ${Math.ceil(nearestHaki.distance)}m` : '補充を待とう！'}</div>
       </div>
 
       {/* 仮想スティック表示 */}

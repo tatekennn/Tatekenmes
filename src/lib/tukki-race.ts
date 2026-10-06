@@ -171,7 +171,7 @@ export function stepRace(race: Race, seconds: number, input: RaceInput) {
 
 export function raceSnapshot(race: Race) {
   return {
-    actors: race.actors.map((actor) => ({ x: actor.x, z: actor.z, score: actor.score })),
+    actors: race.actors.map((actor) => ({ x: actor.x, z: actor.z, score: actor.score, facing: actor.facing })),
     active: [...race.active], refillIn: Math.max(0, Math.ceil(race.nextRefill - race.elapsed)),
     playerStopped: race.elapsed < race.actors[0].stoppedUntil,
     playerBumps: race.playerBumps, refills: race.refills,
