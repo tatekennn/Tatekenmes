@@ -140,7 +140,7 @@ function Sign() {
     const ctx = canvas.getContext('2d')!;
     ctx.fillStyle = '#f8e9bd'; ctx.fillRect(0, 0, 512, 256);
     ctx.fillStyle = '#6c502e'; ctx.textAlign = 'center'; ctx.font = 'bold 54px sans-serif';
-    ctx.fillText('覇気の草原', 256, 106); ctx.font = '28px sans-serif'; ctx.fillText('32個の覇気を探そう', 256, 171);
+    ctx.fillText('覇気の草原', 256, 106); ctx.font = '28px sans-serif'; ctx.fillText('仲間より先に覇気を集めよう', 256, 171);
     const result = new THREE.CanvasTexture(canvas); result.colorSpace = THREE.SRGBColorSpace; return result;
   }, []);
   useEffect(() => () => texture.dispose(), [texture]);
