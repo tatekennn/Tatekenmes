@@ -1,6 +1,7 @@
 import { HAKI_SPOTS, WORLD_RADIUS, TREE_SPOTS, groundHeight, touchesHaki } from './tukki-game';
 import type { TukkiColor } from '@/components/TukkiModel';
 
+export const RACE_SECONDS = 60;
 export const REFILL_SECONDS = 8;
 export const REFILL_AMOUNT = 6;
 export const COLLISION_PAUSE = 0.35;
@@ -83,11 +84,12 @@ function npcWish(race: Race, actor: Racer, index: number) {
 
 /** Advance in short substeps; collisions, collection and refill share one ordered simulation. */
 export function stepRace(race: Race, seconds: number, input: RaceInput) {
-  const duration = Math.max(0, Math.min(seconds, 0.1));
+  const clockDuration = Math.max(0, Math.min(seconds, RACE_SECONDS - race.elapsed));
+  const duration = Math.min(clockDuration, 0.1);
   if (duration === 0) return;
   const steps = Math.ceil(duration / (1 / 60)), dt = duration / steps;
   for (let step = 0; step < steps; step++) {
-    race.elapsed += dt;
+    race.elapsed = Math.min(RACE_SECONDS, race.elapsed + clockDuration / steps);
     while (race.elapsed >= race.nextRefill) {
       let added = 0;
       const start = race.refills * 7 % race.active.length;
@@ -167,11 +169,17 @@ export function stepRace(race: Race, seconds: number, input: RaceInput) {
       actor.walk += dt * speed * 1.1;
     });
   }
+  if (race.elapsed >= RACE_SECONDS - 1e-8) {
+    race.elapsed = RACE_SECONDS;
+    race.actors.forEach((actor) => { actor.vx = actor.vy = actor.vz = 0; });
+  }
 }
 
 export function raceSnapshot(race: Race) {
   return {
     actors: race.actors.map((actor) => ({ x: actor.x, z: actor.z, score: actor.score, facing: actor.facing })),
+    timeLeft: Math.max(0, Math.ceil(RACE_SECONDS - race.elapsed - 1e-8)),
+    finished: race.elapsed >= RACE_SECONDS,
     active: [...race.active], refillIn: Math.max(0, Math.ceil(race.nextRefill - race.elapsed)),
     playerStopped: race.elapsed < race.actors[0].stoppedUntil,
     playerBumps: race.playerBumps, refills: race.refills,
