@@ -26,7 +26,7 @@ interface InputState {
   pitchDelta: number;
 }
 
-function useInput() {
+function useInput(enabled: boolean) {
   const input = useRef<InputState>({ fwd: 0, side: 0, jump: false, yawDelta: 0, pitchDelta: 0 });
   const keys = useRef<Set<string>>(new Set());
   const stick = useRef({ x: 0, y: 0 });
@@ -43,6 +43,7 @@ function useInput() {
       input.current.jump = k.has('Space') || k.has('KeyE') || jumpButton.current;
     };
     const down = (e: KeyboardEvent) => {
+      if (!enabled) return;
       if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
       keys.current.add(e.code);
       recompute.current();
@@ -57,6 +58,7 @@ function useInput() {
       jumpButton.current = false;
       recompute.current();
     };
+    blur();
     window.addEventListener('keydown', down);
     window.addEventListener('keyup', up);
     window.addEventListener('blur', blur);
@@ -64,8 +66,9 @@ function useInput() {
       window.removeEventListener('keydown', down);
       window.removeEventListener('keyup', up);
       window.removeEventListener('blur', blur);
+      blur();
     };
-  }, []);
+  }, [enabled]);
 
   const setStick = (x: number, y: number) => {
     stick.current = { x, y };
@@ -82,8 +85,8 @@ function useInput() {
 /* ------------------------------------------------------------------ */
 /*  プレイヤー                                                         */
 /* ------------------------------------------------------------------ */
-function RaceScene({ input, game, onUpdate, playerPos }: {
-  input: React.MutableRefObject<InputState>; game: Race;
+function RaceScene({ input, game, onUpdate, playerPos, running }: {
+  input: React.MutableRefObject<InputState>; game: Race; running: boolean;
   onUpdate: (game: Race) => void; playerPos: React.MutableRefObject<THREE.Vector3>;
 }) {
   const yaw = useRef(0), pitch = useRef(0.3);
@@ -96,7 +99,7 @@ function RaceScene({ input, game, onUpdate, playerPos }: {
     yaw.current -= inp.yawDelta;
     pitch.current = THREE.MathUtils.clamp(pitch.current + inp.pitchDelta, 0.12, 0.85);
     inp.yawDelta = inp.pitchDelta = 0;
-    stepRace(game, dt, {
+    if (running) stepRace(game, dt, {
       x: -Math.sin(yaw.current) * inp.fwd + Math.cos(yaw.current) * inp.side,
       z: -Math.cos(yaw.current) * inp.fwd - Math.sin(yaw.current) * inp.side,
       jump: inp.jump,
@@ -277,7 +280,15 @@ function FollowLight({ target }: { target: React.MutableRefObject<THREE.Vector3>
 /*  画面                                                               */
 /* ------------------------------------------------------------------ */
 export default function TukkiWorld() {
-  const { input, setStick, setButton } = useInput();
+  const [phase, setPhase] = useState<'intro' | 'countdown' | 'playing' | 'instructions'>('intro');
+  const [countdown, setCountdown] = useState(3);
+  const { input, setStick, setButton } = useInput(phase === 'playing');
+  useEffect(() => {
+    if (phase !== 'countdown') return;
+    if (countdown === 0) { setPhase('playing'); return; }
+    const timer = window.setTimeout(() => setCountdown((value) => value - 1), 1000);
+    return () => window.clearTimeout(timer);
+  }, [phase, countdown]);
   const [game, setGame] = useState(createRace);
   const [round, setRound] = useState(0);
   const [hud, setHud] = useState(() => raceSnapshot(game));
@@ -301,6 +312,7 @@ export default function TukkiWorld() {
   const ranking = RACERS.map((racer, i) => ({ ...racer, score: hud.actors[i].score, index: i })).sort((a, b) => b.score - a.score || a.index - b.index);
   const rank = 1 + hud.actors.filter((actor) => actor.score > hud.actors[0].score).length;
   const reset = () => {
+    setPhase('intro'); setCountdown(3);
     setStick(0, 0); setButton(false); input.current.yawDelta = input.current.pitchDelta = 0;
     stickRef.current = null; setStickUi(null); drag.current = null;
     const next = createRace(); setGame(next); setHud(raceSnapshot(next)); setShowHelp(true); setRound((value) => value + 1);
@@ -308,6 +320,7 @@ export default function TukkiWorld() {
 
   // 右側ドラッグ＝カメラ回転、左側ドラッグ（タッチ）＝仮想スティック
   const onPointerDown = (e: React.PointerEvent) => {
+    if (phase !== 'playing') return;
     const w = window.innerWidth;
     if (e.pointerType === 'touch' && e.clientX < w / 2) {
       stickRef.current = { id: e.pointerId, ox: e.clientX, oy: e.clientY };
@@ -362,9 +375,10 @@ export default function TukkiWorld() {
         <ambientLight intensity={0.35} />
         <FollowLight target={playerPos} />
         <World />
-        <RaceScene key={round} input={input} game={game} onUpdate={onUpdate} playerPos={playerPos} />
+        <RaceScene key={round} input={input} game={game} onUpdate={onUpdate} playerPos={playerPos} running={phase === 'playing'} />
       </Canvas>
 
+      <div style={{ display: phase === 'playing' ? 'contents' : 'none' }}>
       <div style={hudStyle}>
         <div style={{ fontSize: 13, letterSpacing: 1 }}>ツッキーくんの覇気レース</div>
         <div style={{ fontSize: 27, fontWeight: 800, marginTop: 4 }}>あなたの覇気 {hud.actors[0].score}</div>
@@ -403,6 +417,8 @@ export default function TukkiWorld() {
           onPointerCancel={() => setStick(0, 0)} onLostPointerCapture={() => setStick(0, 0)}
           style={{ gridColumn: column, gridRow: row, height: 40, borderRadius: 12, border: '1px solid #bdd0a0', background: '#fffbea', color: '#43532e', fontSize: 22, touchAction: 'none' }}>{icon}</button>)}
       </div>
+      <button onPointerDown={(e) => e.stopPropagation()} onClick={() => { setStick(0, 0); setButton(false); setPhase('instructions'); }}
+        style={{ position: 'absolute', right: 20, bottom: 210, border: '1px solid #bdd0a0', borderRadius: 20, background: '#fffbea', color: '#43532e', padding: '8px 13px', cursor: 'pointer' }}>遊び方 / 一時停止</button>
       <div aria-label="視点操作" style={{ position: 'absolute', right: 20, bottom: 164, display: 'flex', gap: 6 }} onPointerDown={(e) => e.stopPropagation()}>
         {([
           ['左を見る', '↶', -Math.PI / 6, 0], ['右を見る', '↷', Math.PI / 6, 0],
@@ -434,6 +450,35 @@ export default function TukkiWorld() {
           <div style={{ ...stickKnob, left: stickUi.x + stickUi.dx - 24, top: stickUi.y + stickUi.dy - 24 }} />
         </>
       )}
+      </div>
+      {(phase === 'intro' || phase === 'instructions') && <div style={{ position: 'absolute', inset: 0, zIndex: 10, background: 'linear-gradient(180deg, #19463055, #15391f99)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, overflowY: 'auto' }}
+        onPointerDown={(e) => e.stopPropagation()}>
+        <section role="dialog" aria-modal="true" aria-labelledby="tukki-intro-title"
+          style={{ width: '100%', maxWidth: 520, maxHeight: '100%', overflowY: 'auto', background: '#fffbea', color: '#43532e', border: '3px solid #fff', borderRadius: 28, padding: 'clamp(20px, 4vw, 34px)', boxShadow: '0 20px 70px #142e3955', fontFamily: 'system-ui, sans-serif', boxSizing: 'border-box' }}>
+          <div style={{ color: '#8e7028', letterSpacing: 3, fontSize: 12, fontWeight: 800 }}>HAKI RACE</div>
+          <h1 id="tukki-intro-title" style={{ fontSize: 'clamp(25px, 5vw, 36px)', lineHeight: 1.25, margin: '10px 0 12px' }}>ツッキーくんの<br />覇気レース</h1>
+          <p style={{ margin: '0 0 20px', lineHeight: 1.7 }}>明るい草原で、仲間8人と早取り勝負！<br />金色に光る覇気を集めて、1位を目指そう。</p>
+          <div style={{ background: '#edf2d9', borderRadius: 16, padding: '14px 18px', fontSize: 14, lineHeight: 1.8 }}>
+            <strong>あそびのルール</strong>
+            <ul style={{ paddingLeft: 20, margin: '6px 0 0' }}>
+              <li>覇気に近づくと自動で獲得。仲間も集めるよ！</li>
+              <li>8秒ごとに最大6個の覇気が増えるよ。</li>
+              <li>ぶつかるとお互い一瞬ストップ。覇気は減らないよ。</li>
+            </ul>
+          </div>
+          <div style={{ fontSize: 14, lineHeight: 1.8, margin: '18px 0' }}>
+            <strong>操作方法</strong><br />
+            <span>PC：WASD / 矢印で移動、Space / Eでジャンプ。ドラッグで見回す。</span><br />
+            <span>スマホ：左側をドラッグして移動、右側で見回す。ジャンプは右下のボタン。</span><br />
+            <span style={{ color: '#71814f', fontSize: 12 }}>画面の矢印ボタンでも移動・視点変更ができます。</span>
+          </div>
+          <button autoFocus onClick={() => { if (phase === 'instructions') setPhase('playing'); else { setCountdown(3); setPhase('countdown'); } }}
+            style={{ width: '100%', border: 0, borderRadius: 16, padding: '16px 20px', background: '#e7b839', color: '#493611', fontSize: 19, fontWeight: 800, cursor: 'pointer', boxShadow: '0 4px 0 #b58b22' }}>{phase === 'instructions' ? 'レースに戻る' : 'ゲームスタート'}</button>
+        </section>
+      </div>}
+      {phase === 'countdown' && <div role="status" aria-live="assertive" style={{ position: 'absolute', inset: 0, zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#244d3933', pointerEvents: 'auto', color: '#fffbea', textAlign: 'center', fontFamily: 'system-ui, sans-serif', textShadow: '0 5px 0 #486535' }}>
+        <div><div style={{ fontSize: 22, fontWeight: 800 }}>よーい…</div><div style={{ fontSize: 120, fontWeight: 900 }}>{countdown || 'GO!'}</div></div>
+      </div>}
     </div>
   );
 }
