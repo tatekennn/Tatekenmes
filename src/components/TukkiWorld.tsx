@@ -2,8 +2,9 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { HAKI_SPOTS, WORLD_RADIUS, groundHeight } from '@/lib/tukki-game';
-import { createRace, stepRace, raceSnapshot, RACERS, REFILL_AMOUNT, REFILL_SECONDS, type Race } from '@/lib/tukki-race';
+import { WORLD_RADIUS, groundHeight } from '@/lib/tukki-game';
+import { createLife, stepLife, lifeSnapshot, interact, RESIDENTS, BENCHES, HOMES, type Life } from '@/lib/tukki-life';
+import TukkiVillage from './TukkiVillage';
 import * as THREE from 'three';
 import TukkiLandscape from './TukkiLandscape';
 import TukkiModel, { TUKKI_COLORS, type TukkiHandle } from './TukkiModel';
@@ -40,7 +41,7 @@ function useInput(enabled: boolean) {
       const ks = (k.has('KeyD') || k.has('ArrowRight') ? 1 : 0) - (k.has('KeyA') || k.has('ArrowLeft') ? 1 : 0);
       input.current.fwd = THREE.MathUtils.clamp(kf + -stick.current.y, -1, 1);
       input.current.side = THREE.MathUtils.clamp(ks + stick.current.x, -1, 1);
-      input.current.jump = k.has('Space') || k.has('KeyE') || jumpButton.current;
+      input.current.jump = k.has('Space') || jumpButton.current;
     };
     const down = (e: KeyboardEvent) => {
       if (!enabled) return;
@@ -85,9 +86,9 @@ function useInput(enabled: boolean) {
 /* ------------------------------------------------------------------ */
 /*  プレイヤー                                                         */
 /* ------------------------------------------------------------------ */
-function RaceScene({ input, game, onUpdate, playerPos, running }: {
-  input: React.MutableRefObject<InputState>; game: Race; running: boolean;
-  onUpdate: (game: Race) => void; playerPos: React.MutableRefObject<THREE.Vector3>;
+function LifeScene({ input, game, onUpdate, playerPos, running }: {
+  input: React.MutableRefObject<InputState>; game: Life; running: boolean;
+  onUpdate: (game: Life) => void; playerPos: React.MutableRefObject<THREE.Vector3>;
 }) {
   const yaw = useRef(0), pitch = useRef(0.3);
   const camPos = useRef(new THREE.Vector3(0, 5, 12));
@@ -107,7 +108,7 @@ function RaceScene({ input, game, onUpdate, playerPos, running }: {
     yaw.current -= inp.yawDelta;
     pitch.current = THREE.MathUtils.clamp(pitch.current + inp.pitchDelta, 0.12, 0.85);
     inp.yawDelta = inp.pitchDelta = 0;
-    if (running) stepRace(game, dt, {
+    if (running) stepLife(game, dt, {
       x: -Math.sin(yaw.current) * inp.fwd + Math.cos(yaw.current) * inp.side,
       z: -Math.cos(yaw.current) * inp.fwd - Math.sin(yaw.current) * inp.side,
       jump: inp.jump,
@@ -124,12 +125,11 @@ function RaceScene({ input, game, onUpdate, playerPos, running }: {
     if (hudTime.current >= 0.1) { hudTime.current = 0; onUpdate(game); }
   }, -1);
   return <>
-    {RACERS.map((racer, index) => <RacerModel key={racer.color} game={game} index={index} />)}
-    {HAKI_SPOTS.map((_, index) => <Haki key={index} index={index} game={game} />)}
+    {RESIDENTS.map((racer, index) => <ResidentModel key={racer.color} game={game} index={index} />)}
   </>;
 }
 
-function RacerModel({ game, index }: { game: Race; index: number }) {
+function ResidentModel({ game, index }: { game: Life; index: number }) {
   const model = useRef<TukkiHandle>(null);
   const ring = useRef<THREE.Mesh>(null!);
   useFrame(() => {
@@ -140,20 +140,20 @@ function RacerModel({ game, index }: { game: Race; index: number }) {
     const forwardSpeed = actor.vx * Math.sin(actor.facing) + actor.vz * Math.cos(actor.facing);
     const sideSpeed = -actor.vx * Math.cos(actor.facing) + actor.vz * Math.sin(actor.facing);
     m.animate(actor.walk, Math.min(1, speed / 7), forwardSpeed / 10 * 0.18, game.elapsed + index,
-      speed > 0.2 ? sideSpeed / speed : 0);
+      speed > 0.2 ? sideSpeed / speed : 0, index === 0 && game.resting);
     ring.current.position.set(actor.x, groundHeight(actor.x, actor.z) + 0.08, actor.z);
-    ring.current.visible = game.elapsed < actor.stoppedUntil;
+    ring.current.visible = index === 0 && game.resting;
   });
   return <>
-    <TukkiModel ref={model} color={RACERS[index].color} scale={index === 0 ? 1 : 0.85} />
+    <TukkiModel ref={model} color={RESIDENTS[index].color} scale={index === 0 ? 1 : 0.85} />
     <mesh ref={ring} rotation={[-Math.PI / 2, 0, 0]} visible={false}>
-      <ringGeometry args={[1.05, 1.3, 32]} /><meshBasicMaterial color="#ffb64d" transparent opacity={0.8} depthWrite={false} />
+      <ringGeometry args={[1.05, 1.3, 32]} /><meshBasicMaterial color="#cbdc99" transparent opacity={0.8} depthWrite={false} />
     </mesh>
   </>;
 }
 
 /* ------------------------------------------------------------------ */
-/*  草原：地面・木々・雲・集める覇気                              */
+/*  草原：地面・木々・雲・仲間の暮らし                              */
 /* ------------------------------------------------------------------ */
 function Cloud({ position, scale, seed }: { position: [number, number, number]; scale: number; seed: number }) {
   const g = useRef<THREE.Group>(null!);
@@ -186,47 +186,10 @@ function Cloud({ position, scale, seed }: { position: [number, number, number]; 
   );
 }
 
-function HakiLabel() {
-  const texture = useMemo(() => {
-    const canvas = document.createElement('canvas'); canvas.width = 128; canvas.height = 64;
-    const context = canvas.getContext('2d')!;
-    context.font = 'bold 40px sans-serif'; context.textAlign = 'center'; context.textBaseline = 'middle';
-    context.lineWidth = 7; context.strokeStyle = '#fff6ce'; context.strokeText('覇気', 64, 32);
-    context.fillStyle = '#725123'; context.fillText('覇気', 64, 32);
-    const result = new THREE.CanvasTexture(canvas); result.colorSpace = THREE.SRGBColorSpace;
-    return result;
-  }, []);
-  useEffect(() => () => texture.dispose(), [texture]);
-  return <sprite position={[0, 1.1, 0]} scale={[1.3, 0.65, 1]}><spriteMaterial map={texture} transparent depthWrite={false} /></sprite>;
-}
-
-function Haki({ index, game }: { index: number; game: Race }) {
-  const group = useRef<THREE.Group>(null!);
-  const spot = HAKI_SPOTS[index];
-  useFrame(({ clock }) => {
-    const t = clock.getElapsedTime();
-    group.current.position.y = groundHeight(spot.x, spot.z) + 1.5 + Math.sin(t * 2.5 + index) * 0.16;
-    group.current.rotation.y = t * 0.8;
-    group.current.visible = game.active[index];
-  });
-  return (
-    <group ref={group} position={[spot.x, 1.5, spot.z]} visible={game.active[index]}>
-      <mesh>
-        <octahedronGeometry args={[0.55]} />
-        <meshStandardMaterial color="#ffd65a" emissive="#ffb52e" emissiveIntensity={0.65} roughness={0.3} />
-      </mesh>
-      <mesh rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[0.85, 0.045, 8, 32]} />
-        <meshBasicMaterial color="#ffe7a0" />
-      </mesh>
-      <HakiLabel />
-    </group>
-  );
-}
-
 function World() {
   return <>
     <TukkiLandscape />
+    <TukkiVillage />
     {Array.from({ length: 8 }, (_, i) => <Cloud key={i} position={[(i - 4) * 24, 32 + (i % 3) * 4, -65]} scale={1.8} seed={i} />)}
   </>;
 }
@@ -286,332 +249,96 @@ function FollowLight({ target }: { target: React.MutableRefObject<THREE.Vector3>
 /*  画面                                                               */
 /* ------------------------------------------------------------------ */
 export default function TukkiWorld() {
-  const [phase, setPhase] = useState<'intro' | 'countdown' | 'playing' | 'instructions' | 'finished'>('intro');
-  const [countdown, setCountdown] = useState(3);
+  const [phase, setPhase] = useState<'intro' | 'playing' | 'help'>('intro');
   const { input, setStick, setButton } = useInput(phase === 'playing');
-  useEffect(() => {
-    if (phase !== 'countdown') return;
-    if (countdown === 0) { setPhase('playing'); return; }
-    const timer = window.setTimeout(() => setCountdown((value) => value - 1), 1000);
-    return () => window.clearTimeout(timer);
-  }, [phase, countdown]);
-  const [game, setGame] = useState(createRace);
-  const [round, setRound] = useState(0);
-  const [hud, setHud] = useState(() => raceSnapshot(game));
-  const [showHelp, setShowHelp] = useState(true);
-  const [rankingOpen, setRankingOpen] = useState(true);
-  useEffect(() => {
-    const media = window.matchMedia('(max-width: 600px)');
-    const update = () => setRankingOpen(!media.matches);
-    update(); media.addEventListener('change', update);
-    return () => media.removeEventListener('change', update);
-  }, []);
+  const [game] = useState(createLife);
+  const [hud, setHud] = useState(() => lifeSnapshot(game));
+  const [message, setMessage] = useState<{ name: string; text: string } | null>(null);
   const playerPos = useRef(new THREE.Vector3());
   const drag = useRef<{ id: number; x: number; y: number } | null>(null);
   const stickRef = useRef<{ id: number; ox: number; oy: number } | null>(null);
   const [stickUi, setStickUi] = useState<{ x: number; y: number; dx: number; dy: number } | null>(null);
-
-  const onUpdate = (race: Race) => {
-    const snapshot = raceSnapshot(race);
-    setHud(snapshot);
-    if (snapshot.finished && phase === 'playing') setPhase('finished');
-    if (Math.hypot(race.actors[0].vx, race.actors[0].vz) > 2) setShowHelp(false);
-  };
-  const ranking = RACERS.map((racer, i) => ({ ...racer, score: hud.actors[i].score, index: i })).sort((a, b) => b.score - a.score || a.index - b.index);
-  const rank = 1 + hud.actors.filter((actor) => actor.score > hud.actors[0].score).length;
-  const nearestHaki = HAKI_SPOTS.reduce<{ x: number; z: number; distance: number } | null>((nearest, spot, i) => {
-    if (!hud.active[i]) return nearest;
-    const distance = Math.hypot(spot.x - hud.actors[0].x, spot.z - hud.actors[0].z);
-    return !nearest || distance < nearest.distance ? { ...spot, distance } : nearest;
-  }, null);
-  const reset = () => {
-    setPhase('intro'); setCountdown(3);
-    setStick(0, 0); setButton(false); input.current.yawDelta = input.current.pitchDelta = 0;
-    stickRef.current = null; setStickUi(null); drag.current = null;
-    const next = createRace(); setGame(next); setHud(raceSnapshot(next)); setShowHelp(true); setRound((value) => value + 1);
-  };
-
-  // 右側ドラッグ＝カメラ回転、左側ドラッグ（タッチ）＝仮想スティック
-  const onPointerDown = (e: React.PointerEvent) => {
+  const action = () => { if (phase !== 'playing') return; setMessage(interact(game)); setHud(lifeSnapshot(game)); };
+  const actionRef = useRef(action); actionRef.current = action;
+  useEffect(() => {
+    const key = (e: KeyboardEvent) => { if (e.code === 'KeyE' && !e.repeat) { e.preventDefault(); actionRef.current(); } };
+    window.addEventListener('keydown', key); return () => window.removeEventListener('keydown', key);
+  }, []);
+  useEffect(() => { if (!message) return; const timer = window.setTimeout(() => setMessage(null), 6000); return () => window.clearTimeout(timer); }, [message]);
+  const stopInput = () => { setStick(0, 0); setButton(false); stickRef.current = null; drag.current = null; setStickUi(null); input.current.yawDelta = input.current.pitchDelta = 0; };
+  const pointerDown = (e: React.PointerEvent) => {
     if (phase !== 'playing') return;
-    const w = window.innerWidth;
-    if (e.pointerType === 'touch' && e.clientX < w / 2) {
-      stickRef.current = { id: e.pointerId, ox: e.clientX, oy: e.clientY };
-      setStickUi({ x: e.clientX, y: e.clientY, dx: 0, dy: 0 });
-    } else {
-      drag.current = { id: e.pointerId, x: e.clientX, y: e.clientY };
+    if (e.pointerType === 'touch' && e.clientX < window.innerWidth / 2) {
+      stickRef.current = { id: e.pointerId, ox: e.clientX, oy: e.clientY }; setStickUi({ x: e.clientX, y: e.clientY, dx: 0, dy: 0 });
+    } else drag.current = { id: e.pointerId, x: e.clientX, y: e.clientY };
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+  const pointerMove = (e: React.PointerEvent) => {
+    if (phase !== 'playing') return;
+    const stick = stickRef.current;
+    if (stick?.id === e.pointerId) {
+      let dx = e.clientX - stick.ox, dy = e.clientY - stick.oy; const length = Math.hypot(dx, dy);
+      if (length > 60) { dx *= 60 / length; dy *= 60 / length; }
+      setStick(dx / 60, dy / 60); setStickUi({ x: stick.ox, y: stick.oy, dx, dy }); return;
     }
-    (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
+    const d = drag.current;
+    if (d?.id === e.pointerId) { input.current.yawDelta += (e.clientX - d.x) * 0.005; input.current.pitchDelta += (e.clientY - d.y) * 0.004; drag.current = { id: e.pointerId, x: e.clientX, y: e.clientY }; }
   };
-  const onPointerMove = (e: React.PointerEvent) => {
-    if (phase !== 'playing') return;
-    if (stickRef.current && stickRef.current.id === e.pointerId) {
-      const R = 60;
-      let dx = e.clientX - stickRef.current.ox;
-      let dy = e.clientY - stickRef.current.oy;
-      const len = Math.hypot(dx, dy);
-      if (len > R) {
-        dx *= R / len;
-        dy *= R / len;
+  const pointerUp = (e: React.PointerEvent) => { if (stickRef.current?.id === e.pointerId) { stickRef.current = null; setStick(0, 0); setStickUi(null); } if (drag.current?.id === e.pointerId) drag.current = null; };
+  const pause = () => { stopInput(); setMessage(null); setPhase('help'); };
+  return <div style={{ position: 'fixed', inset: 0, background: SKY_BOTTOM, touchAction: 'none', userSelect: 'none', fontFamily: 'system-ui, sans-serif', color: '#43532e' }} onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={pointerUp} onPointerCancel={pointerUp}>
+    <style>{`
+      .life-stick { display: none; }
+      @media (max-width:600px), (max-height:500px), (pointer:coarse) {
+        .life-stick { display: block; }
+        .life-jump, .life-subtitle { display: none !important; }
+        .life-map { width: 138px !important; }
+        .life-title { font-size: 17px !important; }
+        .life-message { bottom: 180px !important; }
       }
-      setStick(dx / R, dy / R);
-      setStickUi({ x: stickRef.current.ox, y: stickRef.current.oy, dx, dy });
-      return;
-    }
-    if (drag.current && drag.current.id === e.pointerId) {
-      input.current.yawDelta += (e.clientX - drag.current.x) * 0.005;
-      input.current.pitchDelta += (e.clientY - drag.current.y) * 0.004;
-      drag.current = { id: e.pointerId, x: e.clientX, y: e.clientY };
-    }
-  };
-  const onPointerUp = (e: React.PointerEvent) => {
-    if (stickRef.current && stickRef.current.id === e.pointerId) {
-      stickRef.current = null;
-      setStick(0, 0);
-      setStickUi(null);
-    }
-    if (drag.current && drag.current.id === e.pointerId) drag.current = null;
-  };
-
-  return (
-    <div
-      style={{ position: 'fixed', inset: 0, background: SKY_BOTTOM, touchAction: 'none', userSelect: 'none' }}
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={onPointerUp}
-      onPointerCancel={onPointerUp}
-    >
-      <style>{`
-        @media (max-width: 600px), (max-height: 500px), (pointer: coarse) {
-          .tukki-desktop-controls, .tukki-ranking, .tukki-help, .tukki-hud-title, .tukki-refill, .tukki-pause-label { display: none !important; }
-          .tukki-hud { top: max(12px, env(safe-area-inset-top)) !important; left: 12px !important; min-width: 0 !important; padding: 9px 12px !important; border-radius: 14px !important; }
-          .tukki-score { font-size: 20px !important; margin-top: 0 !important; }
-          .tukki-status-idle { display: none !important; }
-          .tukki-pause { top: max(12px, env(safe-area-inset-top)) !important; right: 12px !important; bottom: auto !important; width: 44px; height: 44px; padding: 0 !important; font-size: 22px; }
-          .tukki-timer { top: max(12px, env(safe-area-inset-top)) !important; left: auto !important; right: 66px; transform: none !important; width: 76px !important; padding: 8px !important; font-size: 23px !important; }
-          .tukki-pause-icon { display: inline !important; }
-          .tukki-map { top: calc(max(12px, env(safe-area-inset-top)) + 62px) !important; bottom: auto !important; left: auto !important; right: 12px; width: 148px !important; }
-          .tukki-mobile-stick { display: block !important; }
-          .tukki-floating-stick { display: none !important; }
-          .tukki-jump { bottom: max(22px, env(safe-area-inset-bottom)) !important; right: 16px !important; width: 68px !important; height: 68px !important; padding: 0 !important; font-size: 12px !important; white-space: nowrap; }
-        }
-        @media (max-height: 500px) { .tukki-map { width: 136px !important; } }
-      `}</style>
-      <Canvas shadows camera={{ position: [0, 5, 12], fov: 55, near: 0.1, far: 500 }} dpr={[1, 2]}>
-        <fog attach="fog" args={[SKY_BOTTOM, 65, 150]} />
-        <Sky />
-        <hemisphereLight args={['#fff8e4', '#6c9552', 1.2]} />
-        <ambientLight intensity={0.35} />
-        <FollowLight target={playerPos} />
-        <World />
-        <RaceScene key={round} input={input} game={game} onUpdate={onUpdate} playerPos={playerPos} running={phase === 'playing'} />
-      </Canvas>
-
-      <div style={{ display: phase === 'playing' ? 'contents' : 'none' }}>
-      <div className="tukki-timer" role="timer" aria-label="残り時間" style={{ position: 'absolute', top: 16, left: '50%', transform: 'translateX(-50%)', width: 100, boxSizing: 'border-box', padding: '10px 12px', borderRadius: 14, background: hud.timeLeft <= 10 ? '#fff0dd' : '#fffbea', color: hud.timeLeft <= 10 ? '#bf4c21' : '#43532e', fontSize: 28, fontWeight: 800, textAlign: 'center', fontVariantNumeric: 'tabular-nums', fontFamily: 'system-ui, sans-serif', pointerEvents: 'none' }}>{Math.floor(hud.timeLeft / 60)}:{String(hud.timeLeft % 60).padStart(2, '0')}</div>
-      <div className="tukki-hud" style={hudStyle}>
-        <div className="tukki-hud-title" style={{ fontSize: 13, letterSpacing: 1 }}>ツッキーくんの覇気レース</div>
-        <div className="tukki-score" style={{ fontSize: 27, fontWeight: 800, marginTop: 4 }}>あなたの覇気 {hud.actors[0].score}</div>
-        <div style={{ fontSize: 13, marginTop: 5 }}>{rank}位 / 9人 · 地面に {hud.active.filter(Boolean).length}個</div>
-        <div className="tukki-refill" style={{ fontSize: 12, marginTop: 5 }}>あと{hud.refillIn}秒で覇気を補充（最大{REFILL_AMOUNT}個）</div>
-        <div role="status" className={hud.playerStopped ? undefined : 'tukki-status-idle'} style={{ fontSize: 12, marginTop: 6, color: hud.playerStopped ? '#b86622' : '#59733d' }}>
-          {hud.playerStopped ? 'ぶつかった！ ちょっとひと休み' : '早い者勝ち！ 仲間より先に集めよう'}
-        </div>
+      @media (max-height:500px) { .life-map { width: 116px !important; } .life-message { bottom: 20px !important; max-width: 45vw !important; } }
+    `}</style>
+    <Canvas shadows camera={{ position: [0, 5, 12], fov: 55, near: 0.1, far: 500 }} dpr={[1, 2]}>
+      <fog attach="fog" args={[SKY_BOTTOM, 65, 150]} /><Sky /><hemisphereLight args={['#fff8e4', '#6c9552', 1.2]} /><ambientLight intensity={0.35} />
+      <FollowLight target={playerPos} /><World /><LifeScene input={input} game={game} onUpdate={(life) => setHud(lifeSnapshot(life))} playerPos={playerPos} running={phase === 'playing'} />
+    </Canvas>
+    {phase === 'playing' && <>
+      <div style={{ position: 'absolute', top: 'max(12px, env(safe-area-inset-top))', left: 12, maxWidth: 'calc(100% - 80px)', boxSizing: 'border-box', padding: '10px 14px', borderRadius: 16, background: '#fffbeae8', pointerEvents: 'none' }}>
+        <div className="life-title" style={{ fontSize: 20, fontWeight: 800 }}>ツッキーくんの のんびり生活</div>
+        <div style={{ fontSize: 12, marginTop: 4 }}>{hud.resting ? 'ひと休み中 ☕' : '今日は、どこへ行こう？'}</div>
+        <div className="life-subtitle" style={{ fontSize: 11, marginTop: 4 }}>WASDで散歩 · Eであいさつ / 休む · ドラッグで見回す</div>
       </div>
-
-      <details className="tukki-ranking" open={rankingOpen} onToggle={(e) => setRankingOpen(e.currentTarget.open)} onPointerDown={(e) => e.stopPropagation()}
-        style={{ ...hudStyle, pointerEvents: 'auto', left: 'auto', right: 16, minWidth: 140, padding: '12px 15px' }}>
-        <summary style={{ fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>みんなの覇気</summary>
-        <ol aria-label="覇気ランキング" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-          {ranking.map((racer) => <li key={racer.color} style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 12, marginTop: 4, fontWeight: racer.index === 0 ? 800 : 400 }}>
-            <span style={{ width: 9, height: 9, borderRadius: '50%', background: TUKKI_COLORS[racer.color].body, border: '1px solid #76532955' }} />
-            <span style={{ flex: 1 }}>{racer.name}</span><span>{racer.score}</span>
-          </li>)}
-        </ol>
-      </details>
-
-      {showHelp && <div className="tukki-help" style={helpStyle}>
-        <div style={{ fontWeight: 700, marginBottom: 5 }}>仲間8人と覇気の早取りレース！</div>
-        <div>覇気は{REFILL_SECONDS}秒ごとに補充。ぶつかると両方が一瞬止まるよ</div>
-        <div style={{ fontSize: 12, marginTop: 5 }}>WASD / 矢印で歩く · Space / Eでジャンプ · ドラッグ / 視点ボタンで見回す</div>
-        <div style={{ fontSize: 12 }}>スマホ：左半分で歩く・右半分で見回す</div>
-      </div>}
-
-      <div className="tukki-desktop-controls" aria-label="移動操作" style={{ position: 'absolute', left: 22, bottom: 268, display: 'grid', gridTemplateColumns: 'repeat(3, 40px)', gap: 4 }}>
-        {([
-          ['前に歩く', '↑', 0, -1, 2, 1], ['左に歩く', '←', -1, 0, 1, 2],
-          ['後ろに歩く', '↓', 0, 1, 2, 2], ['右に歩く', '→', 1, 0, 3, 2],
-        ] as const).map(([label, icon, x, y, column, row]) => <button key={label} aria-label={label}
-          onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); e.currentTarget.setPointerCapture(e.pointerId); setStick(x, y); }}
-          onPointerUp={(e) => { e.stopPropagation(); setStick(0, 0); }}
-          onPointerCancel={() => setStick(0, 0)} onLostPointerCapture={() => setStick(0, 0)}
-          style={{ gridColumn: column, gridRow: row, height: 40, borderRadius: 12, border: '1px solid #bdd0a0', background: '#fffbea', color: '#43532e', fontSize: 22, touchAction: 'none' }}>{icon}</button>)}
-      </div>
-      <button className="tukki-pause" aria-label="遊び方 / 一時停止" onPointerDown={(e) => e.stopPropagation()} onClick={() => { setStick(0, 0); setButton(false); setPhase('instructions'); }}
-        style={{ position: 'absolute', right: 20, bottom: 210, border: '1px solid #bdd0a0', borderRadius: 20, background: '#fffbea', color: '#43532e', padding: '8px 13px', cursor: 'pointer' }}><span className="tukki-pause-label">遊び方 / 一時停止</span><span className="tukki-pause-icon" style={{ display: 'none' }}>Ⅱ</span></button>
-      <div className="tukki-desktop-controls" aria-label="視点操作" style={{ position: 'absolute', right: 20, bottom: 164, display: 'flex', gap: 6 }} onPointerDown={(e) => e.stopPropagation()}>
-        {([
-          ['左を見る', '↶', -Math.PI / 6, 0], ['右を見る', '↷', Math.PI / 6, 0],
-          ['上を見る', '↑', 0, -0.12], ['下を見る', '↓', 0, 0.12],
-        ] as const).map(([label, icon, yaw, pitch]) => <button key={label} aria-label={label}
-          onClick={() => { input.current.yawDelta += yaw; input.current.pitchDelta += pitch; }}
-          style={{ width: 38, height: 38, borderRadius: 12, border: '1px solid #bdd0a0', background: '#fffbea', color: '#43532e', fontSize: 22, cursor: 'pointer' }}>{icon}</button>)}
-      </div>
-      <button className="tukki-desktop-controls" onPointerDown={(e) => e.stopPropagation()} onClick={reset} style={{ position: 'absolute', right: 20, bottom: 120, padding: '8px 13px', borderRadius: 20, background: '#fffbea', border: '1px solid #bdd0a0', color: '#43532e', fontSize: 12, cursor: 'pointer' }}>やり直す</button>
-
-      <button className="tukki-jump" style={{ ...btnStyle, position: 'absolute', right: 20, bottom: 24 }}
-        onPointerDown={(e) => { e.stopPropagation(); e.currentTarget.setPointerCapture(e.pointerId); setButton(true); }}
-        onPointerUp={(e) => { e.stopPropagation(); setButton(false); }}
-        onPointerCancel={() => setButton(false)} onLostPointerCapture={() => setButton(false)} aria-label="ジャンプ">ジャンプ</button>
-
-      <div className="tukki-map" style={{ position: 'absolute', bottom: 16, left: 16, pointerEvents: 'none', width: 'clamp(164px, 17vw, 190px)', background: '#fffbea', padding: 8, boxSizing: 'border-box', borderRadius: 18, boxShadow: '0 3px 14px #48653533', color: '#43532e', fontFamily: 'system-ui, sans-serif' }}>
-        <div style={{ fontSize: 12, fontWeight: 800, marginBottom: 4 }}>覇気マップ <span style={{ float: 'right', fontSize: 10 }}>↑ 北</span></div>
-        <svg viewBox="-64 -64 128 128" role="img" aria-label="覇気マップ。金色のひし形が覇気、青い矢印があなた、小さな丸が仲間。点線は最寄りの覇気" style={{ width: '100%', display: 'block', background: '#dceacb', borderRadius: '50%' }}>
-          <circle r={WORLD_RADIUS} fill="#d6e5bd" stroke="#91aa70" strokeWidth="1" />
-          <path d="M0 -58V58M-50 -29L50 29M-50 29L50 -29" stroke="#f5e5b9" strokeWidth="4" />
-          {nearestHaki && <line x1={hud.actors[0].x} y1={hud.actors[0].z} x2={nearestHaki.x} y2={nearestHaki.z} stroke="#805a0c" strokeWidth="1.2" strokeDasharray="2 2" />}
-          {hud.actors.slice(1).map((actor, i) => <circle key={i} cx={actor.x} cy={actor.z} r="2" fill={TUKKI_COLORS[RACERS[i + 1].color].body} stroke="#765329" strokeWidth="0.7" />)}
-          {HAKI_SPOTS.map((spot, i) => hud.active[i] && <path key={i} transform={`translate(${spot.x} ${spot.z})`} d="M0 -3.8L3.8 0L0 3.8L-3.8 0Z" fill="#ffd336" stroke="#795207" strokeWidth="1" />)}
-          <g transform={`translate(${hud.actors[0].x} ${hud.actors[0].z})`}>
-            <circle r="5.8" fill="white" stroke="#1265ac" strokeWidth="1" />
-            <path transform={`rotate(${hud.actors[0].facing * 180 / Math.PI + 180})`} d="M0 -5L3.5 3.5L0 1.8L-3.5 3.5Z" fill="#1265ac" />
-          </g>
+      <button aria-label="遊び方 / 一時停止" onPointerDown={(e) => e.stopPropagation()} onClick={pause} style={{ ...buttonStyle, position: 'absolute', top: 'max(12px, env(safe-area-inset-top))', right: 12, width: 44, height: 44, fontSize: 22 }}>Ⅱ</button>
+      <div className="life-map" style={{ position: 'absolute', top: 78, right: 12, width: 154, padding: 8, borderRadius: 16, background: '#fffbeae8', boxSizing: 'border-box', pointerEvents: 'none' }}>
+        <div style={{ fontSize: 11, fontWeight: 800 }}>草原の地図 <span style={{ float: 'right' }}>↑北</span></div>
+        <svg viewBox="-64 -64 128 128" role="img" aria-label="草原の地図。青い矢印があなた、丸が仲間、家とベンチの場所" style={{ width: '100%', display: 'block', borderRadius: '50%', background: '#dceacb', marginTop: 4 }}>
+          <circle r={WORLD_RADIUS} fill="#d6e5bd" stroke="#91aa70" /><path d="M0 -58V58M-50 -29L50 29M-50 29L50 -29" stroke="#f5e5b9" strokeWidth="4" />
+          {HOMES.map((p, i) => <path key={i} transform={`translate(${p.x} ${p.z})`} d="M-4 0L0 -5L4 0V5H-4Z" fill={p.color} stroke="#765329" strokeWidth="1" />)}
+          {BENCHES.map((p, i) => <rect key={i} x={p.x - 3} y={p.z - 1.5} width="6" height="3" fill="#94734d" />)}
+          {hud.actors.slice(1).map((p, i) => <circle key={i} cx={p.x} cy={p.z} r="2.6" fill={TUKKI_COLORS[RESIDENTS[i + 1].color].body} stroke="#765329" strokeWidth="0.7" />)}
+          <g transform={`translate(${hud.actors[0].x} ${hud.actors[0].z})`}><circle r="5" fill="white" stroke="#1265ac" /><path transform={`rotate(${hud.actors[0].facing * 180 / Math.PI + 180})`} d="M0 -4L3 3L0 1L-3 3Z" fill="#1265ac" /></g>
         </svg>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, fontWeight: 700, marginTop: 5 }}><span style={{ color: '#94610a' }}>◆ 覇気</span><span style={{ color: '#1265ac' }}>▲ あなた</span><span>● 仲間</span></div>
-        <div style={{ fontSize: 11, textAlign: 'center', marginTop: 3 }}>{nearestHaki ? `近くの覇気まで ${Math.ceil(nearestHaki.distance)}m` : '補充を待とう！'}</div>
+        <div style={{ fontSize: 9, textAlign: 'center', marginTop: 4, whiteSpace: 'nowrap' }}>⌂ 家　▰ ベンチ　● 仲間</div>
       </div>
-
-      <div className="tukki-mobile-stick" role="group" aria-label="移動スティック。押したまま動かすと前後左右に移動" style={{ display: 'none', position: 'absolute', left: 'max(24px, env(safe-area-inset-left))', bottom: 'max(28px, env(safe-area-inset-bottom))', width: 120, height: 120, borderRadius: '50%', border: '2px solid #ffffffaa', background: '#fffbea33', boxShadow: '0 3px 16px #284b2522', touchAction: 'none' }}
-        onPointerDown={(e) => {
-          e.preventDefault(); e.stopPropagation();
-          const rect = e.currentTarget.getBoundingClientRect();
-          const ox = rect.left + rect.width / 2, oy = rect.top + rect.height / 2;
-          stickRef.current = { id: e.pointerId, ox, oy };
-          setStickUi({ x: ox, y: oy, dx: 0, dy: 0 }); setStick(0, 0);
-          e.currentTarget.setPointerCapture(e.pointerId);
-          onPointerMove(e);
-        }} onLostPointerCapture={onPointerUp}>
-        <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', color: '#43532e99', fontSize: 72, lineHeight: 1, pointerEvents: 'none' }}>＋</div>
-        <div style={{ position: 'absolute', left: 36, top: 36, width: 48, height: 48, borderRadius: '50%', background: '#fffbeaee', border: '2px solid #6b8757', boxSizing: 'border-box', boxShadow: '0 3px 8px #284b2533', transform: `translate(${stickUi?.dx ?? 0}px, ${stickUi?.dy ?? 0}px)`, pointerEvents: 'none' }} />
-        <span style={{ position: 'absolute', top: -24, left: 0, width: '100%', textAlign: 'center', fontSize: 12, fontWeight: 800, color: '#43532e', pointerEvents: 'none', textShadow: '0 1px 2px #fff' }}>移動</span>
+      <div className="life-stick" role="group" aria-label="移動スティック" style={{ position: 'absolute', left: 'max(24px, env(safe-area-inset-left))', bottom: 'max(28px, env(safe-area-inset-bottom))', width: 120, height: 120, borderRadius: '50%', border: '2px solid #ffffffaa', background: '#fffbea55', touchAction: 'none' }}
+        onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); const r = e.currentTarget.getBoundingClientRect(); stickRef.current = { id: e.pointerId, ox: r.x + r.width / 2, oy: r.y + r.height / 2 }; e.currentTarget.setPointerCapture(e.pointerId); pointerMove(e); }} onLostPointerCapture={pointerUp}>
+        <span style={{ position: 'absolute', top: -24, width: '100%', textAlign: 'center', fontSize: 12, fontWeight: 800, pointerEvents: 'none' }}>お散歩</span>
+        <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', fontSize: 64, color: '#647b4a88', pointerEvents: 'none' }}>＋</div>
+        <div style={{ position: 'absolute', left: 36, top: 36, width: 48, height: 48, borderRadius: '50%', background: '#fffbea', border: '2px solid #6b8757', boxSizing: 'border-box', transform: `translate(${(stickUi?.dx ?? 0) * 0.6}px, ${(stickUi?.dy ?? 0) * 0.6}px)`, pointerEvents: 'none' }} />
       </div>
-      {/* 仮想スティック表示 */}
-      {stickUi && (
-        <>
-          <div className="tukki-floating-stick" style={{ ...stickBase, left: stickUi.x - 60, top: stickUi.y - 60 }} />
-          <div className="tukki-floating-stick" style={{ ...stickKnob, left: stickUi.x + stickUi.dx - 24, top: stickUi.y + stickUi.dy - 24 }} />
-        </>
-      )}
-      </div>
-      {(phase === 'intro' || phase === 'instructions') && <div style={{ position: 'absolute', inset: 0, zIndex: 10, background: 'linear-gradient(180deg, #19463055, #15391f99)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, overflowY: 'auto' }}
-        onPointerDown={(e) => e.stopPropagation()}>
-        <section role="dialog" aria-modal="true" aria-labelledby="tukki-intro-title"
-          style={{ width: '100%', maxWidth: 520, maxHeight: '100%', overflowY: 'auto', background: '#fffbea', color: '#43532e', border: '3px solid #fff', borderRadius: 28, padding: 'clamp(20px, 4vw, 34px)', boxShadow: '0 20px 70px #142e3955', fontFamily: 'system-ui, sans-serif', boxSizing: 'border-box' }}>
-          <div style={{ color: '#8e7028', letterSpacing: 3, fontSize: 12, fontWeight: 800 }}>HAKI RACE</div>
-          <h1 id="tukki-intro-title" style={{ fontSize: 'clamp(25px, 5vw, 36px)', lineHeight: 1.25, margin: '10px 0 12px' }}>ツッキーくんの<br />覇気レース</h1>
-          <p style={{ margin: '0 0 20px', lineHeight: 1.7 }}>明るい草原で、仲間8人と1分間の早取り勝負！<br />金色に光る覇気を集めて、1位を目指そう。</p>
-          <div style={{ background: '#edf2d9', borderRadius: 16, padding: '14px 18px', fontSize: 14, lineHeight: 1.8 }}>
-            <strong>あそびのルール</strong>
-            <ul style={{ paddingLeft: 20, margin: '6px 0 0' }}>
-              <li>制限時間は1分！ 集めた覇気の数で順位が決まるよ。</li>
-              <li>覇気に近づくと自動で獲得。仲間も集めるよ！</li>
-              <li>8秒ごとに最大6個の覇気が増えるよ。</li>
-              <li>ぶつかるとお互い一瞬ストップ。覇気は減らないよ。</li>
-            </ul>
-          </div>
-          <div style={{ fontSize: 14, lineHeight: 1.8, margin: '18px 0' }}>
-            <strong>操作方法</strong><br />
-            <span>PC：WASD / 矢印で移動、Space / Eでジャンプ。ドラッグで見回す。</span><br />
-            <span>スマホ：左下のスティックで移動、右側をドラッグして見回す。ジャンプは右下のボタン。</span><br />
-            <span className="tukki-desktop-controls" style={{ color: '#71814f', fontSize: 12 }}>画面の矢印ボタンでも移動・視点変更ができます。</span>
-          </div>
-          {phase === 'instructions' && <div style={{ marginBottom: 18, fontSize: 13 }}>
-            <strong>現在の順位：{rank}位 / 9人</strong>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '5px 12px', marginTop: 8 }}>{ranking.map((racer, i) => <span key={racer.color}>{i + 1}. {racer.name}　{racer.score}</span>)}</div>
-          </div>}
-          <button autoFocus onClick={() => { if (phase === 'instructions') setPhase('playing'); else { setCountdown(3); setPhase('countdown'); } }}
-            style={{ width: '100%', border: 0, borderRadius: 16, padding: '16px 20px', background: '#e7b839', color: '#493611', fontSize: 19, fontWeight: 800, cursor: 'pointer', boxShadow: '0 4px 0 #b58b22' }}>{phase === 'instructions' ? 'レースに戻る' : 'ゲームスタート'}</button>
-          {phase === 'instructions' && <button onClick={reset} style={{ display: 'block', margin: '16px auto 0', border: 0, background: 'transparent', color: '#59733d', textDecoration: 'underline', cursor: 'pointer', padding: 8 }}>最初からやり直す</button>}
-        </section>
-      </div>}
-      {phase === 'finished' && <div style={{ position: 'absolute', inset: 0, zIndex: 10, background: '#15391f99', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, overflowY: 'auto' }} onPointerDown={(e) => e.stopPropagation()}>
-        <section role="dialog" aria-modal="true" aria-labelledby="tukki-result-title" style={{ width: '100%', maxWidth: 420, maxHeight: '100%', overflowY: 'auto', padding: 26, boxSizing: 'border-box', background: '#fffbea', borderRadius: 26, color: '#43532e', fontFamily: 'system-ui, sans-serif' }}>
-          <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: 3, color: '#987322' }}>TIME UP!</div>
-          <h2 id="tukki-result-title" style={{ margin: '8px 0' }}>レース終了！</h2>
-          <div style={{ fontSize: 40, fontWeight: 900, color: rank === 1 ? '#b88614' : '#43532e' }}>{rank}位 <span style={{ fontSize: 16 }}>/ 9人</span></div>
-          <p style={{ marginTop: 6 }}>あなたの覇気：<strong>{hud.actors[0].score}個</strong><br />{rank === 1 ? 'おめでとう！ 草原の覇気チャンピオン！' : 'おつかれさま！ 次はもっと集めてみよう。'}</p>
-          <ol aria-label="最終順位" style={{ listStyle: 'none', padding: 0, margin: '18px 0' }}>{ranking.map((racer) => <li key={racer.color} style={{ display: 'flex', gap: 10, padding: '6px 10px', borderRadius: 8, background: racer.index === 0 ? '#e4edcd' : 'transparent', fontWeight: racer.index === 0 ? 800 : 400 }}>
-            <span>{1 + ranking.filter((other) => other.score > racer.score).length}位</span><span style={{ flex: 1 }}>{racer.name}</span><span>{racer.score}個</span>
-          </li>)}</ol>
-          <button autoFocus onClick={() => { reset(); setPhase('countdown'); }} style={{ width: '100%', border: 0, borderRadius: 14, padding: 16, fontSize: 18, fontWeight: 800, background: '#e7b839', color: '#493611', cursor: 'pointer' }}>もう一度遊ぶ</button>
-          <button onClick={reset} style={{ display: 'block', margin: '12px auto 0', padding: 8, border: 0, background: 'transparent', color: '#59733d', cursor: 'pointer' }}>説明画面に戻る</button>
-        </section>
-      </div>}
-      {phase === 'countdown' && <div role="status" aria-live="assertive" style={{ position: 'absolute', inset: 0, zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#244d3933', pointerEvents: 'auto', color: '#fffbea', textAlign: 'center', fontFamily: 'system-ui, sans-serif', textShadow: '0 5px 0 #486535' }}>
-        <div><div style={{ fontSize: 22, fontWeight: 800 }}>よーい…</div><div style={{ fontSize: 120, fontWeight: 900 }}>{countdown || 'GO!'}</div></div>
-      </div>}
-    </div>
-  );
+      <button aria-label="生活アクション" onPointerDown={(e) => e.stopPropagation()} onClick={action} style={{ ...buttonStyle, position: 'absolute', right: 16, bottom: 'max(28px, env(safe-area-inset-bottom))', width: 94, height: 72, borderRadius: 24, fontSize: 13, fontWeight: 800, background: '#ffe3a1' }}>{hud.action.label}</button>
+      <button className="life-jump" aria-label="ジャンプ" onPointerDown={(e) => { e.stopPropagation(); e.currentTarget.setPointerCapture(e.pointerId); setButton(true); }} onPointerUp={() => setButton(false)} onPointerCancel={() => setButton(false)} onLostPointerCapture={() => setButton(false)} style={{ ...buttonStyle, position: 'absolute', right: 16, bottom: 112, padding: 10 }}>ジャンプ</button>
+      {message && <div className="life-message" role="status" style={{ position: 'absolute', bottom: 32, left: '50%', transform: 'translateX(-50%)', width: 'min(80vw, 420px)', maxWidth: '80vw', padding: '14px 18px', background: '#fffbeaf5', borderRadius: 18, boxShadow: '0 4px 20px #354b2522', boxSizing: 'border-box', pointerEvents: 'none' }}><strong style={{ fontSize: 13 }}>{message.name}</strong><div style={{ fontSize: 14, lineHeight: 1.7, marginTop: 5 }}>{message.text}</div></div>}
+    </>}
+    {phase !== 'playing' && <div onPointerDown={(e) => e.stopPropagation()} style={{ position: 'absolute', inset: 0, background: '#36564166', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+      <section role="dialog" aria-modal="true" aria-labelledby="life-title" style={{ width: '100%', maxWidth: 480, maxHeight: '100%', overflowY: 'auto', boxSizing: 'border-box', borderRadius: 28, padding: 'clamp(22px, 4vw, 34px)', background: '#fffbea', boxShadow: '0 20px 60px #142e3933' }}>
+        <div style={{ letterSpacing: 3, fontSize: 12, color: '#8a784e' }}>A SLOW DAY</div><h1 id="life-title" style={{ fontSize: 30, lineHeight: 1.35 }}>ツッキーくんの<br />のんびり生活</h1>
+        <p style={{ lineHeight: 1.8 }}>急がなくても、何もしなくても大丈夫。<br />仲間たちと、草原でゆっくり過ごそう。</p>
+        <div style={{ background: '#edf2d9', borderRadius: 16, padding: 16, lineHeight: 1.9, fontSize: 14 }}>🌿 好きなところへお散歩<br />💬 仲間の近くで「あいさつ」<br />☕ ベンチや草の上で「ひと休み」<br /><span style={{ color: '#71814f' }}>制限時間も、順位もありません。</span></div>
+        <p style={{ fontSize: 13, lineHeight: 1.8 }}>スマホ：左下のスティックで移動、右側をドラッグして見回す。右下のボタンであいさつ・ひと休み。<br />PC：WASD / 矢印で移動、Eでアクション、Spaceでジャンプ。</p>
+        <button autoFocus onClick={() => setPhase('playing')} style={{ ...buttonStyle, width: '100%', padding: 16, fontWeight: 800, fontSize: 18, background: '#e5bc5d', borderRadius: 16 }}>{phase === 'intro' ? '草原へ行く' : 'お散歩に戻る'}</button>
+      </section>
+    </div>}
+  </div>;
 }
-
-const hudStyle: React.CSSProperties = {
-  position: 'absolute',
-  top: 16,
-  left: 16,
-  color: '#43532e',
-  fontFamily: 'ui-sans-serif, system-ui, sans-serif',
-  background: 'rgba(255, 253, 239, .93)',
-  padding: '16px 20px', borderRadius: 20, minWidth: 210,
-  boxShadow: '0 4px 20px rgba(57,80,35,.12)',
-  pointerEvents: 'none',
-};
-
-const helpStyle: React.CSSProperties = {
-  position: 'absolute',
-  left: '50%',
-  bottom: 32,
-  transform: 'translateX(-50%)',
-  background: 'rgba(255, 253, 239, .94)',
-  border: '1px solid rgba(130, 157, 93, .3)',
-  borderRadius: 12,
-  padding: '12px 18px',
-  color: '#43532e',
-  fontFamily: 'ui-sans-serif, system-ui, sans-serif',
-  fontSize: 14,
-  lineHeight: 1.6,
-  pointerEvents: 'none',
-  textAlign: 'center',
-  width: 'min(88vw, 560px)',
-  boxSizing: 'border-box',
-};
-
-const btnStyle: React.CSSProperties = {
-  width: 82,
-  height: 82,
-  borderRadius: '50%',
-  border: '1px solid rgba(124, 92, 255, .6)',
-  background: '#ffe09a',
-  color: '#43532e',
-  fontSize: 14,
-  fontWeight: 700,
-  touchAction: 'none',
-  cursor: 'pointer',
-};
-
-const stickBase: React.CSSProperties = {
-  position: 'absolute',
-  width: 120,
-  height: 120,
-  borderRadius: '50%',
-  border: '2px solid rgba(255,255,255,.35)',
-  pointerEvents: 'none',
-};
-
-const stickKnob: React.CSSProperties = {
-  position: 'absolute',
-  width: 48,
-  height: 48,
-  borderRadius: '50%',
-  background: 'rgba(124, 92, 255, .7)',
-  pointerEvents: 'none',
-};
+const buttonStyle: React.CSSProperties = { border: '1px solid #b5c4a1', background: '#fffbea', color: '#43532e', borderRadius: 14, cursor: 'pointer', touchAction: 'none' };
