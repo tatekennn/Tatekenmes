@@ -1,6 +1,6 @@
 'use client';
 
-import React, { forwardRef, useImperativeHandle, useMemo, useRef } from 'react';
+import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 
 /* ------------------------------------------------------------------ */
@@ -20,17 +20,17 @@ export interface TukkiPalette {
   cheek: string;
 }
 
-export const TUKKI_COLORS: Record<string, TukkiPalette> = {
+export const TUKKI_COLORS = {
   blue: { body: '#4ba7e6', ear: '#f8c5cb', belly: '#ffffff', muzzle: '#fff3dd', nose: '#4a2e1f', cheek: '#f7a8c0' },
-  green: { body: '#55c46f', ear: '#a2e8b2', belly: '#ffffff', muzzle: '#f6ffe3', nose: '#3a2e1f', cheek: '#ffb9a6' },
-  lime: { body: '#bfdc4f', ear: '#e2f39a', belly: '#ffffff', muzzle: '#fcffe8', nose: '#3a3a1f', cheek: '#ffb4b4' },
+  green: { body: '#62c749', ear: '#a2e8b2', belly: '#ffffff', muzzle: '#f6ffe3', nose: '#3a2e1f', cheek: '#ffb9a6' },
+  lime: { body: '#b5dc3d', ear: '#e2f39a', belly: '#ffffff', muzzle: '#fcffe8', nose: '#3a3a1f', cheek: '#ffb4b4' },
   orange: { body: '#f59d3e', ear: '#ffcf96', belly: '#ffffff', muzzle: '#fff3dd', nose: '#4a2e1f', cheek: '#ff93a4' },
   pink: { body: '#f59fc5', ear: '#ffd2e6', belly: '#ffffff', muzzle: '#fff1f6', nose: '#4a2235', cheek: '#ff7394' },
-  purple: { body: '#9f80df', ear: '#cfbdf5', belly: '#ffffff', muzzle: '#f5f0ff', nose: '#2e2440', cheek: '#ffa3d4' },
+  purple: { body: '#a394ed', ear: '#cfbdf5', belly: '#ffffff', muzzle: '#f5f0ff', nose: '#2e2440', cheek: '#ffa3d4' },
   tan: { body: '#dcb48f', ear: '#f1d8bf', belly: '#fff9ef', muzzle: '#fff3dd', nose: '#4a2e1f', cheek: '#ffa3b9' },
   white: { body: '#f6f6f6', ear: '#ffe3ec', belly: '#ffffff', muzzle: '#fff3dd', nose: '#4a2e1f', cheek: '#ffb9c9' },
   yellow: { body: '#f7d44f', ear: '#fff0a8', belly: '#ffffff', muzzle: '#fff9dd', nose: '#4a2e1f', cheek: '#ffa3a4' },
-};
+} satisfies Record<string, TukkiPalette>;
 
 export type TukkiColor = keyof typeof TUKKI_COLORS;
 
@@ -132,6 +132,48 @@ function makeBelly() {
   return patch;
 }
 
+function makeFang() {
+  const vertices: number[] = [], indices: number[] = [];
+  const rings = 12, sides = 16;
+  for (let i = 0; i <= rings; i++) {
+    const t = i / rings;
+    const radius = 0.073 * Math.pow(1 - t, 0.8);
+    for (let j = 0; j <= sides; j++) {
+      const angle = j / sides * Math.PI * 2;
+      vertices.push(Math.cos(angle) * radius + 0.04 * t * t, -0.36 * t, Math.sin(angle) * radius + 0.045 * Math.sin(t * Math.PI));
+      if (i < rings && j < sides) {
+        const a = i * (sides + 1) + j, b = a + sides + 1;
+        indices.push(a, a + 1, b, a + 1, b + 1, b);
+      }
+    }
+  }
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+  geometry.setIndex(indices); geometry.computeVertexNormals();
+  return geometry;
+}
+
+function makeMuzzle() {
+  const shape = new THREE.Shape();
+  shape.moveTo(0, 0.11);
+  shape.bezierCurveTo(-0.17, 0.2, -0.39, 0.12, -0.39, -0.045);
+  shape.bezierCurveTo(-0.39, -0.23, -0.13, -0.23, 0, -0.13);
+  shape.bezierCurveTo(0.13, -0.23, 0.39, -0.23, 0.39, -0.045);
+  shape.bezierCurveTo(0.39, 0.12, 0.17, 0.2, 0, 0.11);
+  return new THREE.ExtrudeGeometry(shape, { depth: 0.085, bevelEnabled: true, bevelThickness: 0.055, bevelSize: 0.04, bevelSegments: 4, steps: 1, curveSegments: 20 });
+}
+
+function makeBellyBorder() {
+  const curve = new THREE.CurvePath<THREE.Vector3>();
+  const shape = new THREE.Shape();
+  shape.moveTo(-1.04, 1.94);
+  shape.bezierCurveTo(-0.65, 1.57, 0.65, 1.57, 1.04, 1.94);
+  shape.bezierCurveTo(0.7, 1.27, -0.7, 1.27, -1.04, 1.94);
+  const points = shape.getPoints(64).map((v) => new THREE.Vector3(v.x, v.y, frontSurface(v.x, v.y) + 0.028));
+  for (let i = 1; i < points.length; i++) curve.add(new THREE.LineCurve3(points[i - 1], points[i]));
+  return new THREE.TubeGeometry(curve, 160, 0.014, 6, false);
+}
+
 const TukkiModel = forwardRef<TukkiHandle, Props>(function TukkiModel({ color, scale = 1 }, ref) {
   const p = TUKKI_COLORS[color];
   const group = useRef<THREE.Group>(null!);
@@ -147,7 +189,17 @@ const TukkiModel = forwardRef<TukkiHandle, Props>(function TukkiModel({ color, s
       sphere: new THREE.SphereGeometry(1, 40, 28),
       body: new THREE.LatheGeometry(BODY_POINTS, 64),
       belly: makeBelly(),
-      cone: new THREE.ConeGeometry(1, 1, 10),
+      cone: new THREE.ConeGeometry(1, 1, 24),
+      cylinder: new THREE.CylinderGeometry(1, 1, 1, 40),
+      box: new THREE.BoxGeometry(1, 1, 1),
+      dome: new THREE.SphereGeometry(1, 40, 20, 0, Math.PI * 2, 0, Math.PI / 2),
+      muzzle: makeMuzzle(),
+      fang: makeFang(),
+      bellyBorder: makeBellyBorder(),
+      mustache: new THREE.TubeGeometry(new THREE.CatmullRomCurve3([
+        new THREE.Vector3(0.01, -0.23, 1.08), new THREE.Vector3(0.2, -0.29, 1.12),
+        new THREE.Vector3(0.36, -0.25, 1.07), new THREE.Vector3(0.44, -0.14, 1.02),
+      ]), 24, 0.065, 10, false),
       capsule: new THREE.CapsuleGeometry(1, 1, 8, 16),
     }),
     [],
@@ -168,8 +220,25 @@ const TukkiModel = forwardRef<TukkiHandle, Props>(function TukkiModel({ color, s
       cheek: toon(p.cheek, { transparent: true, opacity: 0.9 }),
       fang: toon('#ffffff'),
       claw: toon('#fff3dd'),
+      hat: toon('#fffefa'),
+      helmet: toon('#ffda52'),
+      black: toon('#383331'),
+      ribbon: toon('#294666'),
+      wood: toon('#b67a31'),
+      gold: toon('#f4c04d'),
+      tongue: toon('#efa2b8'),
+      line: new THREE.MeshBasicMaterial({ color: OUTLINE_COLOR }),
+      paintBlue: toon('#69b5df'),
+      paintPink: toon('#ef85a7'),
+      paintGreen: toon('#82c76a'),
     };
   }, [p]);
+
+  useEffect(() => () => { Object.values(geo).forEach((geometry) => geometry.dispose()); }, [geo]);
+  useEffect(() => () => {
+    mats.body.gradientMap?.dispose();
+    Object.values(mats).forEach((material) => material.dispose());
+  }, [mats]);
 
   useImperativeHandle(ref, () => ({
     group: group.current,
@@ -177,7 +246,8 @@ const TukkiModel = forwardRef<TukkiHandle, Props>(function TukkiModel({ color, s
       const swing = Math.sin(walk) * 0.7 * amount;
       // 腕は基本「お腹の前で合わせる」構え。歩くとそこから前後に揺れる
       armL.current.rotation.x = -0.3 + swing * 0.35;
-      armR.current.rotation.x = -0.3 - swing * 0.35;
+      armR.current.rotation.x = color === 'orange' ? -0.35 + Math.sin(t * 3) * 0.1 : -0.3 - swing * 0.35;
+      armR.current.rotation.z = color === 'orange' ? 2.3 + Math.sin(t * 3) * 0.15 : -0.95;
       legL.current.rotation.x = -swing * 0.9;
       legR.current.rotation.x = swing * 0.9;
       // 体の前傾と弾み
@@ -200,6 +270,7 @@ const TukkiModel = forwardRef<TukkiHandle, Props>(function TukkiModel({ color, s
         {/* 頭から胴へ一続きの洋梨型。白いお腹は表面に沿う三日月。 */}
         <Part geometry={geo.body} material={mats.body} outline={O} scale={[1, 1, 0.78]} width={1.025} />
         <mesh geometry={geo.belly} material={mats.belly} />
+        <mesh geometry={geo.bellyBorder} material={mats.line} />
 
         <group ref={head} position={[0, 2.7, 0]}>
           {/* 耳: 小さめで頭の上側面。内側に明るい色の丸 */}
@@ -216,26 +287,46 @@ const TukkiModel = forwardRef<TukkiHandle, Props>(function TukkiModel({ color, s
           {/* 鼻: 大きめの濃い茶色、顔の中央 */}
           <Part geometry={S} material={mats.nose} outline={O} position={[0, -0.11, 0.92]} scale={[0.27, 0.2, 0.15]} width={1.12} castShadow={false} />
           <mesh geometry={S} material={mats.muzzle} position={[-0.075, -0.04, 1.058]} scale={[0.065, 0.05, 0.012]} />
-          {/* マズル: 鼻の下に小さなクリーム色 */}
-          <Part geometry={S} material={mats.muzzle} outline={O} position={[0, -0.34, 0.87]} scale={[0.35, 0.18, 0.14]} width={1.08} castShadow={false} />
-          {/* 牙: マズルの両脇から下に */}
-          {[-1, 1].map((s) => (
-            <Part
-              key={s}
-              geometry={geo.cone}
-              material={mats.fang}
-              outline={O}
-              position={[s * 0.24, -0.56, 0.94]}
-              rotation={[Math.PI, 0, s * 0.15]}
-              scale={[0.065, 0.32, 0.065]}
-              width={1.15}
-              castShadow={false}
-            />
-          ))}
+          {/* 小さな笑顔と、左右に丸いふくらみのある口元 */}
+          <Part geometry={S} material={mats.muzzle} outline={O} position={[0, -0.51, 0.91]} scale={[0.23, 0.18, 0.105]} width={1.09} castShadow={false} />
+          <mesh geometry={S} material={mats.nose} position={[0, -0.49, 1.006]} scale={[0.19, 0.105, 0.02]} />
+          <mesh geometry={S} material={mats.tongue} position={[0, -0.52, 1.026]} scale={[0.12, 0.055, 0.012]} />
+          <Part geometry={geo.muzzle} material={mats.muzzle} outline={O} position={[0, -0.31, 0.91]} width={1.045} castShadow={false} />
+          {[-1, 1].map((s) => <Part key={s} geometry={geo.fang} material={mats.fang} outline={O}
+            position={[s * 0.29, -0.42, 0.96]} scale={[s, 1, 1]} width={1.09} castShadow={false} />)}
           {/* ほっぺ */}
           {[-1, 1].map((s) => (
             <mesh key={s} geometry={S} material={mats.cheek} position={[s * 0.73, -0.14, 0.66]} scale={[0.17, 0.075, 0.035]} />
           ))}
+          {(color === 'green' || color === 'purple' || color === 'orange') && [-1, 1].map((sign) => (
+            <mesh key={sign} geometry={S} material={mats.line} position={[sign * 0.5, 0.2, 0.76]} rotation={[0, 0, sign * -0.18]} scale={[0.085, 0.018, 0.025]} />
+          ))}
+
+          {color === 'tan' && <group position={[0, 0.85, 0]}>
+            <Part geometry={geo.cylinder} material={mats.hat} outline={O} position={[0, 0.12, 0]} scale={[0.48, 0.28, 0.4]} width={1.04} />
+            {[-1, 0, 1].map((i) => <Part key={i} geometry={S} material={mats.hat} outline={O} position={[i * 0.31, 0.4 + (i === 0 ? 0.07 : 0), 0]} scale={[0.31, 0.29, 0.32]} width={1.045} />)}
+          </group>}
+          {color === 'lime' && <group position={[0, 0.85, 0]}>
+            <Part geometry={geo.cylinder} material={mats.helmet} outline={O} scale={[0.62, 0.09, 0.54]} width={1.04} />
+            <Part geometry={geo.dome} material={mats.helmet} outline={O} position={[0, 0.02, 0]} scale={[0.52, 0.38, 0.46]} width={1.04} />
+            <mesh geometry={geo.box} material={mats.body} position={[0, 0.2, 0.44]} scale={[0.2, 0.045, 0.025]} />
+            <mesh geometry={geo.box} material={mats.body} position={[0, 0.2, 0.44]} scale={[0.045, 0.2, 0.025]} />
+          </group>}
+          {color === 'white' && <>
+            <group position={[0, 0.88, 0]} rotation={[0, 0, -0.08]}>
+              <Part geometry={geo.cylinder} material={mats.black} outline={O} scale={[0.67, 0.09, 0.52]} width={1.04} />
+              <Part geometry={geo.cylinder} material={mats.black} outline={O} position={[0, 0.44, 0]} scale={[0.4, 0.84, 0.36]} width={1.04} />
+              <mesh geometry={geo.cylinder} material={mats.gold} position={[0, 0.15, 0]} scale={[0.41, 0.12, 0.37]} />
+            </group>
+            <mesh geometry={geo.mustache} material={mats.black} />
+            <mesh geometry={geo.mustache} material={mats.black} scale={[-1, 1, 1]} />
+          </>}
+          {color === 'yellow' && <group position={[0, -0.77, 0.98]}>
+            {[-1, 1].map((sign) => <Part key={sign} geometry={geo.cone} material={mats.ribbon} outline={O} position={[sign * 0.17, 0, 0]} rotation={[0, 0, sign * Math.PI / 2]} scale={[0.17, 0.3, 0.1]} width={1.04} />)}
+            <Part geometry={S} material={mats.ribbon} outline={O} scale={[0.085, 0.1, 0.1]} width={1.04} />
+          </group>}
+          {color === 'green' && [-1, 0, 1].map((i) => <Part key={i} geometry={geo.cone} material={mats.body} outline={O}
+            position={[0.1 + i * 0.13, 0.85, 0]} rotation={[0, 0, -0.3 + i * 0.18]} scale={[0.07, 0.25, 0.07]} width={1.07} />)}
         </group>
 
         {/* 腕: 肩から前へ曲げ、お腹の前で手を合わせる。爪は内側向き */}
@@ -244,21 +335,39 @@ const TukkiModel = forwardRef<TukkiHandle, Props>(function TukkiModel({ color, s
           { r: armR, s: 1 },
         ].map(({ r, s }) => (
           <group key={s} ref={r} position={[s * 1.02, 1.57, 0.82]} rotation={[-0.3, 0, -s * 0.95]}>
-            <Part geometry={geo.capsule} material={mats.body} outline={O} position={[0, -0.45, 0]} scale={[0.27, 0.32, 0.27]} width={1.08} />
-            <Part geometry={S} material={mats.body} outline={O} position={[0, -0.9, 0]} scale={[0.3, 0.26, 0.3]} width={1.08} />
+            <Part geometry={geo.capsule} material={mats.body} outline={O} position={[0, -0.45, 0]} scale={[0.25, 0.31, 0.25]} width={1.04} />
+            <Part geometry={S} material={mats.body} outline={O} position={[0, -0.9, 0]} scale={[0.32, 0.25, 0.28]} width={1.045} />
             {[-1, 0, 1].map((k) => (
               <Part
                 key={k}
                 geometry={geo.cone}
                 material={mats.claw}
                 outline={O}
-                position={[s * -0.18, -0.95 + k * 0.1, k * 0.14]}
+                position={[s * -0.26, -0.92 + k * 0.1, 0.23]}
                 rotation={[0, 0, s * Math.PI / 2]}
-                scale={[0.05, 0.16, 0.05]}
+                scale={[0.05, 0.12, 0.05]}
                 width={1.2}
                 castShadow={false}
               />
             ))}
+            {color === 'orange' && s === 1 && <>
+              <mesh geometry={S} material={mats.cheek} position={[0, -0.92, 0.27]} scale={[0.15, 0.12, 0.02]} />
+              {[-1, 0, 1].map((i) => <mesh key={i} geometry={S} material={mats.cheek} position={[i * 0.1, -0.71, 0.25]} scale={[0.035, 0.04, 0.02]} />)}
+            </>}
+            {color === 'blue' && s === 1 && <group position={[0.04, -0.82, 0.38]} rotation={[0, 0, 0.45]}>
+              <Part geometry={geo.cylinder} material={mats.wood} outline={O} position={[0, 0.22, 0]} scale={[0.055, 0.6, 0.055]} width={1.05} />
+              <Part geometry={geo.cylinder} material={mats.wood} outline={O} position={[0, 0.56, 0]} rotation={[0, 0, Math.PI / 2]} scale={[0.14, 0.42, 0.14]} width={1.05} />
+              {[-1, 1].map((i) => <mesh key={i} geometry={geo.cylinder} material={mats.gold} position={[i * 0.13, 0.56, 0]} rotation={[0, 0, Math.PI / 2]} scale={[0.145, 0.035, 0.145]} />)}
+            </group>}
+            {color === 'pink' && s === 1 && <group position={[0, -0.9, 0.36]}>
+              <Part geometry={S} material={mats.muzzle} outline={O} scale={[0.48, 0.3, 0.055]} width={1.055} />
+              {[{ x: -0.2, y: 0.09, mat: mats.paintBlue }, { x: 0, y: 0.13, mat: mats.paintPink }, { x: 0.2, y: 0.08, mat: mats.paintGreen }].map((dot, i) => <mesh key={i} geometry={S} material={dot.mat} position={[dot.x, dot.y, 0.054]} scale={[0.065, 0.055, 0.012]} />)}
+            </group>}
+            {color === 'pink' && s === -1 && <group position={[0, -0.82, 0.36]} rotation={[0, 0, -0.25]}>
+              <Part geometry={geo.cylinder} material={mats.wood} outline={O} position={[0, 0.15, 0]} scale={[0.035, 0.65, 0.035]} width={1.06} />
+              <mesh geometry={geo.cylinder} material={mats.gold} position={[0, 0.49, 0]} scale={[0.05, 0.11, 0.05]} />
+              <Part geometry={geo.cone} material={mats.paintBlue} outline={O} position={[0, 0.63, 0]} scale={[0.065, 0.18, 0.06]} width={1.05} />
+            </group>}
           </group>
         ))}
 
@@ -267,7 +376,7 @@ const TukkiModel = forwardRef<TukkiHandle, Props>(function TukkiModel({ color, s
           { r: legL, s: -1 },
           { r: legR, s: 1 },
         ].map(({ r, s }) => (
-          <group key={s} ref={r} position={[s * 0.74, 0.49, 0.02]} rotation={[0, 0, s * -0.12]}>
+          <group key={s} ref={r} position={[s * 0.74, 0.58, 0.02]} rotation={[0, 0, s * -0.12]}>
             <Part geometry={geo.capsule} material={mats.body} outline={O} position={[0, -0.15, 0]} scale={[0.36, 0.2, 0.36]} width={1.06} />
             <Part geometry={S} material={mats.body} outline={O} position={[0, -0.38, 0.12]} scale={[0.38, 0.22, 0.46]} width={1.06} />
             {[-1, 0, 1].map((k) => (
@@ -278,7 +387,7 @@ const TukkiModel = forwardRef<TukkiHandle, Props>(function TukkiModel({ color, s
                 outline={O}
                 position={[k * 0.16, -0.45, 0.56]}
                 rotation={[Math.PI / 2, 0, 0]}
-                scale={[0.05, 0.16, 0.05]}
+                scale={[0.05, 0.12, 0.05]}
                 width={1.2}
                 castShadow={false}
               />

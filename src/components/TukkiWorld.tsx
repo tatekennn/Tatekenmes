@@ -2,8 +2,9 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { HAKI_SPOTS, WORLD_RADIUS, touchesHaki } from '@/lib/tukki-game';
+import { HAKI_SPOTS, WORLD_RADIUS, touchesHaki, groundHeight, TREE_SPOTS } from '@/lib/tukki-game';
 import * as THREE from 'three';
+import TukkiLandscape from './TukkiLandscape';
 import TukkiModel, { TUKKI_COLORS, type TukkiColor, type TukkiHandle } from './TukkiModel';
 
 /* ------------------------------------------------------------------ */
@@ -12,7 +13,6 @@ import TukkiModel, { TUKKI_COLORS, type TukkiColor, type TukkiHandle } from './T
 const PLAYER_COLOR: TukkiColor = 'blue';
 const BUDDIES = (Object.keys(TUKKI_COLORS) as TukkiColor[]).filter((c) => c !== PLAYER_COLOR);
 
-const FLOOR_Y = 0;
 
 const MAX_SPEED = 10;
 const ACCEL = 32;
@@ -130,7 +130,7 @@ function Player({
     // 加速と減衰（入力の無い軸だけ減衰させると操作感が素直になる）
     vel.current.addScaledVector(wish, ACCEL * dt);
     const damp = Math.exp(-DAMP * dt);
-    if (inp.jump && !jumpHeld.current && pos.current.y <= FLOOR_Y + 0.001) vel.current.y = 9;
+    if (inp.jump && !jumpHeld.current && pos.current.y <= groundHeight(pos.current.x, pos.current.z) + 0.001) vel.current.y = 9;
     jumpHeld.current = inp.jump;
     vel.current.y -= 24 * dt;
     if (inp.fwd === 0 && inp.side === 0) {
@@ -154,8 +154,18 @@ function Player({
       vel.current.x *= -0.4;
       vel.current.z *= -0.4;
     }
-    if (pos.current.y < FLOOR_Y) {
-      pos.current.y = FLOOR_Y;
+    for (const tree of TREE_SPOTS) {
+      const dx = pos.current.x - tree.x, dz = pos.current.z - tree.z;
+      const distance = Math.hypot(dx, dz);
+      if (distance < 1.35) {
+        const safeDistance = distance || 1;
+        pos.current.x = tree.x + (distance ? dx / safeDistance : 1) * 1.35;
+        pos.current.z = tree.z + (distance ? dz / safeDistance : 0) * 1.35;
+      }
+    }
+    const floor = groundHeight(pos.current.x, pos.current.z);
+    if (pos.current.y < floor) {
+      pos.current.y = floor;
       vel.current.y = Math.max(0, vel.current.y);
     }
     // モデル更新：進行方向を向き、速度に応じて歩く・前傾する
@@ -186,11 +196,11 @@ function Player({
       Math.sin(pitch.current),
       Math.cos(yaw.current) * Math.cos(pitch.current),
     ).multiplyScalar(dist);
-    const target = new THREE.Vector3(pos.current.x, 1.2, pos.current.z).add(offset);
-    target.y = Math.max(target.y, FLOOR_Y + 1.2);
+    const target = new THREE.Vector3(pos.current.x, floor + 1.2, pos.current.z).add(offset);
+    target.y = Math.max(target.y, groundHeight(target.x, target.z) + 1.2);
     camPos.current.lerp(target, 1 - Math.exp(-6 * dt));
     camera.position.copy(camPos.current);
-    camera.lookAt(pos.current.x, 1.8 + pos.current.y * 0.35, pos.current.z);
+    camera.lookAt(pos.current.x, floor + 1.8 + (pos.current.y - floor) * 0.35, pos.current.z);
 
     onPose(pos.current, speed);
   });
@@ -212,7 +222,8 @@ function Buddy({ color, seed }: { color: TukkiColor; seed: number }) {
     const m = model.current;
     if (!m) return;
     const a = t * omega + phase;
-    m.group.position.set(Math.cos(a) * radius, 0, Math.sin(a) * radius);
+    const x = Math.cos(a) * radius, z = Math.sin(a) * radius;
+    m.group.position.set(x, groundHeight(x, z), z);
     // 円周の接線方向を向く
     const vx = -Math.sin(a) * omega;
     const vz = Math.cos(a) * omega;
@@ -276,7 +287,7 @@ function Haki({ index, collected }: { index: number; collected: boolean }) {
   const spot = HAKI_SPOTS[index];
   useFrame(({ clock }) => {
     const t = clock.getElapsedTime();
-    group.current.position.y = 1.5 + Math.sin(t * 2.5 + index) * 0.16;
+    group.current.position.y = groundHeight(spot.x, spot.z) + 1.5 + Math.sin(t * 2.5 + index) * 0.16;
     group.current.rotation.y = t * 0.8;
   });
   return (
@@ -295,58 +306,10 @@ function Haki({ index, collected }: { index: number; collected: boolean }) {
 }
 
 function World() {
-  return (
-    <>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, 0]} receiveShadow>
-        <planeGeometry args={[600, 600]} />
-        <meshStandardMaterial color="#79c85d" roughness={1} />
-      </mesh>
-      {/* 土の広場と歩きやすい小道 */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.005, 0]} receiveShadow>
-        <circleGeometry args={[7, 64]} />
-        <meshStandardMaterial color="#ead7a3" />
-      </mesh>
-      {[0, Math.PI / 3, -Math.PI / 3].map((angle, index) => (
-        <group key={angle} rotation={[0, angle, 0]}>
-          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.008 + index * 0.004, 0]} receiveShadow>
-            <planeGeometry args={[4, WORLD_RADIUS * 2]} />
-            <meshStandardMaterial color="#dfcd9b" />
-          </mesh>
-        </group>
-      ))}
-      {Array.from({ length: 12 }, (_, i) => {
-        const angle = i / 12 * Math.PI * 2;
-        return <mesh key={`hill-${i}`} position={[Math.cos(angle) * 120, -5, Math.sin(angle) * 120]} scale={[30, 16 + i % 3 * 5, 24]}>
-          <sphereGeometry args={[1, 24, 16]} /><meshStandardMaterial color={i % 2 ? '#a1c985' : '#88b980'} roughness={1} />
-        </mesh>;
-      })}
-      {Array.from({ length: 42 }, (_, i) => {
-        const angle = i * 2.39996;
-        const radius = 64 + (i % 4) * 9;
-        return (
-          <group key={i} position={[Math.cos(angle) * radius, 0, Math.sin(angle) * radius]}>
-            <mesh position={[0, 2, 0]} castShadow>
-              <cylinderGeometry args={[0.35, 0.55, 4, 8]} /><meshStandardMaterial color="#957047" />
-            </mesh>
-            <mesh position={[0, 5, 0]} castShadow>
-              <sphereGeometry args={[2.8, 12, 10]} /><meshStandardMaterial color={i % 2 ? '#579e61' : '#70ad61'} />
-            </mesh>
-          </group>
-        );
-      })}
-      {Array.from({ length: 60 }, (_, i) => {
-        const angle = i * 2.39996, radius = 9 + (i % 7) * 7;
-        return <mesh key={i} position={[Math.cos(angle) * radius, 0.15, Math.sin(angle) * radius]}>
-          <sphereGeometry args={[0.25, 8, 6]} /><meshStandardMaterial color={['#fff0a1', '#fff5ec', '#f5b3bd'][i % 3]} />
-        </mesh>;
-      })}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.025, 0]}>
-        <ringGeometry args={[WORLD_RADIUS - 0.15, WORLD_RADIUS + 0.15, 128]} />
-        <meshBasicMaterial color="#f3e5b5" transparent opacity={0.7} />
-      </mesh>
-      {Array.from({ length: 8 }, (_, i) => <Cloud key={i} position={[(i - 4) * 24, 32 + (i % 3) * 4, -65]} scale={1.8} seed={i} />)}
-    </>
-  );
+  return <>
+    <TukkiLandscape />
+    {Array.from({ length: 8 }, (_, i) => <Cloud key={i} position={[(i - 4) * 24, 32 + (i % 3) * 4, -65]} scale={1.8} seed={i} />)}
+  </>;
 }
 
 /** 上下グラデーションの空 */
