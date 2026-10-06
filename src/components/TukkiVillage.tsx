@@ -23,11 +23,11 @@ export default function TukkiVillage() {
       </group>)}
     </group>)}
     {BENCHES.map((p, i) => <group key={i} position={[p.x, groundHeight(p.x, p.z), p.z]}>
-      {[0, 1, 2].map((n) => <mesh key={n} position={[0, 1, (n - 1) * 0.35]} castShadow><boxGeometry args={[3.4, 0.18, 0.3]} /><meshStandardMaterial color="#b78c58" /></mesh>)}
-      {[1.55, 1.9].map((y) => <mesh key={y} position={[0, y, -0.65]} castShadow><boxGeometry args={[3.4, 0.28, 0.16]} /><meshStandardMaterial color="#b78c58" /></mesh>)}
+      {[0, 1, 2].map((n) => <mesh key={n} position={[0, 0.72, (n - 1) * 0.35]} castShadow><boxGeometry args={[3.4, 0.18, 0.3]} /><meshStandardMaterial color="#b78c58" /></mesh>)}
+      {[1.27, 1.62].map((y) => <mesh key={y} position={[0, y, -0.65]} castShadow><boxGeometry args={[3.4, 0.28, 0.16]} /><meshStandardMaterial color="#b78c58" /></mesh>)}
       {[-1.3, 1.3].map((x) => <group key={x}>
-        <mesh position={[x, 0.5, 0]} castShadow><boxGeometry args={[0.16, 1, 1.1]} /><meshStandardMaterial color="#647365" /></mesh>
-        <mesh position={[x, 1.5, -0.65]} castShadow><boxGeometry args={[0.14, 1.4, 0.14]} /><meshStandardMaterial color="#647365" /></mesh>
+        <mesh position={[x, 0.36, 0]} castShadow><boxGeometry args={[0.16, 0.72, 1.1]} /><meshStandardMaterial color="#647365" /></mesh>
+        <mesh position={[x, 1.22, -0.65]} castShadow><boxGeometry args={[0.14, 1.4, 0.14]} /><meshStandardMaterial color="#647365" /></mesh>
       </group>)}
     </group>)}
     <group position={[13, groundHeight(13, 8) + 0.06, 8]}>

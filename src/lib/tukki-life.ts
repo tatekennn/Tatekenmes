@@ -42,6 +42,8 @@ function keepInField(a: Resident) {
 export function lifeAction(life: Life): { kind: 'stand' | 'greet' | 'sit'; index: number; label: string } {
   if (life.resting) return { kind: 'stand', index: -1, label: '立ち上がる' };
   const player = life.actors[0];
+  const nearbyBench = BENCHES.findIndex((b) => Math.hypot(b.x - player.x, b.z - player.z) < 2);
+  if (nearbyBench >= 0) return { kind: 'sit', index: nearbyBench, label: 'ベンチに座る' };
   let closest = -1, distance = 5;
   life.actors.slice(1).forEach((a, i) => { const d = Math.hypot(a.x - player.x, a.z - player.z); if (d < distance) { closest = i + 1; distance = d; } });
   if (closest >= 0) return { kind: 'greet', index: closest, label: 'あいさつ' };
@@ -62,7 +64,8 @@ export function interact(life: Life) {
   }
   life.resting = true; life.restBench = action.index >= 0 ? action.index : null;
   player.vx = player.vy = player.vz = 0;
-  if (life.restBench !== null) { const p = BENCHES[life.restBench]; player.x = p.x; player.z = p.z; player.y = groundHeight(p.x, p.z) + 1.05; player.facing = 0; }
+  player.y = groundHeight(player.x, player.z) + 0.25;
+  if (life.restBench !== null) { const p = BENCHES[life.restBench]; player.x = p.x; player.z = p.z; player.y = groundHeight(p.x, p.z) + 0.98; player.facing = 0; }
   return { name: 'ひと休み', text: '風と雲を眺めながら、ゆっくり過ごそう。' };
 }
 export function stepLife(life: Life, seconds: number, input: { x: number; z: number; jump: boolean }) {
