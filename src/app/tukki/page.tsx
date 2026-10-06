@@ -1,7 +1,7 @@
 export { default } from './TukkiDynamic';
 
-const TITLE = 'ツッキーくんの覇気レース | 覇気.com';
-const DESCRIPTION = 'ツッキーくんと8人の仲間で覇気の早取りレース。定期的に増える覇気を集めよう。ぶつかると一瞬ストップ！';
+const TITLE = 'ツッキーくんののんびり生活 | 覇気.com';
+const DESCRIPTION = 'ツッキーくんと仲間たちの、のんびりした草原暮らし。お散歩、あいさつ、ベンチでひと休み。時間も順位も気にせず過ごそう。';
 const URL = 'https://tukki.xn--7qwx14d.com';
 
 export const metadata = {

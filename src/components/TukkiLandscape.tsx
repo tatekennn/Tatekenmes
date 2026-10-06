@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
-import { groundHeight, TREE_SPOTS, WORLD_RADIUS, HAKI_SPOTS } from '@/lib/tukki-game';
+import { groundHeight, TREE_SPOTS, WORLD_RADIUS, DECORATION_CLEARINGS } from '@/lib/tukki-game';
 
 function Grass() {
   const mesh = useRef<THREE.InstancedMesh>(null!);
@@ -102,7 +102,7 @@ function Flowers() {
     };
     for (let i = 0; i < 100; i++) {
       const angle = i * 2.39996, radius = 10 + i % 7 * 6, x = Math.cos(angle) * radius, z = Math.sin(angle) * radius, y = groundHeight(x, z);
-      if (HAKI_SPOTS.some((spot) => Math.hypot(spot.x - x, spot.z - z) < 1.6)) continue;
+      if (DECORATION_CLEARINGS.some((spot) => Math.hypot(spot.x - x, spot.z - z) < 1.6)) continue;
       add(stems, x, y + 0.2, z, [0.025, 0.4, 0.025], '#679147');
       add(centers, x, y + 0.41, z, [0.08, 0.08, 0.08], '#ecc551');
       for (let j = 0; j < 5; j++) add(petals, x + Math.cos(j * Math.PI * 0.4) * 0.12, y + 0.4, z + Math.sin(j * Math.PI * 0.4) * 0.12, [0.105, 0.037, 0.105], ['#fff4d2', '#f5b5ca', '#d6c3ed'][i % 3]);
@@ -140,7 +140,7 @@ function Sign() {
     const ctx = canvas.getContext('2d')!;
     ctx.fillStyle = '#f8e9bd'; ctx.fillRect(0, 0, 512, 256);
     ctx.fillStyle = '#6c502e'; ctx.textAlign = 'center'; ctx.font = 'bold 54px sans-serif';
-    ctx.fillText('覇気の草原', 256, 106); ctx.font = '28px sans-serif'; ctx.fillText('仲間より先に覇気を集めよう', 256, 171);
+    ctx.fillText('のんびり草原', 256, 106); ctx.font = '28px sans-serif'; ctx.fillText('ひと休みしていきませんか', 256, 171);
     const result = new THREE.CanvasTexture(canvas); result.colorSpace = THREE.SRGBColorSpace; return result;
   }, []);
   useEffect(() => () => texture.dispose(), [texture]);

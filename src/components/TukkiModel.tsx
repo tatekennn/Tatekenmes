@@ -50,7 +50,7 @@ function makeGradientMap(): THREE.DataTexture {
 export interface TukkiHandle {
   group: THREE.Group;
   /** walk: 歩きの位相（rad）、amount: 0..1 で振りの大きさ、lean: 前傾（rad）、t: 経過秒 */
-  animate: (walk: number, amount: number, lean: number, t: number, sideways?: number) => void;
+  animate: (walk: number, amount: number, lean: number, t: number, sideways?: number, seated?: boolean) => void;
 }
 
 interface Props {
@@ -242,14 +242,14 @@ const TukkiModel = forwardRef<TukkiHandle, Props>(function TukkiModel({ color, s
 
   useImperativeHandle(ref, () => ({
     group: group.current,
-    animate: (walk, amount, lean, t, sideways = 0) => {
+    animate: (walk, amount, lean, t, sideways = 0, seated = false) => {
       const swing = Math.sin(walk) * 0.7 * amount;
       // 腕は基本「お腹の前で合わせる」構え。歩くとそこから前後に揺れる
       armL.current.rotation.x = -0.3 + swing * 0.35;
       armR.current.rotation.x = color === 'orange' ? -0.35 + Math.sin(t * 3) * 0.1 : -0.3 - swing * 0.35;
       armR.current.rotation.z = color === 'orange' ? 2.3 + Math.sin(t * 3) * 0.15 : -0.95;
-      legL.current.rotation.x = -swing * 0.9 * (1 - Math.abs(sideways));
-      legR.current.rotation.x = swing * 0.9 * (1 - Math.abs(sideways));
+      legL.current.rotation.x = seated ? -0.95 : -swing * 0.9 * (1 - Math.abs(sideways));
+      legR.current.rotation.x = seated ? -0.95 : swing * 0.9 * (1 - Math.abs(sideways));
       legL.current.rotation.z = 0.12 + swing * sideways * 0.65;
       legR.current.rotation.z = -0.12 - swing * sideways * 0.65;
       torso.current.rotation.z = -sideways * amount * 0.1;
