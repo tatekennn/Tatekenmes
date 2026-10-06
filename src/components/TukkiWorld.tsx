@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Stars } from '@react-three/drei';
+import { HAKI_SPOTS, WORLD_RADIUS, touchesHaki } from '@/lib/tukki-game';
 import * as THREE from 'three';
 import TukkiModel, { TUKKI_COLORS, type TukkiColor, type TukkiHandle } from './TukkiModel';
 
@@ -12,16 +12,14 @@ import TukkiModel, { TUKKI_COLORS, type TukkiColor, type TukkiHandle } from './T
 const PLAYER_COLOR: TukkiColor = 'blue';
 const BUDDIES = (Object.keys(TUKKI_COLORS) as TukkiColor[]).filter((c) => c !== PLAYER_COLOR);
 
-const WORLD_RADIUS = 70; // XZ の行動範囲
-const WORLD_HEIGHT = 45; // Y の上限
 const FLOOR_Y = 0;
 
-const MAX_SPEED = 18;
-const ACCEL = 60;
+const MAX_SPEED = 10;
+const ACCEL = 32;
 const DAMP = 6;
 
-const SKY_TOP = '#0b0a2a';
-const SKY_BOTTOM = '#2a1b5e';
+const SKY_TOP = '#70c9ee';
+const SKY_BOTTOM = '#dff4db';
 
 /* ------------------------------------------------------------------ */
 /*  入力（キーボード＋タッチ）を ref に集約し、描画ループから読む       */
@@ -29,16 +27,16 @@ const SKY_BOTTOM = '#2a1b5e';
 interface InputState {
   fwd: number; // -1..1（前後）
   side: number; // -1..1（左右）
-  vert: number; // -1..1（上下）
+  jump: boolean;
   yawDelta: number; // ドラッグによるカメラ回転の蓄積
   pitchDelta: number;
 }
 
 function useInput() {
-  const input = useRef<InputState>({ fwd: 0, side: 0, vert: 0, yawDelta: 0, pitchDelta: 0 });
+  const input = useRef<InputState>({ fwd: 0, side: 0, jump: false, yawDelta: 0, pitchDelta: 0 });
   const keys = useRef<Set<string>>(new Set());
   const stick = useRef({ x: 0, y: 0 });
-  const buttons = useRef({ up: false, down: false });
+  const jumpButton = useRef(false);
   const recompute = useRef(() => {});
 
   useEffect(() => {
@@ -46,12 +44,9 @@ function useInput() {
       const k = keys.current;
       const kf = (k.has('KeyW') || k.has('ArrowUp') ? 1 : 0) - (k.has('KeyS') || k.has('ArrowDown') ? 1 : 0);
       const ks = (k.has('KeyD') || k.has('ArrowRight') ? 1 : 0) - (k.has('KeyA') || k.has('ArrowLeft') ? 1 : 0);
-      const kv =
-        (k.has('Space') || k.has('KeyE') || buttons.current.up ? 1 : 0) -
-        (k.has('ShiftLeft') || k.has('ShiftRight') || k.has('KeyQ') || buttons.current.down ? 1 : 0);
       input.current.fwd = THREE.MathUtils.clamp(kf + -stick.current.y, -1, 1);
       input.current.side = THREE.MathUtils.clamp(ks + stick.current.x, -1, 1);
-      input.current.vert = THREE.MathUtils.clamp(kv, -1, 1);
+      input.current.jump = k.has('Space') || k.has('KeyE') || jumpButton.current;
     };
     const down = (e: KeyboardEvent) => {
       if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
@@ -64,6 +59,8 @@ function useInput() {
     };
     const blur = () => {
       keys.current.clear();
+      stick.current = { x: 0, y: 0 };
+      jumpButton.current = false;
       recompute.current();
     };
     window.addEventListener('keydown', down);
@@ -80,8 +77,8 @@ function useInput() {
     stick.current = { x, y };
     recompute.current();
   };
-  const setButton = (which: 'up' | 'down', pressed: boolean) => {
-    buttons.current[which] = pressed;
+  const setButton = (pressed: boolean) => {
+    jumpButton.current = pressed;
     recompute.current();
   };
 
@@ -99,16 +96,17 @@ function Player({
   onPose: (p: THREE.Vector3, speed: number) => void;
 }) {
   const model = useRef<TukkiHandle>(null);
-  const pos = useRef(new THREE.Vector3(0, 6, 0));
+  const pos = useRef(new THREE.Vector3(0, 0, 0));
   const vel = useRef(new THREE.Vector3());
   const walk = useRef(0);
-  const facing = useRef(0); // モデルの向き（yaw）
+  const jumpHeld = useRef(false);
+  const facing = useRef(Math.PI); // モデルの向き（yaw）
   const { camera } = useThree();
 
   // カメラの向き（yaw/pitch）はプレイヤー側で管理し、三人称で追従させる
   const yaw = useRef(0);
   const pitch = useRef(0.3);
-  const camPos = useRef(new THREE.Vector3(0, 10, 14));
+  const camPos = useRef(new THREE.Vector3(0, 5, 12));
 
   useFrame(({ clock }, dtRaw) => {
     const dt = Math.min(dtRaw, 0.05);
@@ -117,7 +115,7 @@ function Player({
 
     // ドラッグ分を消費
     yaw.current -= inp.yawDelta;
-    pitch.current = THREE.MathUtils.clamp(pitch.current + inp.pitchDelta, -0.5, 1.2);
+    pitch.current = THREE.MathUtils.clamp(pitch.current + inp.pitchDelta, 0.12, 0.85);
     inp.yawDelta = 0;
     inp.pitchDelta = 0;
 
@@ -126,14 +124,15 @@ function Player({
     const sideDir = new THREE.Vector3(-fwdDir.z, 0, fwdDir.x);
     const wish = new THREE.Vector3()
       .addScaledVector(fwdDir, inp.fwd)
-      .addScaledVector(sideDir, inp.side)
-      .add(new THREE.Vector3(0, inp.vert, 0));
+      .addScaledVector(sideDir, inp.side);
     if (wish.lengthSq() > 1) wish.normalize();
 
     // 加速と減衰（入力の無い軸だけ減衰させると操作感が素直になる）
     vel.current.addScaledVector(wish, ACCEL * dt);
     const damp = Math.exp(-DAMP * dt);
-    if (inp.vert === 0) vel.current.y *= damp;
+    if (inp.jump && !jumpHeld.current && pos.current.y <= FLOOR_Y + 0.001) vel.current.y = 9;
+    jumpHeld.current = inp.jump;
+    vel.current.y -= 24 * dt;
     if (inp.fwd === 0 && inp.side === 0) {
       vel.current.x *= damp;
       vel.current.z *= damp;
@@ -144,7 +143,6 @@ function Player({
         vel.current.z *= MAX_SPEED / h;
       }
     }
-    vel.current.y = THREE.MathUtils.clamp(vel.current.y, -MAX_SPEED, MAX_SPEED);
 
     pos.current.addScaledVector(vel.current, dt);
 
@@ -160,11 +158,6 @@ function Player({
       pos.current.y = FLOOR_Y;
       vel.current.y = Math.max(0, vel.current.y);
     }
-    if (pos.current.y > WORLD_HEIGHT) {
-      pos.current.y = WORLD_HEIGHT;
-      vel.current.y = Math.min(0, vel.current.y);
-    }
-
     // モデル更新：進行方向を向き、速度に応じて歩く・前傾する
     const hSpeed = Math.hypot(vel.current.x, vel.current.z);
     const speed = vel.current.length();
@@ -183,22 +176,21 @@ function Player({
       walk.current += dt * (4 + hSpeed * 0.7);
       const lean = THREE.MathUtils.clamp(hSpeed / MAX_SPEED, 0, 1) * 0.35 - vel.current.y * 0.012;
       m.animate(walk.current, amount, lean, t);
-      // 空中では少しふわっと浮く
-      m.group.position.y += pos.current.y > FLOOR_Y + 0.1 ? Math.sin(t * 2.5) * 0.08 : 0;
+
     }
 
     // 三人称カメラ追従
-    const dist = 13;
+    const dist = 12;
     const offset = new THREE.Vector3(
       Math.sin(yaw.current) * Math.cos(pitch.current),
       Math.sin(pitch.current),
       Math.cos(yaw.current) * Math.cos(pitch.current),
     ).multiplyScalar(dist);
-    const target = new THREE.Vector3().copy(pos.current).add(offset);
+    const target = new THREE.Vector3(pos.current.x, 1.2, pos.current.z).add(offset);
     target.y = Math.max(target.y, FLOOR_Y + 1.2);
     camPos.current.lerp(target, 1 - Math.exp(-6 * dt));
     camera.position.copy(camPos.current);
-    camera.lookAt(pos.current.x, pos.current.y + 1.8, pos.current.z);
+    camera.lookAt(pos.current.x, 1.8 + pos.current.y * 0.35, pos.current.z);
 
     onPose(pos.current, speed);
   });
@@ -207,12 +199,11 @@ function Player({
 }
 
 /* ------------------------------------------------------------------ */
-/*  仲間のツッキーくん（8色）が空間を巡回する                             */
+/*  仲間のツッキーくん（8色）が草原を歩く                             */
 /* ------------------------------------------------------------------ */
 function Buddy({ color, seed }: { color: TukkiColor; seed: number }) {
   const model = useRef<TukkiHandle>(null);
   const radius = 16 + (seed % 5) * 9;
-  const height = 2 + ((seed * 7) % 28);
   const omega = (0.1 + (seed % 3) * 0.05) * (seed % 2 === 0 ? 1 : -1);
   const phase = seed * 1.7;
 
@@ -221,8 +212,7 @@ function Buddy({ color, seed }: { color: TukkiColor; seed: number }) {
     const m = model.current;
     if (!m) return;
     const a = t * omega + phase;
-    const y = height + Math.sin(t * 0.8 + phase) * 2;
-    m.group.position.set(Math.cos(a) * radius, y, Math.sin(a) * radius);
+    m.group.position.set(Math.cos(a) * radius, 0, Math.sin(a) * radius);
     // 円周の接線方向を向く
     const vx = -Math.sin(a) * omega;
     const vz = Math.cos(a) * omega;
@@ -234,7 +224,7 @@ function Buddy({ color, seed }: { color: TukkiColor; seed: number }) {
 }
 
 /* ------------------------------------------------------------------ */
-/*  空間：床・雲・浮遊クリスタル・境界リング                              */
+/*  草原：地面・木々・雲・集める覇気                              */
 /* ------------------------------------------------------------------ */
 function Cloud({ position, scale, seed }: { position: [number, number, number]; scale: number; seed: number }) {
   const g = useRef<THREE.Group>(null!);
@@ -267,82 +257,94 @@ function Cloud({ position, scale, seed }: { position: [number, number, number]; 
   );
 }
 
-function Crystal({ position, size, hue, seed }: { position: [number, number, number]; size: number; hue: number; seed: number }) {
-  const m = useRef<THREE.Mesh>(null!);
+function HakiLabel() {
+  const texture = useMemo(() => {
+    const canvas = document.createElement('canvas'); canvas.width = 128; canvas.height = 64;
+    const context = canvas.getContext('2d')!;
+    context.font = 'bold 40px sans-serif'; context.textAlign = 'center'; context.textBaseline = 'middle';
+    context.lineWidth = 7; context.strokeStyle = '#fff6ce'; context.strokeText('覇気', 64, 32);
+    context.fillStyle = '#725123'; context.fillText('覇気', 64, 32);
+    const result = new THREE.CanvasTexture(canvas); result.colorSpace = THREE.SRGBColorSpace;
+    return result;
+  }, []);
+  useEffect(() => () => texture.dispose(), [texture]);
+  return <sprite position={[0, 1.1, 0]} scale={[1.3, 0.65, 1]}><spriteMaterial map={texture} transparent depthWrite={false} /></sprite>;
+}
+
+function Haki({ index, collected }: { index: number; collected: boolean }) {
+  const group = useRef<THREE.Group>(null!);
+  const spot = HAKI_SPOTS[index];
   useFrame(({ clock }) => {
     const t = clock.getElapsedTime();
-    m.current.rotation.y = t * 0.4 + seed;
-    m.current.rotation.x = Math.sin(t * 0.5 + seed) * 0.3;
-    m.current.position.y = position[1] + Math.sin(t * 0.9 + seed) * 0.6;
+    group.current.position.y = 1.5 + Math.sin(t * 2.5 + index) * 0.16;
+    group.current.rotation.y = t * 0.8;
   });
   return (
-    <mesh ref={m} position={position} castShadow>
-      <octahedronGeometry args={[size, 0]} />
-      <meshStandardMaterial
-        color={`hsl(${hue}, 85%, 70%)`}
-        emissive={`hsl(${hue}, 85%, 45%)`}
-        emissiveIntensity={0.9}
-        roughness={0.3}
-        flatShading
-      />
-    </mesh>
+    <group ref={group} position={[spot.x, 1.5, spot.z]} visible={!collected}>
+      <mesh>
+        <octahedronGeometry args={[0.55]} />
+        <meshStandardMaterial color="#ffd65a" emissive="#ffb52e" emissiveIntensity={0.65} roughness={0.3} />
+      </mesh>
+      <mesh rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[0.85, 0.045, 8, 32]} />
+        <meshBasicMaterial color="#ffe7a0" />
+      </mesh>
+      <HakiLabel />
+    </group>
   );
 }
 
 function World() {
-  const crystals = useMemo(
-    () =>
-      Array.from({ length: 30 }, (_, i) => {
-        const a = (i / 30) * Math.PI * 2 + (i % 3) * 0.4;
-        const r = 14 + (i % 5) * 12;
-        return {
-          pos: [Math.cos(a) * r, 2 + ((i * 5) % (WORLD_HEIGHT - 4)), Math.sin(a) * r] as [number, number, number],
-          size: 0.7 + (i % 3) * 0.45,
-          hue: (i * 37) % 360,
-        };
-      }),
-    [],
-  );
-  const clouds = useMemo(
-    () =>
-      Array.from({ length: 14 }, (_, i) => {
-        const a = (i / 14) * Math.PI * 2 + 0.3;
-        const r = 22 + (i % 4) * 14;
-        return {
-          pos: [Math.cos(a) * r, 6 + ((i * 9) % 32), Math.sin(a) * r] as [number, number, number],
-          scale: 1 + (i % 3) * 0.5,
-        };
-      }),
-    [],
-  );
   return (
     <>
-      {/* 床 */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, FLOOR_Y - 0.01, 0]} receiveShadow>
-        <circleGeometry args={[WORLD_RADIUS + 6, 96]} />
-        <meshStandardMaterial color="#1a1444" roughness={1} />
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, 0]} receiveShadow>
+        <planeGeometry args={[600, 600]} />
+        <meshStandardMaterial color="#79c85d" roughness={1} />
       </mesh>
-      <gridHelper args={[WORLD_RADIUS * 2, 40, '#6b4fd6', '#2f2470']} position={[0, FLOOR_Y, 0]} />
-      {/* 床のリング模様 */}
-      {[10, 25, 40, 55].map((rr) => (
-        <mesh key={rr} rotation={[-Math.PI / 2, 0, 0]} position={[0, FLOOR_Y + 0.02, 0]}>
-          <ringGeometry args={[rr - 0.1, rr + 0.1, 96]} />
-          <meshBasicMaterial color="#8d78ff" transparent opacity={0.25} />
-        </mesh>
+      {/* 土の広場と歩きやすい小道 */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.005, 0]} receiveShadow>
+        <circleGeometry args={[7, 64]} />
+        <meshStandardMaterial color="#ead7a3" />
+      </mesh>
+      {[0, Math.PI / 3, -Math.PI / 3].map((angle, index) => (
+        <group key={angle} rotation={[0, angle, 0]}>
+          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.008 + index * 0.004, 0]} receiveShadow>
+            <planeGeometry args={[4, WORLD_RADIUS * 2]} />
+            <meshStandardMaterial color="#dfcd9b" />
+          </mesh>
+        </group>
       ))}
-      {/* 行動範囲の境界 */}
-      {[0.25, 0.5, 0.75, 1].map((f) => (
-        <mesh key={f} position={[0, WORLD_HEIGHT * f, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[WORLD_RADIUS - 0.15, WORLD_RADIUS, 96]} />
-          <meshBasicMaterial color="#7c5cff" transparent opacity={0.3} side={THREE.DoubleSide} />
-        </mesh>
-      ))}
-      {crystals.map((c, i) => (
-        <Crystal key={i} position={c.pos} size={c.size} hue={c.hue} seed={i} />
-      ))}
-      {clouds.map((c, i) => (
-        <Cloud key={i} position={c.pos} scale={c.scale} seed={i} />
-      ))}
+      {Array.from({ length: 12 }, (_, i) => {
+        const angle = i / 12 * Math.PI * 2;
+        return <mesh key={`hill-${i}`} position={[Math.cos(angle) * 120, -5, Math.sin(angle) * 120]} scale={[30, 16 + i % 3 * 5, 24]}>
+          <sphereGeometry args={[1, 24, 16]} /><meshStandardMaterial color={i % 2 ? '#a1c985' : '#88b980'} roughness={1} />
+        </mesh>;
+      })}
+      {Array.from({ length: 42 }, (_, i) => {
+        const angle = i * 2.39996;
+        const radius = 64 + (i % 4) * 9;
+        return (
+          <group key={i} position={[Math.cos(angle) * radius, 0, Math.sin(angle) * radius]}>
+            <mesh position={[0, 2, 0]} castShadow>
+              <cylinderGeometry args={[0.35, 0.55, 4, 8]} /><meshStandardMaterial color="#957047" />
+            </mesh>
+            <mesh position={[0, 5, 0]} castShadow>
+              <sphereGeometry args={[2.8, 12, 10]} /><meshStandardMaterial color={i % 2 ? '#579e61' : '#70ad61'} />
+            </mesh>
+          </group>
+        );
+      })}
+      {Array.from({ length: 60 }, (_, i) => {
+        const angle = i * 2.39996, radius = 9 + (i % 7) * 7;
+        return <mesh key={i} position={[Math.cos(angle) * radius, 0.15, Math.sin(angle) * radius]}>
+          <sphereGeometry args={[0.25, 8, 6]} /><meshStandardMaterial color={['#fff0a1', '#fff5ec', '#f5b3bd'][i % 3]} />
+        </mesh>;
+      })}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.025, 0]}>
+        <ringGeometry args={[WORLD_RADIUS - 0.15, WORLD_RADIUS + 0.15, 128]} />
+        <meshBasicMaterial color="#f3e5b5" transparent opacity={0.7} />
+      </mesh>
+      {Array.from({ length: 8 }, (_, i) => <Cloud key={i} position={[(i - 4) * 24, 32 + (i % 3) * 4, -65]} scale={1.8} seed={i} />)}
     </>
   );
 }
@@ -366,7 +368,7 @@ function Sky() {
   return (
     <mesh>
       <sphereGeometry args={[300, 32, 16]} />
-      <meshBasicMaterial map={tex} side={THREE.BackSide} fog={false} />
+      <meshBasicMaterial map={tex} side={THREE.BackSide} fog={false} toneMapped={false} />
     </mesh>
   );
 }
@@ -383,7 +385,7 @@ function FollowLight({ target }: { target: React.MutableRefObject<THREE.Vector3>
   return (
     <directionalLight
       ref={light}
-      intensity={2.2}
+      intensity={1.6}
       color="#fff4e0"
       castShadow
       shadow-mapSize={[2048, 2048]}
@@ -403,18 +405,34 @@ function FollowLight({ target }: { target: React.MutableRefObject<THREE.Vector3>
 /* ------------------------------------------------------------------ */
 export default function TukkiWorld() {
   const { input, setStick, setButton } = useInput();
-  const [hud, setHud] = useState({ x: 0, y: 6, z: 0, speed: 0 });
+  const [collected, setCollected] = useState<Set<number>>(() => new Set());
+  const found = useRef(new Set<number>());
+  const previous = useRef(new THREE.Vector3());
+  const [message, setMessage] = useState('黄金の覇気に近づいて集めよう！');
+  const [round, setRound] = useState(0);
+  const [mapPos, setMapPos] = useState({ x: 0, z: 0 });
+  const mapFrame = useRef(0);
   const [showHelp, setShowHelp] = useState(true);
-  const hudTimer = useRef(0);
-  const playerPos = useRef(new THREE.Vector3(0, 6, 0));
+  const playerPos = useRef(new THREE.Vector3(0, 0, 0));
   const drag = useRef<{ id: number; x: number; y: number } | null>(null);
   const stickRef = useRef<{ id: number; ox: number; oy: number } | null>(null);
   const [stickUi, setStickUi] = useState<{ x: number; y: number; dx: number; dy: number } | null>(null);
 
   const onPose = (p: THREE.Vector3, speed: number) => {
     playerPos.current.copy(p);
-    hudTimer.current += 1;
-    if (hudTimer.current % 6 === 0) setHud({ x: p.x, y: p.y, z: p.z, speed });
+    if (++mapFrame.current % 10 === 0) setMapPos({ x: p.x, z: p.z });
+    let changed = false;
+    HAKI_SPOTS.forEach((spot, index) => {
+      if (!found.current.has(index) && touchesHaki(previous.current.x, previous.current.z, p.x, p.z, spot.x, spot.z)) {
+        found.current.add(index);
+        changed = true;
+      }
+    });
+    previous.current.copy(p);
+    if (changed) {
+      setCollected(new Set(found.current));
+      setMessage(found.current.size === HAKI_SPOTS.length ? 'ぜんぶ集めた！ 覇気マスター！' : '覇気をゲット！');
+    }
     if (speed > 2 && showHelp) setShowHelp(false);
   };
 
@@ -466,56 +484,60 @@ export default function TukkiWorld() {
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerUp}
     >
-      <Canvas shadows camera={{ position: [0, 10, 14], fov: 55, near: 0.1, far: 500 }} dpr={[1, 2]}>
-        <fog attach="fog" args={[SKY_BOTTOM, 70, 200]} />
+      <style>{`@media (max-width: 600px) { .tukki-help { bottom: 132px !important; font-size: 12px !important; } }`}</style>
+      <Canvas shadows camera={{ position: [0, 5, 12], fov: 55, near: 0.1, far: 500 }} dpr={[1, 2]}>
+        <fog attach="fog" args={[SKY_BOTTOM, 65, 150]} />
         <Sky />
-        <hemisphereLight args={['#cfd8ff', '#3b2a7a', 0.9]} />
+        <hemisphereLight args={['#fff8e4', '#6c9552', 1.2]} />
         <ambientLight intensity={0.35} />
         <FollowLight target={playerPos} />
-        <Stars radius={200} depth={80} count={4000} factor={5} fade speed={0.5} />
         <World />
-        <Player input={input} onPose={onPose} />
+        <Player key={round} input={input} onPose={onPose} />
+        {HAKI_SPOTS.map((_, i) => <Haki key={i} index={i} collected={collected.has(i)} />)}
         {BUDDIES.map((c, i) => (
           <Buddy key={c} color={c} seed={i + 1} />
         ))}
       </Canvas>
 
-      {/* HUD */}
       <div style={hudStyle}>
-        <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: 2 }}>tukki.覇気.com</div>
-        <div style={{ opacity: 0.8, fontSize: 13, marginTop: 4 }}>
-          x {hud.x.toFixed(1)} / y {hud.y.toFixed(1)} / z {hud.z.toFixed(1)} · 速度 {hud.speed.toFixed(1)}
+        <div style={{ fontSize: 13, letterSpacing: 2 }}>ツッキーくんの覇気あつめ</div>
+        <div style={{ fontSize: 28, fontWeight: 800, marginTop: 4 }}>覇気 {collected.size} / {HAKI_SPOTS.length}</div>
+        <div role="progressbar" aria-label="集めた覇気" aria-valuemin={0} aria-valuemax={HAKI_SPOTS.length} aria-valuenow={collected.size}
+          style={{ height: 7, background: '#d8dfc7', borderRadius: 8, marginTop: 8 }}>
+          <div style={{ width: `${collected.size / HAKI_SPOTS.length * 100}%`, height: '100%', background: '#efb838', borderRadius: 8 }} />
         </div>
+        <div role="status" style={{ fontSize: 13, marginTop: 8 }}>{message}</div>
       </div>
 
-      {showHelp && (
-        <div style={helpStyle}>
-          <div style={{ fontWeight: 700, marginBottom: 6 }}>ツッキーくんを動かそう</div>
-          <div>WASD / 矢印: 前後左右</div>
-          <div>Space / E: 上昇　Shift / Q: 下降</div>
-          <div>ドラッグ: カメラ回転</div>
-          <div style={{ marginTop: 6, opacity: 0.7 }}>スマホ: 左半分スティック・右半分ドラッグ・右下ボタンで上下</div>
-        </div>
-      )}
+      {showHelp && <div className="tukki-help" style={helpStyle}>
+        <div style={{ fontWeight: 700, marginBottom: 6 }}>草原に散らばった32個の覇気を探そう</div>
+        <div>WASD / 矢印で歩く · Space / Eでジャンプ · ドラッグで見回す</div>
+        <div style={{ fontSize: 12, marginTop: 5 }}>スマホ：左半分で歩く・右半分で見回す</div>
+      </div>}
 
-      {/* 上下ボタン（タッチ用） */}
-      <div style={{ position: 'absolute', right: 16, bottom: 24, display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {(['up', 'down'] as const).map((which) => (
-          <button
-            key={which}
-            style={btnStyle}
-            onPointerDown={(e) => {
-              e.stopPropagation();
-              setButton(which, true);
-            }}
-            onPointerUp={() => setButton(which, false)}
-            onPointerCancel={() => setButton(which, false)}
-            onPointerLeave={() => setButton(which, false)}
-            aria-label={which === 'up' ? '上昇' : '下降'}
-          >
-            {which === 'up' ? '▲' : '▼'}
-          </button>
-        ))}
+      {collected.size === HAKI_SPOTS.length && <div className="tukki-help" style={{ ...helpStyle, pointerEvents: 'auto' }}>
+        <div style={{ fontSize: 24, fontWeight: 800 }}>覇気マスター！</div>
+        <div>草原の覇気をすべて集めたよ！</div>
+        <button onPointerDown={(e) => e.stopPropagation()} onClick={() => {
+          found.current.clear(); setCollected(new Set()); previous.current.set(0, 0, 0);
+          playerPos.current.set(0, 0, 0); setStick(0, 0); setButton(false);
+          stickRef.current = null; setStickUi(null); drag.current = null;
+          setMessage('もう一度、覇気を集めよう！'); setShowHelp(true); setRound((r) => r + 1);
+        }} style={{ marginTop: 12, padding: '10px 20px', borderRadius: 20, border: 0, background: '#f8cf62', color: '#52401c', fontWeight: 700, cursor: 'pointer' }}>もう一度あそぶ</button>
+      </div>}
+
+      <button style={{ ...btnStyle, position: 'absolute', right: 20, bottom: 24 }}
+        onPointerDown={(e) => { e.stopPropagation(); e.currentTarget.setPointerCapture(e.pointerId); setButton(true); }}
+        onPointerUp={(e) => { e.stopPropagation(); setButton(false); }}
+        onPointerCancel={() => setButton(false)} onLostPointerCapture={() => setButton(false)} aria-label="ジャンプ">ジャンプ</button>
+
+      <div style={{ position: 'absolute', bottom: 20, left: 16, pointerEvents: 'none', width: 'clamp(100px, 15vw, 150px)' }}>
+        <svg viewBox="-64 -64 128 128" role="img" aria-label="覇気の地図。金色の点が残りの覇気、青い点がツッキーくん" style={{ width: '100%', display: 'block', background: 'rgba(255,253,239,.88)', borderRadius: '50%', boxShadow: '0 3px 14px #48653522' }}>
+          <circle r={WORLD_RADIUS} fill="#d6e5bd" stroke="#91aa70" strokeWidth="1" />
+          <path d="M0 -58V58M-50 -29L50 29M-50 29L50 -29" stroke="#f5e5b9" strokeWidth="4" />
+          {HAKI_SPOTS.map((spot, i) => !collected.has(i) && <circle key={i} cx={spot.x} cy={spot.z} r="2.3" fill="#eab029" stroke="#9d741c" strokeWidth="0.5" />)}
+          <circle cx={mapPos.x} cy={mapPos.z} r="3.5" fill="#409ed2" stroke="white" strokeWidth="1.5" />
+        </svg>
       </div>
 
       {/* 仮想スティック表示 */}
@@ -533,9 +555,11 @@ const hudStyle: React.CSSProperties = {
   position: 'absolute',
   top: 16,
   left: 16,
-  color: '#f7f1df',
+  color: '#43532e',
   fontFamily: 'ui-sans-serif, system-ui, sans-serif',
-  textShadow: '0 1px 6px rgba(0,0,0,.8)',
+  background: 'rgba(255, 253, 239, .93)',
+  padding: '16px 20px', borderRadius: 20, minWidth: 210,
+  boxShadow: '0 4px 20px rgba(57,80,35,.12)',
   pointerEvents: 'none',
 };
 
@@ -544,27 +568,29 @@ const helpStyle: React.CSSProperties = {
   left: '50%',
   bottom: 32,
   transform: 'translateX(-50%)',
-  background: 'rgba(10, 8, 30, .75)',
-  border: '1px solid rgba(124, 92, 255, .5)',
+  background: 'rgba(255, 253, 239, .94)',
+  border: '1px solid rgba(130, 157, 93, .3)',
   borderRadius: 12,
   padding: '12px 18px',
-  color: '#f7f1df',
+  color: '#43532e',
   fontFamily: 'ui-sans-serif, system-ui, sans-serif',
   fontSize: 14,
   lineHeight: 1.6,
   pointerEvents: 'none',
   textAlign: 'center',
-  maxWidth: '90vw',
+  width: 'min(88vw, 560px)',
+  boxSizing: 'border-box',
 };
 
 const btnStyle: React.CSSProperties = {
-  width: 64,
-  height: 64,
+  width: 82,
+  height: 82,
   borderRadius: '50%',
   border: '1px solid rgba(124, 92, 255, .6)',
-  background: 'rgba(10, 8, 30, .6)',
-  color: '#f7f1df',
-  fontSize: 24,
+  background: '#ffe09a',
+  color: '#43532e',
+  fontSize: 14,
+  fontWeight: 700,
   touchAction: 'none',
   cursor: 'pointer',
 };
