@@ -92,7 +92,15 @@ function RaceScene({ input, game, onUpdate, playerPos, running }: {
   const yaw = useRef(0), pitch = useRef(0.3);
   const camPos = useRef(new THREE.Vector3(0, 5, 12));
   const hudTime = useRef(0);
-  const { camera } = useThree();
+  const { camera, size } = useThree();
+  const portrait = size.width / size.height < 0.85;
+  const compactView = size.width <= 600 || size.height <= 500;
+  useEffect(() => {
+    if (camera instanceof THREE.PerspectiveCamera) {
+      camera.fov = portrait ? 68 : compactView ? 60 : 55;
+      camera.updateProjectionMatrix();
+    }
+  }, [camera, portrait, compactView]);
   useFrame((_, dt) => {
     if (document.hidden) return;
     const inp = input.current;
@@ -106,12 +114,12 @@ function RaceScene({ input, game, onUpdate, playerPos, running }: {
     });
     const player = game.actors[0], floor = groundHeight(player.x, player.z);
     playerPos.current.set(player.x, player.y, player.z);
-    const offset = new THREE.Vector3(Math.sin(yaw.current) * Math.cos(pitch.current), Math.sin(pitch.current), Math.cos(yaw.current) * Math.cos(pitch.current)).multiplyScalar(12);
+    const offset = new THREE.Vector3(Math.sin(yaw.current) * Math.cos(pitch.current), Math.sin(pitch.current), Math.cos(yaw.current) * Math.cos(pitch.current)).multiplyScalar(portrait ? 18 : compactView ? 14 : 12);
     const target = new THREE.Vector3(player.x, floor + 1.2, player.z).add(offset);
     target.y = Math.max(target.y, groundHeight(target.x, target.z) + 1.2);
     camPos.current.lerp(target, 1 - Math.exp(-6 * Math.min(dt, 0.1)));
     camera.position.copy(camPos.current);
-    camera.lookAt(player.x, floor + 1.8 + (player.y - floor) * 0.35, player.z);
+    camera.lookAt(player.x, floor + (portrait ? 3 : 1.8) + (player.y - floor) * 0.35, player.z);
     hudTime.current += dt;
     if (hudTime.current >= 0.1) { hudTime.current = 0; onUpdate(game); }
   }, -1);
@@ -370,7 +378,19 @@ export default function TukkiWorld() {
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerUp}
     >
-      <style>{`@media (max-width: 600px) { .tukki-ranking { top: 184px !important; padding: 8px 10px !important; min-width: 114px !important; } .tukki-help { display: none !important; } }`}</style>
+      <style>{`
+        @media (max-width: 600px), (max-height: 500px), (pointer: coarse) {
+          .tukki-desktop-controls, .tukki-ranking, .tukki-help, .tukki-hud-title, .tukki-refill, .tukki-pause-label { display: none !important; }
+          .tukki-hud { top: max(12px, env(safe-area-inset-top)) !important; left: 12px !important; min-width: 0 !important; padding: 9px 12px !important; border-radius: 14px !important; }
+          .tukki-score { font-size: 20px !important; margin-top: 0 !important; }
+          .tukki-status-idle { display: none !important; }
+          .tukki-pause { top: max(12px, env(safe-area-inset-top)) !important; right: 12px !important; bottom: auto !important; width: 44px; height: 44px; padding: 0 !important; font-size: 22px; }
+          .tukki-pause-icon { display: inline !important; }
+          .tukki-map { bottom: max(12px, env(safe-area-inset-bottom)) !important; left: 12px !important; }
+          .tukki-jump { bottom: max(22px, env(safe-area-inset-bottom)) !important; right: 16px !important; width: 68px !important; height: 68px !important; padding: 0 !important; font-size: 12px !important; white-space: nowrap; }
+        }
+        @media (max-height: 500px) { .tukki-map { width: 136px !important; } }
+      `}</style>
       <Canvas shadows camera={{ position: [0, 5, 12], fov: 55, near: 0.1, far: 500 }} dpr={[1, 2]}>
         <fog attach="fog" args={[SKY_BOTTOM, 65, 150]} />
         <Sky />
@@ -382,12 +402,12 @@ export default function TukkiWorld() {
       </Canvas>
 
       <div style={{ display: phase === 'playing' ? 'contents' : 'none' }}>
-      <div style={hudStyle}>
-        <div style={{ fontSize: 13, letterSpacing: 1 }}>ツッキーくんの覇気レース</div>
-        <div style={{ fontSize: 27, fontWeight: 800, marginTop: 4 }}>あなたの覇気 {hud.actors[0].score}</div>
+      <div className="tukki-hud" style={hudStyle}>
+        <div className="tukki-hud-title" style={{ fontSize: 13, letterSpacing: 1 }}>ツッキーくんの覇気レース</div>
+        <div className="tukki-score" style={{ fontSize: 27, fontWeight: 800, marginTop: 4 }}>あなたの覇気 {hud.actors[0].score}</div>
         <div style={{ fontSize: 13, marginTop: 5 }}>{rank}位 / 9人 · 地面に {hud.active.filter(Boolean).length}個</div>
-        <div style={{ fontSize: 12, marginTop: 5 }}>あと{hud.refillIn}秒で覇気を補充（最大{REFILL_AMOUNT}個）</div>
-        <div role="status" style={{ fontSize: 12, marginTop: 6, color: hud.playerStopped ? '#b86622' : '#59733d' }}>
+        <div className="tukki-refill" style={{ fontSize: 12, marginTop: 5 }}>あと{hud.refillIn}秒で覇気を補充（最大{REFILL_AMOUNT}個）</div>
+        <div role="status" className={hud.playerStopped ? undefined : 'tukki-status-idle'} style={{ fontSize: 12, marginTop: 6, color: hud.playerStopped ? '#b86622' : '#59733d' }}>
           {hud.playerStopped ? 'ぶつかった！ ちょっとひと休み' : '早い者勝ち！ 仲間より先に集めよう'}
         </div>
       </div>
@@ -410,7 +430,7 @@ export default function TukkiWorld() {
         <div style={{ fontSize: 12 }}>スマホ：左半分で歩く・右半分で見回す</div>
       </div>}
 
-      <div aria-label="移動操作" style={{ position: 'absolute', left: 22, bottom: 268, display: 'grid', gridTemplateColumns: 'repeat(3, 40px)', gap: 4 }}>
+      <div className="tukki-desktop-controls" aria-label="移動操作" style={{ position: 'absolute', left: 22, bottom: 268, display: 'grid', gridTemplateColumns: 'repeat(3, 40px)', gap: 4 }}>
         {([
           ['前に歩く', '↑', 0, -1, 2, 1], ['左に歩く', '←', -1, 0, 1, 2],
           ['後ろに歩く', '↓', 0, 1, 2, 2], ['右に歩く', '→', 1, 0, 3, 2],
@@ -420,9 +440,9 @@ export default function TukkiWorld() {
           onPointerCancel={() => setStick(0, 0)} onLostPointerCapture={() => setStick(0, 0)}
           style={{ gridColumn: column, gridRow: row, height: 40, borderRadius: 12, border: '1px solid #bdd0a0', background: '#fffbea', color: '#43532e', fontSize: 22, touchAction: 'none' }}>{icon}</button>)}
       </div>
-      <button onPointerDown={(e) => e.stopPropagation()} onClick={() => { setStick(0, 0); setButton(false); setPhase('instructions'); }}
-        style={{ position: 'absolute', right: 20, bottom: 210, border: '1px solid #bdd0a0', borderRadius: 20, background: '#fffbea', color: '#43532e', padding: '8px 13px', cursor: 'pointer' }}>遊び方 / 一時停止</button>
-      <div aria-label="視点操作" style={{ position: 'absolute', right: 20, bottom: 164, display: 'flex', gap: 6 }} onPointerDown={(e) => e.stopPropagation()}>
+      <button className="tukki-pause" aria-label="遊び方 / 一時停止" onPointerDown={(e) => e.stopPropagation()} onClick={() => { setStick(0, 0); setButton(false); setPhase('instructions'); }}
+        style={{ position: 'absolute', right: 20, bottom: 210, border: '1px solid #bdd0a0', borderRadius: 20, background: '#fffbea', color: '#43532e', padding: '8px 13px', cursor: 'pointer' }}><span className="tukki-pause-label">遊び方 / 一時停止</span><span className="tukki-pause-icon" style={{ display: 'none' }}>Ⅱ</span></button>
+      <div className="tukki-desktop-controls" aria-label="視点操作" style={{ position: 'absolute', right: 20, bottom: 164, display: 'flex', gap: 6 }} onPointerDown={(e) => e.stopPropagation()}>
         {([
           ['左を見る', '↶', -Math.PI / 6, 0], ['右を見る', '↷', Math.PI / 6, 0],
           ['上を見る', '↑', 0, -0.12], ['下を見る', '↓', 0, 0.12],
@@ -430,14 +450,14 @@ export default function TukkiWorld() {
           onClick={() => { input.current.yawDelta += yaw; input.current.pitchDelta += pitch; }}
           style={{ width: 38, height: 38, borderRadius: 12, border: '1px solid #bdd0a0', background: '#fffbea', color: '#43532e', fontSize: 22, cursor: 'pointer' }}>{icon}</button>)}
       </div>
-      <button onPointerDown={(e) => e.stopPropagation()} onClick={reset} style={{ position: 'absolute', right: 20, bottom: 120, padding: '8px 13px', borderRadius: 20, background: '#fffbea', border: '1px solid #bdd0a0', color: '#43532e', fontSize: 12, cursor: 'pointer' }}>やり直す</button>
+      <button className="tukki-desktop-controls" onPointerDown={(e) => e.stopPropagation()} onClick={reset} style={{ position: 'absolute', right: 20, bottom: 120, padding: '8px 13px', borderRadius: 20, background: '#fffbea', border: '1px solid #bdd0a0', color: '#43532e', fontSize: 12, cursor: 'pointer' }}>やり直す</button>
 
-      <button style={{ ...btnStyle, position: 'absolute', right: 20, bottom: 24 }}
+      <button className="tukki-jump" style={{ ...btnStyle, position: 'absolute', right: 20, bottom: 24 }}
         onPointerDown={(e) => { e.stopPropagation(); e.currentTarget.setPointerCapture(e.pointerId); setButton(true); }}
         onPointerUp={(e) => { e.stopPropagation(); setButton(false); }}
         onPointerCancel={() => setButton(false)} onLostPointerCapture={() => setButton(false)} aria-label="ジャンプ">ジャンプ</button>
 
-      <div style={{ position: 'absolute', bottom: 16, left: 16, pointerEvents: 'none', width: 'clamp(164px, 17vw, 190px)', background: '#fffbea', padding: 8, boxSizing: 'border-box', borderRadius: 18, boxShadow: '0 3px 14px #48653533', color: '#43532e', fontFamily: 'system-ui, sans-serif' }}>
+      <div className="tukki-map" style={{ position: 'absolute', bottom: 16, left: 16, pointerEvents: 'none', width: 'clamp(164px, 17vw, 190px)', background: '#fffbea', padding: 8, boxSizing: 'border-box', borderRadius: 18, boxShadow: '0 3px 14px #48653533', color: '#43532e', fontFamily: 'system-ui, sans-serif' }}>
         <div style={{ fontSize: 12, fontWeight: 800, marginBottom: 4 }}>覇気マップ <span style={{ float: 'right', fontSize: 10 }}>↑ 北</span></div>
         <svg viewBox="-64 -64 128 128" role="img" aria-label="覇気マップ。金色のひし形が覇気、青い矢印があなた、小さな丸が仲間。点線は最寄りの覇気" style={{ width: '100%', display: 'block', background: '#dceacb', borderRadius: '50%' }}>
           <circle r={WORLD_RADIUS} fill="#d6e5bd" stroke="#91aa70" strokeWidth="1" />
@@ -481,10 +501,15 @@ export default function TukkiWorld() {
             <strong>操作方法</strong><br />
             <span>PC：WASD / 矢印で移動、Space / Eでジャンプ。ドラッグで見回す。</span><br />
             <span>スマホ：左側をドラッグして移動、右側で見回す。ジャンプは右下のボタン。</span><br />
-            <span style={{ color: '#71814f', fontSize: 12 }}>画面の矢印ボタンでも移動・視点変更ができます。</span>
+            <span className="tukki-desktop-controls" style={{ color: '#71814f', fontSize: 12 }}>画面の矢印ボタンでも移動・視点変更ができます。</span>
           </div>
+          {phase === 'instructions' && <div style={{ marginBottom: 18, fontSize: 13 }}>
+            <strong>現在の順位：{rank}位 / 9人</strong>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '5px 12px', marginTop: 8 }}>{ranking.map((racer, i) => <span key={racer.color}>{i + 1}. {racer.name}　{racer.score}</span>)}</div>
+          </div>}
           <button autoFocus onClick={() => { if (phase === 'instructions') setPhase('playing'); else { setCountdown(3); setPhase('countdown'); } }}
             style={{ width: '100%', border: 0, borderRadius: 16, padding: '16px 20px', background: '#e7b839', color: '#493611', fontSize: 19, fontWeight: 800, cursor: 'pointer', boxShadow: '0 4px 0 #b58b22' }}>{phase === 'instructions' ? 'レースに戻る' : 'ゲームスタート'}</button>
+          {phase === 'instructions' && <button onClick={reset} style={{ display: 'block', margin: '16px auto 0', border: 0, background: 'transparent', color: '#59733d', textDecoration: 'underline', cursor: 'pointer', padding: 8 }}>最初からやり直す</button>}
         </section>
       </div>}
       {phase === 'countdown' && <div role="status" aria-live="assertive" style={{ position: 'absolute', inset: 0, zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#244d3933', pointerEvents: 'auto', color: '#fffbea', textAlign: 'center', fontFamily: 'system-ui, sans-serif', textShadow: '0 5px 0 #486535' }}>
