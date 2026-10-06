@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "test:tukki": "node --test scripts/test-tukki-race.cjs"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",

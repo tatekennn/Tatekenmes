@@ -2,21 +2,15 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { HAKI_SPOTS, WORLD_RADIUS, touchesHaki, groundHeight, TREE_SPOTS } from '@/lib/tukki-game';
+import { HAKI_SPOTS, WORLD_RADIUS, groundHeight } from '@/lib/tukki-game';
+import { createRace, stepRace, raceSnapshot, RACERS, REFILL_AMOUNT, REFILL_SECONDS, type Race } from '@/lib/tukki-race';
 import * as THREE from 'three';
 import TukkiLandscape from './TukkiLandscape';
-import TukkiModel, { TUKKI_COLORS, type TukkiColor, type TukkiHandle } from './TukkiModel';
+import TukkiModel, { TUKKI_COLORS, type TukkiHandle } from './TukkiModel';
 
 /* ------------------------------------------------------------------ */
 /*  定数                                                               */
 /* ------------------------------------------------------------------ */
-const PLAYER_COLOR: TukkiColor = 'blue';
-const BUDDIES = (Object.keys(TUKKI_COLORS) as TukkiColor[]).filter((c) => c !== PLAYER_COLOR);
-
-
-const MAX_SPEED = 10;
-const ACCEL = 32;
-const DAMP = 6;
 
 const SKY_TOP = '#70c9ee';
 const SKY_BOTTOM = '#dff4db';
@@ -88,150 +82,60 @@ function useInput() {
 /* ------------------------------------------------------------------ */
 /*  プレイヤー                                                         */
 /* ------------------------------------------------------------------ */
-function Player({
-  input,
-  onPose,
-}: {
-  input: React.MutableRefObject<InputState>;
-  onPose: (p: THREE.Vector3, speed: number) => void;
+function RaceScene({ input, game, onUpdate, playerPos }: {
+  input: React.MutableRefObject<InputState>; game: Race;
+  onUpdate: (game: Race) => void; playerPos: React.MutableRefObject<THREE.Vector3>;
 }) {
-  const model = useRef<TukkiHandle>(null);
-  const pos = useRef(new THREE.Vector3(0, 0, 0));
-  const vel = useRef(new THREE.Vector3());
-  const walk = useRef(0);
-  const jumpHeld = useRef(false);
-  const facing = useRef(Math.PI); // モデルの向き（yaw）
-  const { camera } = useThree();
-
-  // カメラの向き（yaw/pitch）はプレイヤー側で管理し、三人称で追従させる
-  const yaw = useRef(0);
-  const pitch = useRef(0.3);
+  const yaw = useRef(0), pitch = useRef(0.3);
   const camPos = useRef(new THREE.Vector3(0, 5, 12));
-
-  useFrame(({ clock }, dtRaw) => {
-    const dt = Math.min(dtRaw, 0.05);
+  const hudTime = useRef(0);
+  const { camera } = useThree();
+  useFrame((_, dt) => {
+    if (document.hidden) return;
     const inp = input.current;
-    const t = clock.getElapsedTime();
-
-    // ドラッグ分を消費
     yaw.current -= inp.yawDelta;
     pitch.current = THREE.MathUtils.clamp(pitch.current + inp.pitchDelta, 0.12, 0.85);
-    inp.yawDelta = 0;
-    inp.pitchDelta = 0;
-
-    // カメラの yaw に相対した移動方向（水平面）。カメラは +sin/+cos 側に居るので前方はその逆
-    const fwdDir = new THREE.Vector3(-Math.sin(yaw.current), 0, -Math.cos(yaw.current));
-    const sideDir = new THREE.Vector3(-fwdDir.z, 0, fwdDir.x);
-    const wish = new THREE.Vector3()
-      .addScaledVector(fwdDir, inp.fwd)
-      .addScaledVector(sideDir, inp.side);
-    if (wish.lengthSq() > 1) wish.normalize();
-
-    // 加速と減衰（入力の無い軸だけ減衰させると操作感が素直になる）
-    vel.current.addScaledVector(wish, ACCEL * dt);
-    const damp = Math.exp(-DAMP * dt);
-    if (inp.jump && !jumpHeld.current && pos.current.y <= groundHeight(pos.current.x, pos.current.z) + 0.001) vel.current.y = 9;
-    jumpHeld.current = inp.jump;
-    vel.current.y -= 24 * dt;
-    if (inp.fwd === 0 && inp.side === 0) {
-      vel.current.x *= damp;
-      vel.current.z *= damp;
-    } else {
-      const h = Math.hypot(vel.current.x, vel.current.z);
-      if (h > MAX_SPEED) {
-        vel.current.x *= MAX_SPEED / h;
-        vel.current.z *= MAX_SPEED / h;
-      }
-    }
-
-    pos.current.addScaledVector(vel.current, dt);
-
-    // 行動範囲の端で跳ね返す
-    const r = Math.hypot(pos.current.x, pos.current.z);
-    if (r > WORLD_RADIUS) {
-      pos.current.x *= WORLD_RADIUS / r;
-      pos.current.z *= WORLD_RADIUS / r;
-      vel.current.x *= -0.4;
-      vel.current.z *= -0.4;
-    }
-    for (const tree of TREE_SPOTS) {
-      const dx = pos.current.x - tree.x, dz = pos.current.z - tree.z;
-      const distance = Math.hypot(dx, dz);
-      if (distance < 1.35) {
-        const safeDistance = distance || 1;
-        pos.current.x = tree.x + (distance ? dx / safeDistance : 1) * 1.35;
-        pos.current.z = tree.z + (distance ? dz / safeDistance : 0) * 1.35;
-      }
-    }
-    const floor = groundHeight(pos.current.x, pos.current.z);
-    if (pos.current.y < floor) {
-      pos.current.y = floor;
-      vel.current.y = Math.max(0, vel.current.y);
-    }
-    // モデル更新：進行方向を向き、速度に応じて歩く・前傾する
-    const hSpeed = Math.hypot(vel.current.x, vel.current.z);
-    const speed = vel.current.length();
-    const m = model.current;
-    if (m) {
-      m.group.position.copy(pos.current);
-      if (hSpeed > 0.5) {
-        const targetYaw = Math.atan2(vel.current.x, vel.current.z);
-        // 最短方向で回す
-        let d = targetYaw - facing.current;
-        d = Math.atan2(Math.sin(d), Math.cos(d));
-        facing.current += d * Math.min(1, 12 * dt);
-      }
-      m.group.rotation.y = facing.current;
-      const amount = THREE.MathUtils.clamp(hSpeed / 8, 0, 1);
-      walk.current += dt * (4 + hSpeed * 0.7);
-      const lean = THREE.MathUtils.clamp(hSpeed / MAX_SPEED, 0, 1) * 0.35 - vel.current.y * 0.012;
-      m.animate(walk.current, amount, lean, t);
-
-    }
-
-    // 三人称カメラ追従
-    const dist = 12;
-    const offset = new THREE.Vector3(
-      Math.sin(yaw.current) * Math.cos(pitch.current),
-      Math.sin(pitch.current),
-      Math.cos(yaw.current) * Math.cos(pitch.current),
-    ).multiplyScalar(dist);
-    const target = new THREE.Vector3(pos.current.x, floor + 1.2, pos.current.z).add(offset);
+    inp.yawDelta = inp.pitchDelta = 0;
+    stepRace(game, dt, {
+      x: -Math.sin(yaw.current) * inp.fwd + Math.cos(yaw.current) * inp.side,
+      z: -Math.cos(yaw.current) * inp.fwd - Math.sin(yaw.current) * inp.side,
+      jump: inp.jump,
+    });
+    const player = game.actors[0], floor = groundHeight(player.x, player.z);
+    playerPos.current.set(player.x, player.y, player.z);
+    const offset = new THREE.Vector3(Math.sin(yaw.current) * Math.cos(pitch.current), Math.sin(pitch.current), Math.cos(yaw.current) * Math.cos(pitch.current)).multiplyScalar(12);
+    const target = new THREE.Vector3(player.x, floor + 1.2, player.z).add(offset);
     target.y = Math.max(target.y, groundHeight(target.x, target.z) + 1.2);
-    camPos.current.lerp(target, 1 - Math.exp(-6 * dt));
+    camPos.current.lerp(target, 1 - Math.exp(-6 * Math.min(dt, 0.1)));
     camera.position.copy(camPos.current);
-    camera.lookAt(pos.current.x, floor + 1.8 + (pos.current.y - floor) * 0.35, pos.current.z);
-
-    onPose(pos.current, speed);
-  });
-
-  return <TukkiModel ref={model} color={PLAYER_COLOR} />;
+    camera.lookAt(player.x, floor + 1.8 + (player.y - floor) * 0.35, player.z);
+    hudTime.current += dt;
+    if (hudTime.current >= 0.1) { hudTime.current = 0; onUpdate(game); }
+  }, -1);
+  return <>
+    {RACERS.map((racer, index) => <RacerModel key={racer.color} game={game} index={index} />)}
+    {HAKI_SPOTS.map((_, index) => <Haki key={index} index={index} game={game} />)}
+  </>;
 }
 
-/* ------------------------------------------------------------------ */
-/*  仲間のツッキーくん（8色）が草原を歩く                             */
-/* ------------------------------------------------------------------ */
-function Buddy({ color, seed }: { color: TukkiColor; seed: number }) {
+function RacerModel({ game, index }: { game: Race; index: number }) {
   const model = useRef<TukkiHandle>(null);
-  const radius = 16 + (seed % 5) * 9;
-  const omega = (0.1 + (seed % 3) * 0.05) * (seed % 2 === 0 ? 1 : -1);
-  const phase = seed * 1.7;
-
-  useFrame(({ clock }) => {
-    const t = clock.getElapsedTime();
-    const m = model.current;
+  const ring = useRef<THREE.Mesh>(null!);
+  useFrame(() => {
+    const actor = game.actors[index], m = model.current;
     if (!m) return;
-    const a = t * omega + phase;
-    const x = Math.cos(a) * radius, z = Math.sin(a) * radius;
-    m.group.position.set(x, groundHeight(x, z), z);
-    // 円周の接線方向を向く
-    const vx = -Math.sin(a) * omega;
-    const vz = Math.cos(a) * omega;
-    m.group.rotation.y = Math.atan2(vx, vz);
-    m.animate(t * (5 + seed * 0.3), 0.8, 0.15, t + seed);
+    m.group.position.set(actor.x, actor.y, actor.z); m.group.rotation.y = actor.facing;
+    const speed = Math.hypot(actor.vx, actor.vz);
+    m.animate(actor.walk, Math.min(1, speed / 7), speed / 10 * 0.18, game.elapsed + index);
+    ring.current.position.set(actor.x, groundHeight(actor.x, actor.z) + 0.08, actor.z);
+    ring.current.visible = game.elapsed < actor.stoppedUntil;
   });
-
-  return <TukkiModel ref={model} color={color} scale={0.85} />;
+  return <>
+    <TukkiModel ref={model} color={RACERS[index].color} scale={index === 0 ? 1 : 0.85} />
+    <mesh ref={ring} rotation={[-Math.PI / 2, 0, 0]} visible={false}>
+      <ringGeometry args={[1.05, 1.3, 32]} /><meshBasicMaterial color="#ffb64d" transparent opacity={0.8} depthWrite={false} />
+    </mesh>
+  </>;
 }
 
 /* ------------------------------------------------------------------ */
@@ -282,16 +186,17 @@ function HakiLabel() {
   return <sprite position={[0, 1.1, 0]} scale={[1.3, 0.65, 1]}><spriteMaterial map={texture} transparent depthWrite={false} /></sprite>;
 }
 
-function Haki({ index, collected }: { index: number; collected: boolean }) {
+function Haki({ index, game }: { index: number; game: Race }) {
   const group = useRef<THREE.Group>(null!);
   const spot = HAKI_SPOTS[index];
   useFrame(({ clock }) => {
     const t = clock.getElapsedTime();
     group.current.position.y = groundHeight(spot.x, spot.z) + 1.5 + Math.sin(t * 2.5 + index) * 0.16;
     group.current.rotation.y = t * 0.8;
+    group.current.visible = game.active[index];
   });
   return (
-    <group ref={group} position={[spot.x, 1.5, spot.z]} visible={!collected}>
+    <group ref={group} position={[spot.x, 1.5, spot.z]} visible={game.active[index]}>
       <mesh>
         <octahedronGeometry args={[0.55]} />
         <meshStandardMaterial color="#ffd65a" emissive="#ffb52e" emissiveIntensity={0.65} roughness={0.3} />
@@ -368,35 +273,32 @@ function FollowLight({ target }: { target: React.MutableRefObject<THREE.Vector3>
 /* ------------------------------------------------------------------ */
 export default function TukkiWorld() {
   const { input, setStick, setButton } = useInput();
-  const [collected, setCollected] = useState<Set<number>>(() => new Set());
-  const found = useRef(new Set<number>());
-  const previous = useRef(new THREE.Vector3());
-  const [message, setMessage] = useState('黄金の覇気に近づいて集めよう！');
+  const [game, setGame] = useState(createRace);
   const [round, setRound] = useState(0);
-  const [mapPos, setMapPos] = useState({ x: 0, z: 0 });
-  const mapFrame = useRef(0);
+  const [hud, setHud] = useState(() => raceSnapshot(game));
   const [showHelp, setShowHelp] = useState(true);
-  const playerPos = useRef(new THREE.Vector3(0, 0, 0));
+  const [rankingOpen, setRankingOpen] = useState(true);
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 600px)');
+    const update = () => setRankingOpen(!media.matches);
+    update(); media.addEventListener('change', update);
+    return () => media.removeEventListener('change', update);
+  }, []);
+  const playerPos = useRef(new THREE.Vector3());
   const drag = useRef<{ id: number; x: number; y: number } | null>(null);
   const stickRef = useRef<{ id: number; ox: number; oy: number } | null>(null);
   const [stickUi, setStickUi] = useState<{ x: number; y: number; dx: number; dy: number } | null>(null);
 
-  const onPose = (p: THREE.Vector3, speed: number) => {
-    playerPos.current.copy(p);
-    if (++mapFrame.current % 10 === 0) setMapPos({ x: p.x, z: p.z });
-    let changed = false;
-    HAKI_SPOTS.forEach((spot, index) => {
-      if (!found.current.has(index) && touchesHaki(previous.current.x, previous.current.z, p.x, p.z, spot.x, spot.z)) {
-        found.current.add(index);
-        changed = true;
-      }
-    });
-    previous.current.copy(p);
-    if (changed) {
-      setCollected(new Set(found.current));
-      setMessage(found.current.size === HAKI_SPOTS.length ? 'ぜんぶ集めた！ 覇気マスター！' : '覇気をゲット！');
-    }
-    if (speed > 2 && showHelp) setShowHelp(false);
+  const onUpdate = (race: Race) => {
+    setHud(raceSnapshot(race));
+    if (Math.hypot(race.actors[0].vx, race.actors[0].vz) > 2) setShowHelp(false);
+  };
+  const ranking = RACERS.map((racer, i) => ({ ...racer, score: hud.actors[i].score, index: i })).sort((a, b) => b.score - a.score || a.index - b.index);
+  const rank = 1 + hud.actors.filter((actor) => actor.score > hud.actors[0].score).length;
+  const reset = () => {
+    setStick(0, 0); setButton(false); input.current.yawDelta = input.current.pitchDelta = 0;
+    stickRef.current = null; setStickUi(null); drag.current = null;
+    const next = createRace(); setGame(next); setHud(raceSnapshot(next)); setShowHelp(true); setRound((value) => value + 1);
   };
 
   // 右側ドラッグ＝カメラ回転、左側ドラッグ（タッチ）＝仮想スティック
@@ -447,7 +349,7 @@ export default function TukkiWorld() {
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerUp}
     >
-      <style>{`@media (max-width: 600px) { .tukki-help { bottom: 132px !important; font-size: 12px !important; } }`}</style>
+      <style>{`@media (max-width: 600px) { .tukki-ranking { top: 184px !important; padding: 8px 10px !important; min-width: 114px !important; } .tukki-help { bottom: 132px !important; font-size: 12px !important; } }`}</style>
       <Canvas shadows camera={{ position: [0, 5, 12], fov: 55, near: 0.1, far: 500 }} dpr={[1, 2]}>
         <fog attach="fog" args={[SKY_BOTTOM, 65, 150]} />
         <Sky />
@@ -455,39 +357,38 @@ export default function TukkiWorld() {
         <ambientLight intensity={0.35} />
         <FollowLight target={playerPos} />
         <World />
-        <Player key={round} input={input} onPose={onPose} />
-        {HAKI_SPOTS.map((_, i) => <Haki key={i} index={i} collected={collected.has(i)} />)}
-        {BUDDIES.map((c, i) => (
-          <Buddy key={c} color={c} seed={i + 1} />
-        ))}
+        <RaceScene key={round} input={input} game={game} onUpdate={onUpdate} playerPos={playerPos} />
       </Canvas>
 
       <div style={hudStyle}>
-        <div style={{ fontSize: 13, letterSpacing: 2 }}>ツッキーくんの覇気あつめ</div>
-        <div style={{ fontSize: 28, fontWeight: 800, marginTop: 4 }}>覇気 {collected.size} / {HAKI_SPOTS.length}</div>
-        <div role="progressbar" aria-label="集めた覇気" aria-valuemin={0} aria-valuemax={HAKI_SPOTS.length} aria-valuenow={collected.size}
-          style={{ height: 7, background: '#d8dfc7', borderRadius: 8, marginTop: 8 }}>
-          <div style={{ width: `${collected.size / HAKI_SPOTS.length * 100}%`, height: '100%', background: '#efb838', borderRadius: 8 }} />
+        <div style={{ fontSize: 13, letterSpacing: 1 }}>ツッキーくんの覇気レース</div>
+        <div style={{ fontSize: 27, fontWeight: 800, marginTop: 4 }}>あなたの覇気 {hud.actors[0].score}</div>
+        <div style={{ fontSize: 13, marginTop: 5 }}>{rank}位 / 9人 · 地面に {hud.active.filter(Boolean).length}個</div>
+        <div style={{ fontSize: 12, marginTop: 5 }}>あと{hud.refillIn}秒で覇気を補充（最大{REFILL_AMOUNT}個）</div>
+        <div role="status" style={{ fontSize: 12, marginTop: 6, color: hud.playerStopped ? '#b86622' : '#59733d' }}>
+          {hud.playerStopped ? 'ぶつかった！ ちょっとひと休み' : '早い者勝ち！ 仲間より先に集めよう'}
         </div>
-        <div role="status" style={{ fontSize: 13, marginTop: 8 }}>{message}</div>
       </div>
 
+      <details className="tukki-ranking" open={rankingOpen} onToggle={(e) => setRankingOpen(e.currentTarget.open)} onPointerDown={(e) => e.stopPropagation()}
+        style={{ ...hudStyle, pointerEvents: 'auto', left: 'auto', right: 16, minWidth: 140, padding: '12px 15px' }}>
+        <summary style={{ fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>みんなの覇気</summary>
+        <ol aria-label="覇気ランキング" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+          {ranking.map((racer) => <li key={racer.color} style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 12, marginTop: 4, fontWeight: racer.index === 0 ? 800 : 400 }}>
+            <span style={{ width: 9, height: 9, borderRadius: '50%', background: TUKKI_COLORS[racer.color].body, border: '1px solid #76532955' }} />
+            <span style={{ flex: 1 }}>{racer.name}</span><span>{racer.score}</span>
+          </li>)}
+        </ol>
+      </details>
+
       {showHelp && <div className="tukki-help" style={helpStyle}>
-        <div style={{ fontWeight: 700, marginBottom: 6 }}>草原に散らばった32個の覇気を探そう</div>
-        <div>WASD / 矢印で歩く · Space / Eでジャンプ · ドラッグで見回す</div>
-        <div style={{ fontSize: 12, marginTop: 5 }}>スマホ：左半分で歩く・右半分で見回す</div>
+        <div style={{ fontWeight: 700, marginBottom: 5 }}>仲間8人と覇気の早取りレース！</div>
+        <div>覇気は{REFILL_SECONDS}秒ごとに補充。ぶつかると両方が一瞬止まるよ</div>
+        <div style={{ fontSize: 12, marginTop: 5 }}>WASD / 矢印で歩く · Space / Eでジャンプ · ドラッグで見回す</div>
+        <div style={{ fontSize: 12 }}>スマホ：左半分で歩く・右半分で見回す</div>
       </div>}
 
-      {collected.size === HAKI_SPOTS.length && <div className="tukki-help" style={{ ...helpStyle, pointerEvents: 'auto' }}>
-        <div style={{ fontSize: 24, fontWeight: 800 }}>覇気マスター！</div>
-        <div>草原の覇気をすべて集めたよ！</div>
-        <button onPointerDown={(e) => e.stopPropagation()} onClick={() => {
-          found.current.clear(); setCollected(new Set()); previous.current.set(0, 0, 0);
-          playerPos.current.set(0, 0, 0); setStick(0, 0); setButton(false);
-          stickRef.current = null; setStickUi(null); drag.current = null;
-          setMessage('もう一度、覇気を集めよう！'); setShowHelp(true); setRound((r) => r + 1);
-        }} style={{ marginTop: 12, padding: '10px 20px', borderRadius: 20, border: 0, background: '#f8cf62', color: '#52401c', fontWeight: 700, cursor: 'pointer' }}>もう一度あそぶ</button>
-      </div>}
+      <button onPointerDown={(e) => e.stopPropagation()} onClick={reset} style={{ position: 'absolute', right: 20, bottom: 120, padding: '8px 13px', borderRadius: 20, background: '#fffbea', border: '1px solid #bdd0a0', color: '#43532e', fontSize: 12, cursor: 'pointer' }}>やり直す</button>
 
       <button style={{ ...btnStyle, position: 'absolute', right: 20, bottom: 24 }}
         onPointerDown={(e) => { e.stopPropagation(); e.currentTarget.setPointerCapture(e.pointerId); setButton(true); }}
@@ -495,11 +396,11 @@ export default function TukkiWorld() {
         onPointerCancel={() => setButton(false)} onLostPointerCapture={() => setButton(false)} aria-label="ジャンプ">ジャンプ</button>
 
       <div style={{ position: 'absolute', bottom: 20, left: 16, pointerEvents: 'none', width: 'clamp(100px, 15vw, 150px)' }}>
-        <svg viewBox="-64 -64 128 128" role="img" aria-label="覇気の地図。金色の点が残りの覇気、青い点がツッキーくん" style={{ width: '100%', display: 'block', background: 'rgba(255,253,239,.88)', borderRadius: '50%', boxShadow: '0 3px 14px #48653522' }}>
+        <svg viewBox="-64 -64 128 128" role="img" aria-label="覇気の地図。金色の点が残りの覇気、色の点が9人のキャラ" style={{ width: '100%', display: 'block', background: 'rgba(255,253,239,.88)', borderRadius: '50%', boxShadow: '0 3px 14px #48653522' }}>
           <circle r={WORLD_RADIUS} fill="#d6e5bd" stroke="#91aa70" strokeWidth="1" />
           <path d="M0 -58V58M-50 -29L50 29M-50 29L50 -29" stroke="#f5e5b9" strokeWidth="4" />
-          {HAKI_SPOTS.map((spot, i) => !collected.has(i) && <circle key={i} cx={spot.x} cy={spot.z} r="2.3" fill="#eab029" stroke="#9d741c" strokeWidth="0.5" />)}
-          <circle cx={mapPos.x} cy={mapPos.z} r="3.5" fill="#409ed2" stroke="white" strokeWidth="1.5" />
+          {HAKI_SPOTS.map((spot, i) => hud.active[i] && <circle key={i} cx={spot.x} cy={spot.z} r="2.3" fill="#eab029" stroke="#9d741c" strokeWidth="0.5" />)}
+          {hud.actors.map((actor, i) => <circle key={i} cx={actor.x} cy={actor.z} r={i === 0 ? 3.5 : 2.8} fill={TUKKI_COLORS[RACERS[i].color].body} stroke={i === 0 ? 'white' : '#765329'} strokeWidth={i === 0 ? 1.5 : 0.6} />)}
         </svg>
       </div>
 
