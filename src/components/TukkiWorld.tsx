@@ -344,6 +344,7 @@ export default function TukkiWorld() {
     (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
   };
   const onPointerMove = (e: React.PointerEvent) => {
+    if (phase !== 'playing') return;
     if (stickRef.current && stickRef.current.id === e.pointerId) {
       const R = 60;
       let dx = e.clientX - stickRef.current.ox;
@@ -389,7 +390,9 @@ export default function TukkiWorld() {
           .tukki-pause { top: max(12px, env(safe-area-inset-top)) !important; right: 12px !important; bottom: auto !important; width: 44px; height: 44px; padding: 0 !important; font-size: 22px; }
           .tukki-timer { top: max(12px, env(safe-area-inset-top)) !important; left: auto !important; right: 66px; transform: none !important; width: 76px !important; padding: 8px !important; font-size: 23px !important; }
           .tukki-pause-icon { display: inline !important; }
-          .tukki-map { bottom: max(12px, env(safe-area-inset-bottom)) !important; left: 12px !important; }
+          .tukki-map { top: calc(max(12px, env(safe-area-inset-top)) + 62px) !important; bottom: auto !important; left: auto !important; right: 12px; width: 148px !important; }
+          .tukki-mobile-stick { display: block !important; }
+          .tukki-floating-stick { display: none !important; }
           .tukki-jump { bottom: max(22px, env(safe-area-inset-bottom)) !important; right: 16px !important; width: 68px !important; height: 68px !important; padding: 0 !important; font-size: 12px !important; white-space: nowrap; }
         }
         @media (max-height: 500px) { .tukki-map { width: 136px !important; } }
@@ -478,11 +481,25 @@ export default function TukkiWorld() {
         <div style={{ fontSize: 11, textAlign: 'center', marginTop: 3 }}>{nearestHaki ? `近くの覇気まで ${Math.ceil(nearestHaki.distance)}m` : '補充を待とう！'}</div>
       </div>
 
+      <div className="tukki-mobile-stick" role="group" aria-label="移動スティック。押したまま動かすと前後左右に移動" style={{ display: 'none', position: 'absolute', left: 'max(24px, env(safe-area-inset-left))', bottom: 'max(28px, env(safe-area-inset-bottom))', width: 120, height: 120, borderRadius: '50%', border: '2px solid #ffffffaa', background: '#fffbea33', boxShadow: '0 3px 16px #284b2522', touchAction: 'none' }}
+        onPointerDown={(e) => {
+          e.preventDefault(); e.stopPropagation();
+          const rect = e.currentTarget.getBoundingClientRect();
+          const ox = rect.left + rect.width / 2, oy = rect.top + rect.height / 2;
+          stickRef.current = { id: e.pointerId, ox, oy };
+          setStickUi({ x: ox, y: oy, dx: 0, dy: 0 }); setStick(0, 0);
+          e.currentTarget.setPointerCapture(e.pointerId);
+          onPointerMove(e);
+        }} onLostPointerCapture={onPointerUp}>
+        <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', color: '#43532e99', fontSize: 72, lineHeight: 1, pointerEvents: 'none' }}>＋</div>
+        <div style={{ position: 'absolute', left: 36, top: 36, width: 48, height: 48, borderRadius: '50%', background: '#fffbeaee', border: '2px solid #6b8757', boxSizing: 'border-box', boxShadow: '0 3px 8px #284b2533', transform: `translate(${stickUi?.dx ?? 0}px, ${stickUi?.dy ?? 0}px)`, pointerEvents: 'none' }} />
+        <span style={{ position: 'absolute', top: -24, left: 0, width: '100%', textAlign: 'center', fontSize: 12, fontWeight: 800, color: '#43532e', pointerEvents: 'none', textShadow: '0 1px 2px #fff' }}>移動</span>
+      </div>
       {/* 仮想スティック表示 */}
       {stickUi && (
         <>
-          <div style={{ ...stickBase, left: stickUi.x - 60, top: stickUi.y - 60 }} />
-          <div style={{ ...stickKnob, left: stickUi.x + stickUi.dx - 24, top: stickUi.y + stickUi.dy - 24 }} />
+          <div className="tukki-floating-stick" style={{ ...stickBase, left: stickUi.x - 60, top: stickUi.y - 60 }} />
+          <div className="tukki-floating-stick" style={{ ...stickKnob, left: stickUi.x + stickUi.dx - 24, top: stickUi.y + stickUi.dy - 24 }} />
         </>
       )}
       </div>
@@ -505,7 +522,7 @@ export default function TukkiWorld() {
           <div style={{ fontSize: 14, lineHeight: 1.8, margin: '18px 0' }}>
             <strong>操作方法</strong><br />
             <span>PC：WASD / 矢印で移動、Space / Eでジャンプ。ドラッグで見回す。</span><br />
-            <span>スマホ：左側をドラッグして移動、右側で見回す。ジャンプは右下のボタン。</span><br />
+            <span>スマホ：左下のスティックで移動、右側をドラッグして見回す。ジャンプは右下のボタン。</span><br />
             <span className="tukki-desktop-controls" style={{ color: '#71814f', fontSize: 12 }}>画面の矢印ボタンでも移動・視点変更ができます。</span>
           </div>
           {phase === 'instructions' && <div style={{ marginBottom: 18, fontSize: 13 }}>
