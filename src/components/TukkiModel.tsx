@@ -354,11 +354,6 @@ const TukkiModel = forwardRef<TukkiHandle, Props>(function TukkiModel({ color, s
               <mesh geometry={S} material={mats.cheek} position={[0, -0.92, 0.27]} scale={[0.15, 0.12, 0.02]} />
               {[-1, 0, 1].map((i) => <mesh key={i} geometry={S} material={mats.cheek} position={[i * 0.1, -0.71, 0.25]} scale={[0.035, 0.04, 0.02]} />)}
             </>}
-            {color === 'blue' && s === 1 && <group position={[0.04, -0.82, 0.38]} rotation={[0, 0, 0.45]}>
-              <Part geometry={geo.cylinder} material={mats.wood} outline={O} position={[0, 0.22, 0]} scale={[0.055, 0.6, 0.055]} width={1.05} />
-              <Part geometry={geo.cylinder} material={mats.wood} outline={O} position={[0, 0.56, 0]} rotation={[0, 0, Math.PI / 2]} scale={[0.14, 0.42, 0.14]} width={1.05} />
-              {[-1, 1].map((i) => <mesh key={i} geometry={geo.cylinder} material={mats.gold} position={[i * 0.13, 0.56, 0]} rotation={[0, 0, Math.PI / 2]} scale={[0.145, 0.035, 0.145]} />)}
-            </group>}
             {color === 'pink' && s === 1 && <group position={[0, -0.9, 0.36]}>
               <Part geometry={S} material={mats.muzzle} outline={O} scale={[0.48, 0.3, 0.055]} width={1.055} />
               {[{ x: -0.2, y: 0.09, mat: mats.paintBlue }, { x: 0, y: 0.13, mat: mats.paintPink }, { x: 0.2, y: 0.08, mat: mats.paintGreen }].map((dot, i) => <mesh key={i} geometry={S} material={dot.mat} position={[dot.x, dot.y, 0.054]} scale={[0.065, 0.055, 0.012]} />)}
