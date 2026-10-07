@@ -44,8 +44,14 @@ async function ensureSchema() {
       await db`CREATE TABLE IF NOT EXISTS dns_records (
         id TEXT PRIMARY KEY, ascii_label TEXT NOT NULL REFERENCES domains(ascii_label) ON DELETE CASCADE,
         host TEXT NOT NULL, fqdn TEXT NOT NULL, type TEXT NOT NULL, value TEXT NOT NULL,
-        priority INTEGER, created_at TIMESTAMPTZ NOT NULL, updated_at TIMESTAMPTZ NOT NULL
+        priority INTEGER, provider_record_id TEXT, sync_status TEXT NOT NULL DEFAULT 'pending',
+        sync_error TEXT, synced_at TIMESTAMPTZ,
+        created_at TIMESTAMPTZ NOT NULL, updated_at TIMESTAMPTZ NOT NULL
       )`;
+      await db`ALTER TABLE dns_records ADD COLUMN IF NOT EXISTS provider_record_id TEXT`;
+      await db`ALTER TABLE dns_records ADD COLUMN IF NOT EXISTS sync_status TEXT NOT NULL DEFAULT 'pending'`;
+      await db`ALTER TABLE dns_records ADD COLUMN IF NOT EXISTS sync_error TEXT`;
+      await db`ALTER TABLE dns_records ADD COLUMN IF NOT EXISTS synced_at TIMESTAMPTZ`;
       await db`CREATE INDEX IF NOT EXISTS dns_records_domain_idx ON dns_records(ascii_label)`;
       await db`CREATE TABLE IF NOT EXISTS audit_logs (
         id BIGSERIAL PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id), ascii_label TEXT NOT NULL,
@@ -178,7 +184,8 @@ export async function cloudPurchasesForUser(userId: string): Promise<DemoPurchas
     WHERE domains.user_id = ${userId} ORDER BY domains.created_at DESC` as DomainRow[];
   const purchases: DemoPurchase[] = [];
   for (const row of rows) {
-    const recordRows = await db`SELECT id, host, fqdn, type, value, priority, updated_at
+    const recordRows = await db`SELECT id, host, fqdn, type, value, priority, updated_at,
+      provider_record_id, sync_status, sync_error
       FROM dns_records WHERE ascii_label = ${row.ascii_label} ORDER BY host, type, created_at`;
     purchases.push({
       asciiLabel: row.ascii_label,
@@ -192,6 +199,9 @@ export async function cloudPurchasesForUser(userId: string): Promise<DemoPurchas
         id: String(record.id), host: String(record.host), fqdn: String(record.fqdn),
         type: record.type as DemoDnsRecord['type'], value: String(record.value),
         priority: record.priority === null ? null : Number(record.priority), updatedAt: String(record.updated_at),
+        providerRecordId: record.provider_record_id === null ? null : String(record.provider_record_id),
+        syncStatus: String(record.sync_status) as DemoDnsRecord['syncStatus'],
+        syncError: record.sync_error === null ? null : String(record.sync_error),
       })),
     });
   }
@@ -201,6 +211,11 @@ export async function cloudPurchasesForUser(userId: string): Promise<DemoPurchas
 async function ensureOwned(user: LocalUser, asciiLabel: string) {
   const rows = await sql()`SELECT 1 FROM domains WHERE ascii_label = ${asciiLabel} AND user_id = ${user.id} LIMIT 1`;
   if (!rows.length) throw new CloudDbError('このドメインを変更する権限がありません', 403);
+}
+
+export async function assertCloudDomainOwned(user: LocalUser, asciiLabel: string) {
+  await ensureSchema();
+  await ensureOwned(user, asciiLabel);
 }
 
 async function cloudPurchase(user: LocalUser, asciiLabel: string) {
@@ -227,6 +242,7 @@ export async function saveCloudDnsRecord(
   await ensureOwned(user, asciiLabel);
   const db = sql();
   const current = (await cloudPurchase(user, asciiLabel)).records;
+  const previous = recordId ? current.find((record) => record.id === recordId) : undefined;
   if (!recordId && current.length >= MAX_RECORDS_PER_DOMAIN) throw new CloudDbError('DNSレコード数が上限です');
   if (recordId && !current.some((record) => record.id === recordId)) throw new CloudDbError('編集するレコードが見つかりません', 404);
   const siblings = current.filter((record) => record.id !== recordId && record.fqdn === input.fqdn);
@@ -234,18 +250,50 @@ export async function saveCloudDnsRecord(
     throw new CloudDbError('CNAMEは同じホストの他レコードと共存できません', 409);
   }
   const now = new Date().toISOString();
+  const savedId = recordId ?? `dns_${randomUUID()}`;
   await db`UPDATE domains SET dns_mode = 'CUSTOM' WHERE ascii_label = ${asciiLabel}`;
   if (recordId) {
     await db`UPDATE dns_records SET host = ${input.host}, fqdn = ${input.fqdn}, type = ${input.type},
-      value = ${input.value}, priority = ${input.priority}, updated_at = ${now}
+      value = ${input.value}, priority = ${input.priority}, sync_status = 'pending', sync_error = NULL,
+      updated_at = ${now}
       WHERE id = ${recordId} AND ascii_label = ${asciiLabel}`;
   } else {
-    await db`INSERT INTO dns_records (id, ascii_label, host, fqdn, type, value, priority, created_at, updated_at)
-      VALUES (${`dns_${randomUUID()}`}, ${asciiLabel}, ${input.host}, ${input.fqdn}, ${input.type},
-        ${input.value}, ${input.priority}, ${now}, ${now})`;
+    await db`INSERT INTO dns_records
+      (id, ascii_label, host, fqdn, type, value, priority, provider_record_id, sync_status, created_at, updated_at)
+      VALUES (${savedId}, ${asciiLabel}, ${input.host}, ${input.fqdn}, ${input.type},
+        ${input.value}, ${input.priority}, NULL, 'pending', ${now}, ${now})`;
   }
   await audit(user, asciiLabel, recordId ? 'dns-record-update' : 'dns-record-create', input);
+  const domain = await cloudPurchase(user, asciiLabel);
+  return { domain, record: domain.records.find((record) => record.id === savedId)!, previous };
+}
+
+export async function markCloudDnsRecordSync(
+  user: LocalUser,
+  asciiLabel: string,
+  recordId: string,
+  result: { status: 'synced'; providerRecordId: string } | { status: 'failed'; error: string; providerRecordId?: string | null },
+) {
+  await ensureSchema();
+  await ensureOwned(user, asciiLabel);
+  const db = sql();
+  if (result.status === 'synced') {
+    await db`UPDATE dns_records SET provider_record_id = ${result.providerRecordId}, sync_status = 'synced',
+      sync_error = NULL, synced_at = ${new Date().toISOString()} WHERE id = ${recordId} AND ascii_label = ${asciiLabel}`;
+  } else {
+    const providerRecordId = result.providerRecordId === undefined ? null : result.providerRecordId;
+    await db`UPDATE dns_records SET provider_record_id = ${providerRecordId}, sync_status = 'failed',
+      sync_error = ${result.error.slice(0, 500)} WHERE id = ${recordId} AND ascii_label = ${asciiLabel}`;
+  }
   return cloudPurchase(user, asciiLabel);
+}
+
+export async function cloudDnsRecordForUser(user: LocalUser, asciiLabel: string, recordId: string) {
+  await ensureSchema();
+  await ensureOwned(user, asciiLabel);
+  const record = (await cloudPurchase(user, asciiLabel)).records.find((item) => item.id === recordId);
+  if (!record) throw new CloudDbError('DNSレコードが見つかりません', 404);
+  return record;
 }
 
 export async function deleteCloudDnsRecord(user: LocalUser, asciiLabel: string, recordId: string) {

@@ -46,6 +46,9 @@ export type DemoDnsRecord = {
   value: string;
   priority: number | null;
   updatedAt: string;
+  providerRecordId?: string | null;
+  syncStatus?: 'local' | 'pending' | 'synced' | 'failed';
+  syncError?: string | null;
 };
 
 export type DemoPurchase = {

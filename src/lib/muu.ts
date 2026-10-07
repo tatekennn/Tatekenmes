@@ -1,4 +1,5 @@
 import { MUU_API_BASE, MUU_DOMAIN_ID, VERCEL_A_IP } from './config';
+import type { DnsRecordType } from './subdomain-sale';
 
 // ムームードメイン API v2（Me API）。PAT を Bearer で使う。
 // スコープは「DNS操作(dns:write)」のみ想定＝ドメイン購入等の課金操作は行えない。
@@ -18,40 +19,99 @@ function withDot(fqdn: string): string {
   return fqdn.endsWith('.') ? fqdn : `${fqdn}.`;
 }
 
-type DnsRecord = { id: number; fqdn: string; type: string; value: string };
+export type MuuDnsRecord = {
+  id: number;
+  fqdn: string;
+  type: string;
+  value: string;
+  priority?: number | null;
+  ttl?: number;
+};
+
+export class MuuApiError extends Error {
+  constructor(message: string, public status: number) {
+    super(message);
+  }
+}
+
+async function jsonResponse<T>(res: Response, action: string): Promise<T> {
+  const body = await res.text();
+  if (!res.ok) {
+    throw new MuuApiError(`muu ${action} failed: ${res.status} ${body.slice(0, 500)}`, res.status);
+  }
+  try {
+    return JSON.parse(body) as T;
+  } catch {
+    throw new MuuApiError(`muu ${action} returned invalid JSON`, 502);
+  }
+}
+
+function apiValue(type: DnsRecordType, value: string) {
+  return type === 'CNAME' || type === 'MX' ? withDot(value) : value;
+}
 
 /** 既存レコードを取得（fqdn省略時はゾーン全件） */
-export async function listRecords(fqdn?: string): Promise<DnsRecord[]> {
+export async function listRecords(fqdn?: string): Promise<MuuDnsRecord[]> {
   const base = `${MUU_API_BASE}/me/domains/${MUU_DOMAIN_ID}/dns-records`;
-  const url = fqdn ? `${base}?fqdn=${encodeURIComponent(withDot(fqdn))}` : base;
-  const res = await fetch(url, { headers: headers() });
-  const ct = res.headers.get('content-type') ?? '';
-  if (!res.ok || !ct.includes('json')) {
-    throw new Error(
-      `muu listRecords failed: status=${res.status} finalUrl=${res.url} ct=${ct} body=${(await res.text()).slice(0, 120)}`,
-    );
+  const records: MuuDnsRecord[] = [];
+  for (let page = 1; page <= 2; page += 1) {
+    const params = new URLSearchParams({ page: String(page), 'page-size': '100' });
+    if (fqdn) params.set('fqdn', withDot(fqdn));
+    const res = await fetch(`${base}?${params}`, { headers: headers(), cache: 'no-store' });
+    const json = await jsonResponse<{ data?: MuuDnsRecord[]; meta?: { total?: number } }>(res, 'listRecords');
+    records.push(...(json.data ?? []));
+    if (records.length >= Number(json.meta?.total ?? records.length)) break;
   }
-  const json = await res.json();
-  return (json?.data ?? []) as DnsRecord[];
+  return records;
 }
 
 /** レコードを1件作成する */
 export async function createRecord(
   fqdn: string,
-  type: 'A' | 'CNAME',
+  type: DnsRecordType,
   value: string,
-): Promise<void> {
+  priority: number | null = null,
+): Promise<MuuDnsRecord> {
+  const body: Record<string, unknown> = {
+    fqdn: withDot(fqdn),
+    type,
+    value: apiValue(type, value),
+  };
+  if (type === 'MX') body.priority = priority;
   const res = await fetch(`${MUU_API_BASE}/me/domains/${MUU_DOMAIN_ID}/dns-records`, {
     method: 'POST',
     headers: headers(),
-    body: JSON.stringify({
-      fqdn: withDot(fqdn),
-      type,
-      // CNAME の値は FQDN なので末尾ドット必須（無いとゾーン相対名と解釈される）
-      value: type === 'CNAME' ? withDot(value) : value,
-    }),
+    body: JSON.stringify(body),
   });
-  if (!res.ok) throw new Error(`muu createRecord failed: ${res.status} ${await res.text()}`);
+  const json = await jsonResponse<{ data: MuuDnsRecord }>(res, 'createRecord');
+  return json.data;
+}
+
+export async function updateRecord(
+  id: string | number,
+  type: DnsRecordType,
+  value: string,
+  priority: number | null = null,
+): Promise<MuuDnsRecord> {
+  const body: Record<string, unknown> = { value: apiValue(type, value) };
+  if (type === 'MX') body.priority = priority;
+  const res = await fetch(`${MUU_API_BASE}/me/domains/${MUU_DOMAIN_ID}/dns-records/${id}`, {
+    method: 'PATCH',
+    headers: headers(),
+    body: JSON.stringify(body),
+  });
+  const json = await jsonResponse<{ data: MuuDnsRecord }>(res, 'updateRecord');
+  return json.data;
+}
+
+export async function deleteRecord(id: string | number): Promise<void> {
+  const res = await fetch(`${MUU_API_BASE}/me/domains/${MUU_DOMAIN_ID}/dns-records/${id}`, {
+    method: 'DELETE',
+    headers: headers(),
+  });
+  if (!res.ok && res.status !== 404) {
+    throw new MuuApiError(`muu deleteRecord failed: ${res.status} ${(await res.text()).slice(0, 500)}`, res.status);
+  }
 }
 
 /** その FQDN に既に何かレコードがあるか（＝売約済み判定） */

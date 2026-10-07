@@ -12,6 +12,8 @@ type DnsRecord = {
   value: string;
   priority: number | null;
   updatedAt: string;
+  syncStatus?: 'local' | 'pending' | 'synced' | 'failed';
+  syncError?: string | null;
 };
 type Domain = {
   asciiLabel: string;
@@ -21,7 +23,12 @@ type Domain = {
   records: DnsRecord[];
 };
 type User = { id: string; email: string };
-type DnsProviderStatus = { provider: 'local-mock' | 'muu-sandbox'; ready: boolean; writesEnabled: boolean; message: string };
+type DnsProviderStatus = {
+  provider: 'local-mock' | 'neon-only' | 'muu-production';
+  ready: boolean;
+  writesEnabled: boolean;
+  message: string;
+};
 
 const PLACEHOLDERS: Record<DnsType, string> = {
   A: '8.8.8.8',
@@ -169,7 +176,9 @@ export default function DashboardClient() {
 
         {provider && (
           <div className="account-panel">
-            <span>{provider.provider === 'local-mock' ? 'DNS: ローカル模擬' : 'DNS: Muu sandbox'}</span>
+            <span>{provider.provider === 'muu-production'
+              ? 'DNS: 公開DNS同期'
+              : provider.provider === 'neon-only' ? 'DB: Neonクラウド' : 'DNS: ローカル開発'}</span>
             <strong>{provider.message}</strong>
           </div>
         )}
@@ -217,6 +226,9 @@ export default function DashboardClient() {
                     <article className="dns-record-row" key={record.id}>
                       <div className="dns-record-head"><strong>{record.type}</strong><code>{record.host === '@' ? domain.displayDomain : `${record.host}.${domain.displayDomain}`}</code></div>
                       <p>{record.value}{record.priority !== null ? ` · 優先度 ${record.priority}` : ''}</p>
+                      {record.syncStatus && record.syncStatus !== 'local' && (
+                        <p className="apply-note">公開DNS: {record.syncStatus === 'synced' ? '同期済み' : record.syncStatus === 'failed' ? '同期失敗・再保存してください' : '同期中'}</p>
+                      )}
                       <div className="dns-record-actions">
                         <button type="button" className="text-button" onClick={() => editRecord(record)}>編集</button>
                         <button type="button" className="text-button text-button--danger" onClick={() => deleteRecord(record)} disabled={saving}>削除</button>
@@ -260,7 +272,7 @@ export default function DashboardClient() {
               </>
             )}
             {message && <p className="apply-status">{message}</p>}
-            <p className="apply-note">TTLは本番Muu APIに合わせて3600秒を想定。現在はローカルDBだけを更新します。</p>
+            <p className="apply-note">TTLは3600秒です。本番ではNeon DBへの保存と同時にムームーDNSへ反映します。</p>
           </div>
         )}
       </section>
