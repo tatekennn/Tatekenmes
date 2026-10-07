@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { validateDnsRecordInput } from '../../../../lib/dns-record';
 import {
-  assertCloudDomainOwned,
   deleteLocalDnsRecord,
   LOCAL_SESSION_COOKIE,
   LocalDnsError,
@@ -13,6 +12,7 @@ import {
 import type { DnsMode } from '../../../../lib/subdomain-sale';
 import { dnsProviderStatus } from '../../../../lib/dns-provider';
 import {
+  assertCloudDomainOwned,
   cloudDnsRecordForUser,
   cloudPurchasesForUser,
   cloudUserForSession,
