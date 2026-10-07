@@ -110,7 +110,9 @@ button {
   display: grid;
   place-items: center;
   padding: 1.5rem;
-  overflow: hidden;
+  height: 100svh;
+  overflow-x: hidden;
+  overflow-y: auto;
   isolation: isolate;
   background:
     radial-gradient(circle at 50% 30%, rgba(215, 169, 46, 0.16), transparent 0 22rem),
@@ -131,6 +133,296 @@ button {
     0 0 0 1px rgba(215, 169, 46, 0.12),
     0 30px 80px rgba(0, 0, 0, 0.65);
   text-align: center;
+}
+
+.apply-card--sale {
+  width: min(94vw, 35rem);
+}
+
+.demo-badge {
+  display: inline-flex;
+  margin-bottom: 1.1rem;
+  padding: 0.42rem 0.72rem;
+  border: 1px solid rgba(215, 169, 46, 0.35);
+  border-radius: 999px;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  color: rgba(247, 241, 223, 0.72);
+  background: rgba(215, 169, 46, 0.08);
+}
+
+.stock-meter,
+.price-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0 0 1.2rem;
+  padding: 0.8rem 1rem;
+  border-radius: 0.8rem;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.84rem;
+  background: rgba(0, 0, 0, 0.28);
+  color: rgba(247, 241, 223, 0.68);
+}
+
+.stock-meter strong,
+.price-row strong {
+  color: var(--gold);
+  white-space: nowrap;
+}
+
+.domain-input-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  border: 1px solid rgba(247, 241, 223, 0.2);
+  border-radius: 0.75rem;
+  background: rgba(0, 0, 0, 0.35);
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.domain-input-row:focus-within {
+  border-color: rgba(215, 169, 46, 0.7);
+  box-shadow: 0 0 0 3px rgba(215, 169, 46, 0.18);
+}
+
+.domain-input-row .apply-input {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.domain-input-row > span {
+  padding-right: 1rem;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  color: rgba(247, 241, 223, 0.5);
+  white-space: nowrap;
+}
+
+.checkout-panel,
+.success-panel {
+  margin-top: 1.2rem;
+}
+
+.success-panel h2 {
+  margin: 0.7rem 0 0.4rem;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+}
+
+.success-panel p {
+  font-family: ui-sans-serif, system-ui, sans-serif;
+}
+
+.success-panel strong {
+  color: var(--gold);
+}
+
+.success-mark {
+  display: grid;
+  width: 3.5rem;
+  height: 3.5rem;
+  margin: 0 auto;
+  place-items: center;
+  border-radius: 999px;
+  color: #171006;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: 2rem;
+  font-weight: 900;
+  background: var(--gold);
+  box-shadow: 0 0 38px rgba(215, 169, 46, 0.55);
+}
+
+.order-id {
+  font-size: 0.7rem;
+  color: rgba(247, 241, 223, 0.42);
+  word-break: break-all;
+}
+
+.apply-button--link {
+  display: block;
+  text-decoration: none;
+}
+
+.apply-button--secondary {
+  display: block;
+  margin-top: 0.75rem;
+  color: var(--gold);
+  text-decoration: none;
+  background: transparent;
+  border: 1px solid rgba(215, 169, 46, 0.55);
+  box-shadow: none;
+}
+
+.dns-panel {
+  text-align: left;
+}
+
+.dashboard-card {
+  width: min(96vw, 48rem);
+}
+
+.dns-mode-panel,
+.dns-editor,
+.dns-record-list {
+  margin-bottom: 1.2rem;
+  padding: 1rem;
+  border: 1px solid rgba(247, 241, 223, 0.12);
+  border-radius: 0.9rem;
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.dns-mode-panel .apply-field {
+  margin-bottom: 0.75rem;
+}
+
+.dns-warning,
+.dns-empty {
+  margin: 0.5rem 0 0.9rem;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.78rem;
+  color: #efb3a8;
+}
+
+.dns-section-heading,
+.dns-record-head,
+.dns-record-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+}
+
+.dns-section-heading {
+  margin-bottom: 0.8rem;
+}
+
+.dns-section-heading span {
+  font-size: 0.72rem;
+  color: rgba(247, 241, 223, 0.45);
+}
+
+.dns-record-row {
+  padding: 0.85rem 0;
+  border-top: 1px solid rgba(247, 241, 223, 0.1);
+  font-family: ui-sans-serif, system-ui, sans-serif;
+}
+
+.dns-record-row:first-of-type {
+  border-top: 0;
+}
+
+.dns-record-head strong {
+  flex: 0 0 auto;
+  color: var(--gold);
+}
+
+.dns-record-head code {
+  overflow: hidden;
+  color: rgba(247, 241, 223, 0.72);
+  text-overflow: ellipsis;
+}
+
+.dns-record-row p {
+  margin: 0.55rem 0 0;
+  color: rgba(247, 241, 223, 0.58);
+  font-size: 0.78rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.dns-record-actions {
+  justify-content: flex-end;
+}
+
+.dns-record-actions .text-button {
+  margin-top: 0.35rem;
+}
+
+.text-button--danger {
+  color: #ef8b81;
+}
+
+.dns-editor .domain-input-row > span {
+  max-width: 50%;
+  overflow: hidden;
+  font-size: 0.75rem;
+  text-overflow: ellipsis;
+}
+
+.dns-preview {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.35rem 0.8rem;
+  margin: 0 0 1.2rem;
+  padding: 1rem;
+  border: 1px solid rgba(215, 169, 46, 0.24);
+  border-radius: 0.8rem;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  background: rgba(0, 0, 0, 0.32);
+}
+
+.dns-preview span {
+  overflow: hidden;
+  color: rgba(247, 241, 223, 0.82);
+  text-overflow: ellipsis;
+}
+
+.dns-preview strong {
+  color: var(--gold);
+}
+
+.dns-preview code {
+  grid-column: 1 / -1;
+  color: rgba(247, 241, 223, 0.5);
+  word-break: break-all;
+}
+
+.empty-panel {
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  color: rgba(247, 241, 223, 0.7);
+}
+
+.account-panel {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0 0 1.2rem;
+  padding: 0.8rem 1rem;
+  border: 1px solid rgba(215, 169, 46, 0.24);
+  border-radius: 0.8rem;
+  text-align: left;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  background: rgba(0, 0, 0, 0.28);
+}
+
+.account-panel span {
+  font-size: 0.7rem;
+  color: rgba(247, 241, 223, 0.48);
+}
+
+.account-panel strong {
+  overflow: hidden;
+  color: var(--gold);
+  font-size: 0.86rem;
+  text-overflow: ellipsis;
+}
+
+.text-button {
+  margin-top: 0.9rem;
+  padding: 0.4rem;
+  border: 0;
+  color: rgba(247, 241, 223, 0.58);
+  background: transparent;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+}
+
+.text-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .apply-kicker {

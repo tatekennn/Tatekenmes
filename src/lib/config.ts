@@ -1,7 +1,7 @@
 // 非秘密の設定値（秘密はすべて環境変数）。
 export const BASE_ZONE_ASCII = 'xn--7qwx14d.com'; // 覇気.com
 export const SUFFIX = 'の'; // <name>の.覇気.com
-export const MUU_DOMAIN_ID = 'MU17941622';
+export const MUU_DOMAIN_ID = process.env.MUU_DOMAIN_ID ?? 'MU17941622';
 // 本番APIのベースURL（acme.sh 公式 muumuu 連携と同一。api.muumuu-domain.com は WAF で 403 になる）
 export const MUU_API_BASE = process.env.MUU_API_BASE ?? 'https://muumuu-domain.com/api/v2';
 

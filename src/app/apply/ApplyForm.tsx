@@ -3,81 +3,86 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 
-const MAX_NAME = 20;
-
-type Phase = 'idle' | 'creating' | 'waiting' | 'done' | 'error';
-type Plan = 'hosted' | 'byo';
+type Phase = 'search' | 'checking' | 'confirm' | 'claiming' | 'done' | 'error';
+type Stock = { total: number; sold: number; remaining: number };
+type User = { id: string; email: string };
 
 export default function ApplyForm() {
-  const [name, setName] = useState('');
-  const [plan, setPlan] = useState<Plan>('hosted');
-  const [target, setTarget] = useState('');
-  const [phase, setPhase] = useState<Phase>('idle');
+  const [label, setLabel] = useState('');
+  const [user, setUser] = useState<User | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [phase, setPhase] = useState<Phase>('search');
   const [message, setMessage] = useState('');
-  const [targetUrl, setTargetUrl] = useState('');
-  const [remaining, setRemaining] = useState<number | null>(null);
+  const [orderId, setOrderId] = useState('');
+  const [previewUrl, setPreviewUrl] = useState('');
+  const [stock, setStock] = useState<Stock | null>(null);
 
   useEffect(() => {
-    fetch('/api/stock')
-      .then((r) => r.json())
-      .then((d) => setRemaining(typeof d?.remaining === 'number' ? d.remaining : null))
+    fetch('/api/local-sales', { cache: 'no-store' })
+      .then((res) => res.json())
+      .then((data) => {
+        if (typeof data?.remaining === 'number') setStock(data);
+      })
       .catch(() => {});
+    fetch('/api/local-auth', { cache: 'no-store' })
+      .then((res) => res.json())
+      .then((data) => setUser(data?.user ?? null))
+      .finally(() => setAuthLoading(false));
   }, []);
 
-  const trimmed = name.trim().slice(0, MAX_NAME);
-  const targetTrimmed = target.trim();
-  const valid = trimmed.length > 0 && (plan === 'hosted' || targetTrimmed.length > 0);
-  const busy = phase === 'creating' || phase === 'waiting';
+  const trimmed = label.trim().slice(0, 20);
+  const displayDomain = useMemo(() => `${trimmed || 'あなた'}.覇気.com`, [trimmed]);
+  const busy = phase === 'checking' || phase === 'claiming';
 
-  const previewDomain = useMemo(
-    () => (trimmed ? `${trimmed}の.覇気.com` : '〇〇の.覇気.com'),
-    [trimmed],
-  );
+  const restart = () => {
+    setPhase('search');
+    setMessage('');
+    setOrderId('');
+    setPreviewUrl('');
+  };
 
-  const onSubmit = async (event: FormEvent) => {
+  const checkAvailability = async (event: FormEvent) => {
     event.preventDefault();
-    if (!valid || busy) return;
-    setPhase('creating');
-    setMessage(plan === 'byo' ? '区画を分譲中…' : '覇気を注入中…');
+    if (!trimmed || busy) return;
+    setPhase('checking');
+    setMessage('空きを確認しています…');
     try {
-      const res = await fetch('/api/create', {
+      const res = await fetch('/api/local-sales', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(
-          plan === 'byo' ? { name: trimmed, target: targetTrimmed } : { name: trimmed },
-        ),
+        body: JSON.stringify({ action: 'check', label: trimmed }),
       });
       const data = await res.json();
-      if (!res.ok) {
-        setPhase('error');
-        setMessage(data?.error ?? '手続きに失敗しました');
-        return;
-      }
-      if (data.status === 'sold') {
-        // 持ち込みプラン成約：向き先は買い手のサーバーなので遷移はしない
-        setPhase('done');
-        setMessage(
-          `成約！ ${data.domain} → ${data.record.value} (${data.record.type}) ${data.note}`,
-        );
-        return;
-      }
-      setTargetUrl(data.url);
-      if (data.status === 'exists') {
-        setPhase('done');
-        setMessage('もう存在します。開きます…');
-        window.location.href = data.url;
-        return;
-      }
-      // 証明書発行を待ってから遷移
-      setPhase('waiting');
-      setMessage('ページを生成中…（証明書発行を待っています）');
-      window.setTimeout(() => {
-        setPhase('done');
-        window.location.href = data.url;
-      }, 12_000);
-    } catch {
+      if (!res.ok) throw new Error(data?.error ?? '空き確認に失敗しました');
+      setStock(data);
+      setMessage(`${data.domain} は申し込めます`);
+      setPhase('confirm');
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : '空き確認に失敗しました');
       setPhase('error');
-      setMessage('通信に失敗しました。時間をおいて再度お試しください');
+    }
+  };
+
+  const claim = async () => {
+    if (!user || busy) return;
+    setPhase('claiming');
+    setMessage('無料区画を発行しています…');
+    try {
+      const res = await fetch('/api/local-sales', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'claim', label: trimmed }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error ?? '申込みに失敗しました');
+      setOrderId(data.orderId);
+      setPreviewUrl(data.previewUrl);
+      setStock(data);
+      setMessage(`${data.domain} の無料発行が完了しました`);
+      setPhase('done');
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : '申込みに失敗しました');
+      setPhase('error');
     }
   };
 
@@ -85,98 +90,96 @@ export default function ApplyForm() {
     <main className="apply-stage">
       <div className="aura aura-one" />
       <div className="aura aura-two" />
-
-      <form className="apply-card" onSubmit={onSubmit}>
-        <p className="apply-kicker">
-          覇気.com サブドメイン分譲
-          {remaining !== null && ` — 残り${remaining}区画`}
-        </p>
-        <h1 className="apply-title">覇気を、その名に。</h1>
+      <section className="apply-card apply-card--sale" aria-labelledby="sale-title">
+        <div className="demo-badge">先着無料 · 1アカウント1区画</div>
+        <p className="apply-kicker">覇気.com SUBDOMAIN</p>
+        <h1 className="apply-title" id="sale-title">その名前に、覇気を。</h1>
         <p className="apply-lead">
-          <strong>{previewDomain}</strong> を分譲します（いまなら ¥0 キャンペーン中）。
+          <strong>{displayDomain}</strong>
+          <br />あなた専用の覇気ページを、無料で取得。
         </p>
 
-        <label className="apply-field">
-          <span className="apply-label">なまえ</span>
-          <input
-            className="apply-input"
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="例：たてけん"
-            maxLength={MAX_NAME}
-            disabled={busy}
-            autoFocus
-          />
-        </label>
-
-        <div className="apply-field" role="radiogroup" aria-label="プラン">
-          <span className="apply-label">プラン</span>
-          <label className="apply-plan-option">
-            <input
-              type="radio"
-              name="plan"
-              checked={plan === 'hosted'}
-              onChange={() => setPlan('hosted')}
-              disabled={busy}
-            />
-            <span>
-              <strong>入居プラン</strong> — 覇気全開ページ付き（おまかせ）
-            </span>
-          </label>
-          <label className="apply-plan-option">
-            <input
-              type="radio"
-              name="plan"
-              checked={plan === 'byo'}
-              onChange={() => setPlan('byo')}
-              disabled={busy}
-            />
-            <span>
-              <strong>持ち込みプラン</strong> — 自分のサーバーに向ける
-            </span>
-          </label>
-        </div>
-
-        {plan === 'byo' && (
-          <label className="apply-field">
-            <span className="apply-label">向き先（IP または ホスト名）</span>
-            <input
-              className="apply-input"
-              type="text"
-              value={target}
-              onChange={(e) => setTarget(e.target.value)}
-              placeholder="例：myapp.vercel.app / 203.0.113.10"
-              disabled={busy}
-            />
-          </label>
+        {stock && (
+          <div className="stock-meter" aria-label={`残り${stock.remaining}区画`}>
+            <span>限定 {stock.total}区画</span>
+            <strong>残り {stock.remaining}</strong>
+          </div>
         )}
 
-        <button className="apply-button" type="submit" disabled={!valid || busy}>
-          {busy ? '手続き中…' : plan === 'byo' ? 'この区画を契約する 📄' : '覇気を放つ ⚡'}
-        </button>
+        {phase !== 'done' && (
+          <form onSubmit={checkAvailability}>
+            <label className="apply-field">
+              <span className="apply-label">希望するサブドメイン</span>
+              <div className="domain-input-row">
+                <input
+                  className="apply-input"
+                  value={label}
+                  onChange={(event) => {
+                    setLabel(event.target.value);
+                    if (phase !== 'search') restart();
+                  }}
+                  placeholder="例：tateken"
+                  maxLength={20}
+                  disabled={busy || phase === 'confirm'}
+                  autoFocus
+                />
+                <span>.覇気.com</span>
+              </div>
+            </label>
+            {(phase === 'search' || phase === 'checking' || phase === 'error') && (
+              <button className="apply-button" type="submit" disabled={!trimmed || busy}>
+                {phase === 'checking' ? '確認中…' : '空きを確認する'}
+              </button>
+            )}
+          </form>
+        )}
 
-        {phase !== 'idle' && (
-          <p className={`apply-status apply-status--${phase}`}>
-            {message}
-            {targetUrl && phase !== 'error' && (
+        {(phase === 'confirm' || phase === 'claiming') && (
+          <div className="checkout-panel">
+            <div className="price-row">
+              <span>覇気.com 無料区画</span>
+              <strong>¥0</strong>
+            </div>
+            {authLoading && <p className="apply-status">ログイン状態を確認中…</p>}
+            {!authLoading && user && (
               <>
-                {' '}
-                <a className="apply-link" href={targetUrl}>
-                  {targetUrl.replace('https://', '')}
-                </a>
+                <div className="account-panel">
+                  <span>購入者</span>
+                  <strong>{user.email}</strong>
+                </div>
+                <button className="apply-button" type="button" onClick={claim} disabled={busy}>
+                  {phase === 'claiming' ? '発行中…' : '無料で取得する'}
+                </button>
               </>
             )}
-          </p>
+            {!authLoading && !user && (
+              <div className="empty-panel">
+                <p>購入にはログインが必要です。</p>
+                <a className="apply-button apply-button--link" href="/login">ローカルでログイン</a>
+              </div>
+            )}
+            <button className="text-button" type="button" onClick={restart} disabled={busy}>
+              別の名前を選ぶ
+            </button>
+          </div>
         )}
 
-        {phase === 'idle' && (
-          <p className="apply-note">
-            ※ 送信すると本物のDNSレコードが作成されます。
-            {plan === 'byo' && ' HTTPS証明書は向き先サーバー側でご用意ください。'}
-          </p>
+        {message && <p className={`apply-status apply-status--${phase}`}>{message}</p>}
+        {phase === 'done' && (
+          <div className="success-panel">
+            <div className="success-mark" aria-hidden="true">✓</div>
+            <h2>無料取得完了</h2>
+            <p><strong>{displayDomain}</strong></p>
+            <p className="order-id">申込番号: {orderId}</p>
+            <a className="apply-button apply-button--link" href={previewUrl}>発行後のページを見る</a>
+            <a className="apply-button apply-button--secondary" href="/dashboard">DNS管理画面へ</a>
+            <button className="text-button" type="button" onClick={restart}>続けて試す</button>
+          </div>
         )}
-      </form>
+        <p className="apply-note">
+          決済情報は不要です。取得後はダッシュボードから接続先を設定できます。
+        </p>
+      </section>
     </main>
   );
 }

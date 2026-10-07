@@ -1,4 +1,5 @@
 import HomeHaki from './HomeHaki';
+import HomeCta from './HomeCta';
 
 export default function HomePage() {
   return (
@@ -6,6 +7,7 @@ export default function HomePage() {
       <div className="aura aura-one" />
       <div className="aura aura-two" />
       <HomeHaki />
+      {process.env.NODE_ENV !== 'production' && <HomeCta />}
     </main>
   );
 }
