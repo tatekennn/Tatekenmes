@@ -64,7 +64,7 @@ export function interact(life: Life) {
   }
   life.resting = true; life.restBench = action.index >= 0 ? action.index : null;
   player.vx = player.vy = player.vz = 0;
-  player.y = groundHeight(player.x, player.z) + 0.25;
+  player.y = groundHeight(player.x, player.z) + 0.17;
   if (life.restBench !== null) { const p = BENCHES[life.restBench]; player.x = p.x; player.z = p.z; player.y = groundHeight(p.x, p.z) + 0.98; player.facing = 0; }
   return { name: 'ひと休み', text: '風と雲を眺めながら、ゆっくり過ごそう。' };
 }
@@ -94,7 +94,7 @@ export function stepLife(life: Life, seconds: number, input: { x: number; z: num
       a.vy -= 24 * dt; a.x += a.vx * dt; a.z += a.vz * dt; a.y += a.vy * dt; keepInField(a);
       const moving = Math.hypot(a.vx, a.vz);
       if (moving > 0.2) { const target = Math.atan2(a.vx, a.vz), difference = Math.atan2(Math.sin(target - a.facing), Math.cos(target - a.facing)); a.facing += difference * Math.min(1, 12 * dt); }
-      a.walk += dt * moving * 1.1;
+      a.walk += dt * moving * (i === 0 ? 1.8 : 3);
     });
     life.jumpHeld = input.jump;
     for (let pass = 0; pass < 6; pass++) for (let i = 0; i < life.actors.length; i++) for (let j = i + 1; j < life.actors.length; j++) {

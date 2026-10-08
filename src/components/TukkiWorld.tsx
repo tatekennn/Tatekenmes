@@ -146,7 +146,7 @@ function ResidentModel({ game, index }: { game: Life; index: number }) {
     const speed = Math.hypot(actor.vx, actor.vz);
     const forwardSpeed = actor.vx * Math.sin(actor.facing) + actor.vz * Math.cos(actor.facing);
     const sideSpeed = -actor.vx * Math.cos(actor.facing) + actor.vz * Math.sin(actor.facing);
-    m.animate(actor.walk, Math.min(1, speed / 7), forwardSpeed / 10 * 0.18, game.elapsed + index,
+    m.animate(actor.walk, Math.min(1, speed / (index === 0 ? 6.5 : 2.2)), forwardSpeed / 10 * 0.18, game.elapsed + index,
       speed > 0.2 ? sideSpeed / speed : 0, index === 0 && game.resting);
     ring.current.position.set(actor.x, groundHeight(actor.x, actor.z) + 0.08, actor.z);
     ring.current.visible = index === 0 && game.resting;
