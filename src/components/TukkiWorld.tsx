@@ -249,11 +249,19 @@ function FollowLight({ target }: { target: React.MutableRefObject<THREE.Vector3>
 /*  画面                                                               */
 /* ------------------------------------------------------------------ */
 export default function TukkiWorld() {
-  const [phase, setPhase] = useState<'intro' | 'playing' | 'help'>('intro');
+  const [phase, setPhase] = useState<'intro' | 'playing' | 'help' | 'photo'>('intro');
   const { input, setStick, setButton } = useInput(phase === 'playing');
   const [game] = useState(createLife);
   const [hud, setHud] = useState(() => lifeSnapshot(game));
   const [message, setMessage] = useState<{ name: string; text: string } | null>(null);
+  const renderer = useRef<{ gl: THREE.WebGLRenderer; scene: THREE.Scene; camera: THREE.Camera } | null>(null);
+  const [photo, setPhoto] = useState<string | null>(null);
+  const [photoError, setPhotoError] = useState('');
+  const shoot = () => {
+    const r = renderer.current; if (!r) return;
+    try { r.gl.render(r.scene, r.camera); setPhoto(r.gl.domElement.toDataURL('image/png')); setPhotoError(''); }
+    catch { setPhotoError('撮影できませんでした。もう一度お試しください。'); }
+  };
   const playerPos = useRef(new THREE.Vector3());
   const drag = useRef<{ id: number; x: number; y: number } | null>(null);
   const stickRef = useRef<{ id: number; ox: number; oy: number } | null>(null);
@@ -267,14 +275,14 @@ export default function TukkiWorld() {
   useEffect(() => { if (!message) return; const timer = window.setTimeout(() => setMessage(null), 6000); return () => window.clearTimeout(timer); }, [message]);
   const stopInput = () => { setStick(0, 0); setButton(false); stickRef.current = null; drag.current = null; setStickUi(null); input.current.yawDelta = input.current.pitchDelta = 0; };
   const pointerDown = (e: React.PointerEvent) => {
-    if (phase !== 'playing') return;
-    if (e.pointerType === 'touch' && e.clientX < window.innerWidth / 2) {
+    if (phase !== 'playing' && phase !== 'photo') return;
+    if (phase === 'playing' && e.pointerType === 'touch' && e.clientX < window.innerWidth / 2) {
       stickRef.current = { id: e.pointerId, ox: e.clientX, oy: e.clientY }; setStickUi({ x: e.clientX, y: e.clientY, dx: 0, dy: 0 });
     } else drag.current = { id: e.pointerId, x: e.clientX, y: e.clientY };
     e.currentTarget.setPointerCapture(e.pointerId);
   };
   const pointerMove = (e: React.PointerEvent) => {
-    if (phase !== 'playing') return;
+    if (phase !== 'playing' && phase !== 'photo') return;
     const stick = stickRef.current;
     if (stick?.id === e.pointerId) {
       let dx = e.clientX - stick.ox, dy = e.clientY - stick.oy; const length = Math.hypot(dx, dy);
@@ -298,7 +306,7 @@ export default function TukkiWorld() {
       }
       @media (max-height:500px) { .life-map { width: 116px !important; } .life-message { bottom: 20px !important; max-width: 45vw !important; } }
     `}</style>
-    <Canvas shadows camera={{ position: [0, 5, 12], fov: 55, near: 0.1, far: 500 }} dpr={[1, 2]}>
+    <Canvas onCreated={({ gl, scene, camera }) => { renderer.current = { gl, scene, camera }; }} shadows camera={{ position: [0, 5, 12], fov: 55, near: 0.1, far: 500 }} dpr={[1, 2]}>
       <fog attach="fog" args={[SKY_BOTTOM, 65, 150]} /><Sky /><hemisphereLight args={['#fff8e4', '#6c9552', 1.2]} /><ambientLight intensity={0.35} />
       <FollowLight target={playerPos} /><World /><LifeScene input={input} game={game} onUpdate={(life) => setHud(lifeSnapshot(life))} playerPos={playerPos} running={phase === 'playing'} />
     </Canvas>
@@ -308,6 +316,7 @@ export default function TukkiWorld() {
         <div style={{ fontSize: 12, marginTop: 4 }}>{hud.resting ? 'ひと休み中 ☕' : '今日は、どこへ行こう？'}</div>
         <div className="life-subtitle" style={{ fontSize: 11, marginTop: 4 }}>WASDで散歩 · Eであいさつ / 休む · ドラッグで見回す</div>
       </div>
+      <button aria-label="写真モード" onPointerDown={(e) => e.stopPropagation()} onClick={() => { stopInput(); setMessage(null); setPhoto(null); setPhotoError(''); setPhase('photo'); }} style={{ ...buttonStyle, position: 'absolute', left: 12, top: 116, padding: '12px 16px', fontWeight: 800 }}>📷 写真</button>
       <button aria-label="遊び方 / 一時停止" onPointerDown={(e) => e.stopPropagation()} onClick={pause} style={{ ...buttonStyle, position: 'absolute', top: 'max(12px, env(safe-area-inset-top))', right: 12, width: 44, height: 44, fontSize: 22 }}>Ⅱ</button>
       <div className="life-map" style={{ position: 'absolute', top: 78, right: 12, width: 154, padding: 8, borderRadius: 16, background: '#fffbeae8', boxSizing: 'border-box', pointerEvents: 'none' }}>
         <div style={{ fontSize: 11, fontWeight: 800 }}>草原の地図 <span style={{ float: 'right' }}>↑北</span></div>
@@ -330,11 +339,28 @@ export default function TukkiWorld() {
       <button className="life-jump" aria-label="ジャンプ" onPointerDown={(e) => { e.stopPropagation(); e.currentTarget.setPointerCapture(e.pointerId); setButton(true); }} onPointerUp={() => setButton(false)} onPointerCancel={() => setButton(false)} onLostPointerCapture={() => setButton(false)} style={{ ...buttonStyle, position: 'absolute', right: 16, bottom: 140, padding: 10 }}>ジャンプ</button>
       {message && <div className="life-message" role="status" style={{ position: 'absolute', bottom: 32, left: '50%', transform: 'translateX(-50%)', width: 'min(80vw, 420px)', maxWidth: '80vw', padding: '14px 18px', background: '#fffbeaf5', borderRadius: 18, boxShadow: '0 4px 20px #354b2522', boxSizing: 'border-box', pointerEvents: 'none' }}><strong style={{ fontSize: 13 }}>{message.name}</strong><div style={{ fontSize: 14, lineHeight: 1.7, marginTop: 5 }}>{message.text}</div></div>}
     </>}
-    {phase !== 'playing' && <div onPointerDown={(e) => e.stopPropagation()} style={{ position: 'absolute', inset: 0, background: '#36564166', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+    {phase === 'photo' && <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+      <div style={{ position: 'absolute', top: 16, left: 16, right: 16, display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+        <span style={{ background: '#fffbeae8', borderRadius: 14, padding: 12 }}>ドラッグで角度を変えて撮影</span>
+        <button onPointerDown={(e) => e.stopPropagation()} onClick={() => { stopInput(); setPhoto(null); setPhase('playing'); }} style={{ ...buttonStyle, padding: 12, pointerEvents: 'auto' }}>散歩に戻る</button>
+      </div>
+      {!photo && <button aria-label="撮影する" onPointerDown={(e) => e.stopPropagation()} onClick={shoot} style={{ ...buttonStyle, position: 'absolute', bottom: 'max(28px, env(safe-area-inset-bottom))', left: '50%', transform: 'translateX(-50%)', width: 88, height: 88, borderRadius: '50%', fontSize: 18, fontWeight: 800, pointerEvents: 'auto', border: '5px solid white' }}>撮影</button>}
+      {photoError && <p role="alert" style={{ background: '#fffbea', padding: 12 }}>{photoError}</p>}
+      {photo && <section role="dialog" aria-label="撮影した写真" onPointerDown={(e) => e.stopPropagation()} style={{ position: 'absolute', inset: 0, background: '#233620dd', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: 20, pointerEvents: 'auto' }}>
+        <img src={photo} alt="自然の中のツッキーくんの写真" style={{ maxWidth: '100%', maxHeight: '65vh', objectFit: 'contain', borderRadius: 12 }} />
+        <div style={{ display: 'flex', gap: 12 }}>
+          <button onClick={() => setPhoto(null)} style={{ ...buttonStyle, padding: 14 }}>撮り直す</button>
+          <a href={photo} download={`tukki-${new Date().toISOString().replace(/[:.]/g, '-')}.png`} style={{ ...buttonStyle, textDecoration: 'none', padding: 14, fontWeight: 800, background: '#ffe3a1' }}>写真を保存</a>
+          <button onClick={() => { setPhoto(null); setPhase('playing'); }} style={{ ...buttonStyle, padding: 14 }}>閉じる</button>
+        </div>
+        <small style={{ color: 'white' }}>スマホでは写真の長押しからも保存できます。</small>
+      </section>}
+    </div>}
+    {(phase === 'intro' || phase === 'help') && <div onPointerDown={(e) => e.stopPropagation()} style={{ position: 'absolute', inset: 0, background: '#36564166', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
       <section role="dialog" aria-modal="true" aria-labelledby="life-title" style={{ width: '100%', maxWidth: 480, maxHeight: '100%', overflowY: 'auto', boxSizing: 'border-box', borderRadius: 28, padding: 'clamp(22px, 4vw, 34px)', background: '#fffbea', boxShadow: '0 20px 60px #142e3933' }}>
         <div style={{ letterSpacing: 3, fontSize: 12, color: '#8a784e' }}>A SLOW DAY</div><h1 id="life-title" style={{ fontSize: 30, lineHeight: 1.35 }}>ツッキーくんの<br />のんびり生活</h1>
         <p style={{ lineHeight: 1.8 }}>急がなくても、何もしなくても大丈夫。<br />仲間たちと、草原でゆっくり過ごそう。</p>
-        <div style={{ background: '#edf2d9', borderRadius: 16, padding: 16, lineHeight: 1.9, fontSize: 14 }}>🌿 好きなところへお散歩<br />💬 仲間の近くで「あいさつ」<br />☕ ベンチや草の上で「ひと休み」<br /><span style={{ color: '#71814f' }}>制限時間も、順位もありません。</span></div>
+        <div style={{ background: '#edf2d9', borderRadius: 16, padding: 16, lineHeight: 1.9, fontSize: 14 }}>🌿 好きなところへお散歩<br />💬 仲間の近くで「あいさつ」<br />☕ ベンチや草の上で「ひと休み」<br />📷 好きな景色で写真を撮って保存<br /><span style={{ color: '#71814f' }}>制限時間も、順位もありません。</span></div>
         <p style={{ fontSize: 13, lineHeight: 1.8 }}>スマホ：左下のスティックで移動、右側をドラッグして見回す。右下のボタンであいさつ・ひと休み。<br />PC：WASD / 矢印で移動、Eでアクション、Spaceでジャンプ。</p>
         <button autoFocus onClick={() => setPhase('playing')} style={{ ...buttonStyle, width: '100%', padding: 16, fontWeight: 800, fontSize: 18, background: '#e5bc5d', borderRadius: 16 }}>{phase === 'intro' ? '草原へ行く' : 'お散歩に戻る'}</button>
       </section>
