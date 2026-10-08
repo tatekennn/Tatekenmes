@@ -80,3 +80,33 @@ test('neighbors separate gently without pushing a seated player off the bench', 
   const x = p.x, z = p.z; stepLife(life, 1 / 60, idle);
   assert.equal(p.x, x); assert.equal(p.z, z); assert(Math.hypot(other.x - p.x, other.z - p.z) >= p.radius + other.radius - 0.01);
 });
+
+test('rest and greeting can be chosen independently beside a friend and bench', () => {
+  const life = createLife(); isolate(life); const p = life.actors[0], friend = life.actors[1], bench = BENCHES[0];
+  p.x = bench.x; p.z = bench.z + 2.2; p.y = groundHeight(p.x, p.z);
+  friend.x = p.x + 3; friend.z = p.z; friend.y = p.y;
+  const greeting = interact(life, 'greet'); assert.equal(greeting.name, 'みどり'); assert(!life.resting);
+  interact(life, 'rest'); assert(life.resting); assert.equal(life.restBench, 0);
+  const facing = p.facing; interact(life, 'greet'); assert(life.resting); assert.equal(p.facing, facing);
+  interact(life, 'rest'); assert(!life.resting);
+});
+
+test('greeting without a nearby friend never switches to resting', () => {
+  const life = createLife(); isolate(life);
+  interact(life, 'greet'); assert(!life.resting); assert.equal(life.greetings, 0);
+});
+
+test('player and residents cannot walk through the front, back or ends of a bench', () => {
+  for (const index of [0, 1]) for (const direction of [{ x: 0, z: -1 }, { x: 0, z: 1 }, { x: -1, z: 0 }, { x: 1, z: 0 }]) {
+    const life = createLife(); isolate(life); const a = life.actors[index], bench = BENCHES[0];
+    if (index) { life.actors[0].x = 40; life.actors[0].z = 0; }
+    a.x = bench.x - direction.x * 5; a.z = bench.z - direction.z * 5; a.y = groundHeight(a.x, a.z);
+    a.stoppedUntil = 0; a.chooseAt = 1000; a.targetX = bench.x + direction.x * 5; a.targetZ = bench.z + direction.z * 5;
+    for (let frame = 0; frame < 180; frame++) {
+      stepLife(life, 1 / 60, { ...direction, jump: false });
+      const dx = a.x - Math.max(bench.x - 1.7, Math.min(bench.x + 1.7, a.x));
+      const dz = a.z - Math.max(bench.z - 0.75, Math.min(bench.z + 0.55, a.z));
+      assert(Math.hypot(dx, dz) >= a.radius - 0.01);
+    }
+  }
+});
