@@ -256,7 +256,11 @@ function FollowLight({ target }: { target: React.MutableRefObject<THREE.Vector3>
 /*  画面                                                               */
 /* ------------------------------------------------------------------ */
 export default function TukkiWorld() {
-  const [phase, setPhase] = useState<'intro' | 'playing' | 'help' | 'photo'>('intro');
+  const [phase, setPhase] = useState<'intro' | 'playing' | 'help' | 'photo' | 'background'>('intro');
+  const screen = useRef<HTMLDivElement>(null);
+  const backgroundReturn = useRef<'playing' | 'photo'>('playing');
+  const ownsFullscreen = useRef(false);
+  const [backgroundPhoto, setBackgroundPhoto] = useState(false);
   const { input, setStick, setButton } = useInput(phase === 'playing');
   const [game] = useState(createLife);
   const [hud, setHud] = useState(() => lifeSnapshot(game));
@@ -282,6 +286,27 @@ export default function TukkiWorld() {
   }, []);
   useEffect(() => { if (!message) return; const timer = window.setTimeout(() => setMessage(null), 6000); return () => window.clearTimeout(timer); }, [message]);
   const stopInput = () => { setStick(0, 0); setButton(false); stickRef.current = null; drag.current = null; setStickUi(null); input.current.yawDelta = input.current.pitchDelta = 0; };
+  const leaveBackground = () => {
+    setPhase(backgroundReturn.current);
+    if (document.fullscreenElement === screen.current) void document.exitFullscreen().catch(() => {});
+    ownsFullscreen.current = false;
+  };
+  const enterBackground = () => {
+    stopInput(); setMessage(null);
+    backgroundReturn.current = phase === 'photo' ? 'photo' : 'playing';
+    setBackgroundPhoto(phase === 'photo'); setPhase('background');
+    // Hiding the HUD also works on devices without the Fullscreen API.
+    if (!document.fullscreenElement && screen.current?.requestFullscreen) {
+      void screen.current.requestFullscreen().then(() => { ownsFullscreen.current = true; }).catch(() => {});
+    }
+  };
+  useEffect(() => {
+    if (phase !== 'background') return;
+    const key = (e: KeyboardEvent) => { if (e.code === 'Escape') { e.preventDefault(); leaveBackground(); } };
+    const change = () => { if (ownsFullscreen.current && !document.fullscreenElement) { ownsFullscreen.current = false; setPhase(backgroundReturn.current); } };
+    window.addEventListener('keydown', key); document.addEventListener('fullscreenchange', change);
+    return () => { window.removeEventListener('keydown', key); document.removeEventListener('fullscreenchange', change); };
+  }, [phase]);
   const pointerDown = (e: React.PointerEvent) => {
     if (phase !== 'playing' && phase !== 'photo') return;
     if (phase === 'playing' && e.pointerType === 'touch' && e.clientX < window.innerWidth / 2) {
@@ -302,9 +327,10 @@ export default function TukkiWorld() {
   };
   const pointerUp = (e: React.PointerEvent) => { if (stickRef.current?.id === e.pointerId) { stickRef.current = null; setStick(0, 0); setStickUi(null); } if (drag.current?.id === e.pointerId) drag.current = null; };
   const pause = () => { stopInput(); setMessage(null); setPhase('help'); };
-  return <div style={{ position: 'fixed', inset: 0, background: SKY_BOTTOM, touchAction: 'none', userSelect: 'none', fontFamily: 'system-ui, sans-serif', color: '#43532e' }} onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={pointerUp} onPointerCancel={pointerUp}>
+  return <div ref={screen} aria-label={phase === 'background' ? '背景モード。Escまたはダブルクリックで戻る' : undefined} onDoubleClick={() => { if (phase === 'background') leaveBackground(); }} style={{ position: 'fixed', inset: 0, cursor: phase === 'background' ? 'none' : undefined, background: SKY_BOTTOM, touchAction: 'none', userSelect: 'none', fontFamily: 'system-ui, sans-serif', color: '#43532e' }} onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={pointerUp} onPointerCancel={pointerUp}>
     <style>{`
       .life-stick { display: none; }
+      .life-background-button { top: 204px; }
       .life-photo-button { min-width: 168px; min-height: 72px; font-size: 22px; }
       .life-action { width: 184px !important; height: 88px !important; font-size: 23px !important; }
       .life-jump { bottom: 232px !important; min-width: 120px; font-size: 18px; }
@@ -315,6 +341,7 @@ export default function TukkiWorld() {
       .photo-action { min-height: 52px; font-size: 18px; }
       @media (max-width:600px), (max-height:500px), (pointer:coarse) {
         .life-stick { display: block; }
+        .life-background-button { top: 176px; }
         .life-photo-button { min-width: 108px; min-height: 48px; font-size: 16px; }
         .life-action { width: 124px !important; height: 68px !important; font-size: 17px !important; }
         .photo-controls { left: 12px; bottom: 132px; width: 180px; padding: 10px; }
@@ -329,7 +356,7 @@ export default function TukkiWorld() {
     `}</style>
     <Canvas onCreated={({ gl, scene, camera }) => { renderer.current = { gl, scene, camera }; }} shadows camera={{ position: [0, 5, 12], fov: 55, near: 0.1, far: 500 }} dpr={[1, 2]}>
       <fog attach="fog" args={[SKY_BOTTOM, 65, 150]} /><Sky /><hemisphereLight args={['#fff8e4', '#6c9552', 1.2]} /><ambientLight intensity={0.35} />
-      <FollowLight target={playerPos} /><World /><LifeScene input={input} game={game} onUpdate={(life) => setHud(lifeSnapshot(life))} playerPos={playerPos} running={phase === 'playing'} photoCamera={phase === 'photo' ? photoCamera : null} />
+      <FollowLight target={playerPos} /><World /><LifeScene input={input} game={game} onUpdate={(life) => setHud(lifeSnapshot(life))} playerPos={playerPos} running={phase === 'playing' || phase === 'background'} photoCamera={phase === 'photo' || (phase === 'background' && backgroundPhoto) ? photoCamera : null} />
     </Canvas>
     {phase === 'playing' && <>
       <div style={{ position: 'absolute', top: 'max(12px, env(safe-area-inset-top))', left: 12, maxWidth: 'calc(100% - 80px)', boxSizing: 'border-box', padding: '10px 14px', borderRadius: 16, background: '#fffbeae8', pointerEvents: 'none' }}>
@@ -338,6 +365,7 @@ export default function TukkiWorld() {
         <div className="life-subtitle" style={{ fontSize: 11, marginTop: 4 }}>WASDで散歩 · Eであいさつ · Rで休憩 · ドラッグで見回す</div>
       </div>
       <button className="life-photo-button" aria-label="写真モード" onPointerDown={(e) => e.stopPropagation()} onClick={() => { stopInput(); setMessage(null); setPhoto(null); setPhotoError(''); setPhotoCamera({ distance: 10, height: 1.8, side: 0 }); setPhase('photo'); }} style={{ ...buttonStyle, position: 'absolute', left: 12, top: 116, padding: '12px 16px', fontWeight: 800 }}>📷 写真</button>
+      <button className="life-photo-button life-background-button" aria-label="全画面の背景モード" title="ボタンを隠して全画面に。Escまたはダブルクリック・ダブルタップで戻る" onPointerDown={(e) => e.stopPropagation()} onClick={enterBackground} style={{ ...buttonStyle, position: 'absolute', left: 12, padding: '12px 16px', fontWeight: 800 }}>⛶ 背景モード</button>
       <button aria-label="遊び方 / 一時停止" onPointerDown={(e) => e.stopPropagation()} onClick={pause} style={{ ...buttonStyle, position: 'absolute', top: 'max(12px, env(safe-area-inset-top))', right: 12, width: 44, height: 44, fontSize: 22 }}>Ⅱ</button>
       <div className="life-map" style={{ position: 'absolute', top: 78, right: 12, width: 154, padding: 8, borderRadius: 16, background: '#fffbeae8', boxSizing: 'border-box', pointerEvents: 'none' }}>
         <div style={{ fontSize: 11, fontWeight: 800 }}>草原の地図 <span style={{ float: 'right' }}>↑北</span></div>
@@ -368,6 +396,7 @@ export default function TukkiWorld() {
         <span style={{ background: '#fffbeae8', borderRadius: 14, padding: 12 }}>写真モード · ドラッグで角度を調整</span>
         <button onPointerDown={(e) => e.stopPropagation()} onClick={() => { stopInput(); setPhoto(null); setPhase('playing'); }} style={{ ...buttonStyle, padding: 12, pointerEvents: 'auto' }}>散歩に戻る</button>
       </div>
+      {!photo && <button className="photo-action" onPointerDown={(e) => e.stopPropagation()} onClick={enterBackground} title="Escまたはダブルクリック・ダブルタップで戻る" style={{ ...buttonStyle, position: 'absolute', right: 16, bottom: 28, padding: 14, pointerEvents: 'auto' }}>⛶ 背景にする</button>}
       {!photo && <aside className="photo-controls" aria-label="撮影カメラの位置" onPointerDown={(e) => e.stopPropagation()}>
         <strong>カメラの位置</strong>
         <label>距離<input aria-label="カメラの距離" type="range" min="5" max="24" step="0.5" value={photoCamera.distance} onChange={(e) => setPhotoCamera((c) => ({ ...c, distance: Number(e.target.value) }))} /></label>
@@ -391,8 +420,8 @@ export default function TukkiWorld() {
       <section role="dialog" aria-modal="true" aria-labelledby="life-title" style={{ width: '100%', maxWidth: 480, maxHeight: '100%', overflowY: 'auto', boxSizing: 'border-box', borderRadius: 28, padding: 'clamp(22px, 4vw, 34px)', background: '#fffbea', boxShadow: '0 20px 60px #142e3933' }}>
         <div style={{ letterSpacing: 3, fontSize: 12, color: '#8a784e' }}>A SLOW DAY</div><h1 id="life-title" style={{ fontSize: 30, lineHeight: 1.35 }}>ツッキーくんの<br />のんびり生活</h1>
         <p style={{ lineHeight: 1.8 }}>急がなくても、何もしなくても大丈夫。<br />仲間たちと、草原でゆっくり過ごそう。</p>
-        <div style={{ background: '#edf2d9', borderRadius: 16, padding: 16, lineHeight: 1.9, fontSize: 14 }}>🌿 好きなところへお散歩<br />💬 仲間の近くで「あいさつ」<br />☕ ベンチや草の上で「ひと休み」<br />📷 好きな景色で写真を撮って保存<br /><span style={{ color: '#71814f' }}>制限時間も、順位もありません。</span></div>
-        <p style={{ fontSize: 13, lineHeight: 1.8 }}>スマホ：左下のスティックで移動、右側をドラッグして見回す。右下で「あいさつ」「休憩」を選ぶ。<br />PC：WASD / 矢印で移動、Eであいさつ、Rで休憩 / 立ち上がる、Spaceでジャンプ。</p>
+        <div style={{ background: '#edf2d9', borderRadius: 16, padding: 16, lineHeight: 1.9, fontSize: 14 }}>🌿 好きなところへお散歩<br />💬 仲間の近くで「あいさつ」<br />☕ ベンチや草の上で「ひと休み」<br />📷 好きな景色で写真を撮って保存<br />⛶ 背景モードでボタンを隠して全画面に<br /><span style={{ color: '#71814f' }}>制限時間も、順位もありません。</span></div>
+        <p style={{ fontSize: 13, lineHeight: 1.8 }}>スマホ：左下のスティックで移動、右側をドラッグして見回す。右下で「あいさつ」「休憩」を選ぶ。<br />背景モード：Esc、または画面をダブルクリック / ダブルタップで戻る。<br />PC：WASD / 矢印で移動、Eであいさつ、Rで休憩 / 立ち上がる、Spaceでジャンプ。</p>
         <button autoFocus onClick={() => setPhase('playing')} style={{ ...buttonStyle, width: '100%', padding: 16, fontWeight: 800, fontSize: 18, background: '#e5bc5d', borderRadius: 16 }}>{phase === 'intro' ? '草原へ行く' : 'お散歩に戻る'}</button>
       </section>
     </div>}
