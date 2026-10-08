@@ -260,8 +260,8 @@ const TukkiModel = forwardRef<TukkiHandle, Props>(function TukkiModel({ color, s
       legR.current.rotation.x = -1.3 * sit + swing * 0.9 * (1 - Math.abs(sideways));
       legL.current.rotation.z = 0.12 + swing * sideways * 0.65;
       legR.current.rotation.z = -0.12 - swing * sideways * 0.65;
-      legL.current.position.set(-0.74 - sit * 0.08, 0.58 - sit * 0.22, 0.02 + sit * 0.63);
-      legR.current.position.set(0.74 + sit * 0.08, 0.58 - sit * 0.22, 0.02 + sit * 0.63);
+      legL.current.position.set(-0.74 - sit * 0.08, 0.58 - sit * 0.16 + Math.max(0, -Math.sin(walk)) * 0.12 * amount * (1 - sit), 0.02 + sit * 0.63 - Math.sin(walk) * 0.18 * amount * (1 - sit));
+      legR.current.position.set(0.74 + sit * 0.08, 0.58 - sit * 0.16 + Math.max(0, Math.sin(walk)) * 0.12 * amount * (1 - sit), 0.02 + sit * 0.63 + Math.sin(walk) * 0.18 * amount * (1 - sit));
       footL.current.rotation.x = footR.current.rotation.x = 1.3 * sit;
       torso.current.rotation.z = -sideways * amount * 0.1;
       // 体の前傾と弾み
@@ -269,7 +269,7 @@ const TukkiModel = forwardRef<TukkiHandle, Props>(function TukkiModel({ color, s
       torso.current.position.y = -0.38 * sit + Math.abs(Math.sin(walk)) * 0.1 * amount + Math.sin(t * 2.2) * 0.025;
       // 呼吸と首振り
       const breath = 1 + Math.sin(t * 2.2) * 0.012;
-      torso.current.scale.set(breath * (1 + 0.035 * sit), (1 - 0.12 * sit) / breath, breath);
+      torso.current.scale.set(breath, 1 / breath, breath);
       head.current.rotation.z = Math.sin(walk * 0.5) * 0.06 * amount + Math.sin(t * 1.3) * 0.025;
       head.current.rotation.y = Math.sin(t * 0.9) * 0.08 * (1 - amount);
     },
