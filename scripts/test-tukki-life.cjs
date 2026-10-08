@@ -8,7 +8,7 @@ function load(file) {
   const absolute = path.resolve(__dirname, '..', file);
   if (cache.has(absolute)) return cache.get(absolute).exports;
   const module = { exports: {} }; cache.set(absolute, module);
-  const code = ts.transpileModule(fs.readFileSync(absolute, 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText;
+  const code = ts.transpileModule(fs.readFileSync(absolute, 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 } }).outputText;
   new Function('require', 'module', 'exports', code)((name) => load(path.relative(path.resolve(__dirname, '..'), path.resolve(path.dirname(absolute), `${name}.ts`))), module, module.exports);
   return module.exports;
 }
@@ -109,4 +109,31 @@ test('player and residents cannot walk through the front, back or ends of a benc
       assert(Math.hypot(dx, dz) >= a.radius - 0.01);
     }
   }
+});
+
+const { RESIDENT_WALKS, createWalkNavigator } = load('src/lib/tukki-walk.ts');
+test('resident routes have distinct destinations and clear paths around village props', () => {
+  const nav = createWalkNavigator(HOMES, BENCHES), life = createLife();
+  assert.equal(new Set(RESIDENT_WALKS.slice(1).map(route => JSON.stringify(route))).size, 8);
+  RESIDENT_WALKS.slice(1).forEach((route, i) => {
+    let from = life.actors[i + 1];
+    for (const stop of route) {
+      const path = nav.plan(from, stop); assert(path.length > 0);
+      for (const next of path) { assert(nav.clear(next)); assert(nav.segmentClear(from, next)); from = next; }
+    }
+  });
+});
+
+test('every resident visits multiple stops and takes pauses during a three minute stroll', () => {
+  const life = createLife(), visited = life.actors.map(() => new Set()), pauses = life.actors.map(() => 0);
+  for (let frame = 0; frame < 180 * 30; frame++) {
+    stepLife(life, 1 / 30, idle);
+    life.actors.slice(1).forEach((a, i) => {
+      visited[i + 1].add(a.routeStop);
+      if (life.elapsed > 10 && a.stoppedUntil > life.elapsed) pauses[i + 1]++;
+      const floor = groundHeight(a.x, a.z);
+      assert(a.y >= floor - 0.01); assert(HOMES.every(h => Math.hypot(a.x - h.x, a.z - h.z) >= a.radius + 3.7 - 0.01));
+    });
+  }
+  life.actors.slice(1).forEach((_, i) => { assert(visited[i + 1].size >= 3, `resident ${i + 1} keeps making progress: ${JSON.stringify(life.actors[i + 1])}`); assert(pauses[i + 1] > 30); });
 });
