@@ -86,11 +86,15 @@ function useInput(enabled: boolean) {
 /* ------------------------------------------------------------------ */
 /*  プレイヤー                                                         */
 /* ------------------------------------------------------------------ */
-function LifeScene({ input, game, onUpdate, playerPos, running }: {
-  input: React.MutableRefObject<InputState>; game: Life; running: boolean;
+type PhotoCamera = { distance: number; height: number; side: number };
+
+function LifeScene({ input, game, onUpdate, playerPos, running, photoCamera }: {
+  input: React.MutableRefObject<InputState>; game: Life; running: boolean; photoCamera: PhotoCamera | null;
   onUpdate: (game: Life) => void; playerPos: React.MutableRefObject<THREE.Vector3>;
 }) {
   const yaw = useRef(0), pitch = useRef(0.3);
+  const photoYaw = useRef(0), photoPitch = useRef(0.18);
+  useEffect(() => { if (photoCamera) { photoYaw.current = game.actors[0].facing; photoPitch.current = 0.18; } }, [!!photoCamera, game]);
   const camPos = useRef(new THREE.Vector3(0, 5, 12));
   const hudTime = useRef(0);
   const { camera, size } = useThree();
@@ -105,8 +109,9 @@ function LifeScene({ input, game, onUpdate, playerPos, running }: {
   useFrame((_, dt) => {
     if (document.hidden) return;
     const inp = input.current;
-    yaw.current -= inp.yawDelta;
-    pitch.current = THREE.MathUtils.clamp(pitch.current + inp.pitchDelta, 0.12, 0.85);
+    const activeYaw = photoCamera ? photoYaw : yaw, activePitch = photoCamera ? photoPitch : pitch;
+    activeYaw.current -= inp.yawDelta;
+    activePitch.current = THREE.MathUtils.clamp(activePitch.current + inp.pitchDelta, photoCamera ? -0.1 : 0.12, 0.85);
     inp.yawDelta = inp.pitchDelta = 0;
     if (running) stepLife(game, dt, {
       x: -Math.sin(yaw.current) * inp.fwd + Math.cos(yaw.current) * inp.side,
@@ -115,12 +120,14 @@ function LifeScene({ input, game, onUpdate, playerPos, running }: {
     });
     const player = game.actors[0], floor = groundHeight(player.x, player.z);
     playerPos.current.set(player.x, player.y, player.z);
-    const offset = new THREE.Vector3(Math.sin(yaw.current) * Math.cos(pitch.current), Math.sin(pitch.current), Math.cos(yaw.current) * Math.cos(pitch.current)).multiplyScalar(portrait ? 18 : compactView ? 14 : 12);
-    const target = new THREE.Vector3(player.x, floor + 1.2, player.z).add(offset);
+    const viewYaw = activeYaw.current, viewPitch = activePitch.current;
+    const offset = new THREE.Vector3(Math.sin(viewYaw) * Math.cos(viewPitch), Math.sin(viewPitch), Math.cos(viewYaw) * Math.cos(viewPitch)).multiplyScalar(photoCamera?.distance ?? (portrait ? 18 : compactView ? 14 : 12));
+    const framing = new THREE.Vector3(Math.cos(viewYaw) * (photoCamera?.side ?? 0), 0, -Math.sin(viewYaw) * (photoCamera?.side ?? 0));
+    const target = new THREE.Vector3(player.x, floor + (photoCamera?.height ?? 1.2), player.z).add(offset).add(framing);
     target.y = Math.max(target.y, groundHeight(target.x, target.z) + 1.2);
     camPos.current.lerp(target, 1 - Math.exp(-6 * Math.min(dt, 0.1)));
     camera.position.copy(camPos.current);
-    camera.lookAt(player.x, floor + (portrait ? 3 : 1.8) + (player.y - floor) * 0.35, player.z);
+    camera.lookAt(player.x + framing.x, floor + (photoCamera ? 1.8 : portrait ? 3 : 1.8) + (player.y - floor) * 0.35, player.z + framing.z);
     hudTime.current += dt;
     if (hudTime.current >= 0.1) { hudTime.current = 0; onUpdate(game); }
   }, -1);
@@ -256,6 +263,7 @@ export default function TukkiWorld() {
   const [message, setMessage] = useState<{ name: string; text: string } | null>(null);
   const renderer = useRef<{ gl: THREE.WebGLRenderer; scene: THREE.Scene; camera: THREE.Camera } | null>(null);
   const [photo, setPhoto] = useState<string | null>(null);
+  const [photoCamera, setPhotoCamera] = useState<PhotoCamera>({ distance: 10, height: 1.8, side: 0 });
   const [photoError, setPhotoError] = useState('');
   const shoot = () => {
     const r = renderer.current; if (!r) return;
@@ -297,18 +305,31 @@ export default function TukkiWorld() {
   return <div style={{ position: 'fixed', inset: 0, background: SKY_BOTTOM, touchAction: 'none', userSelect: 'none', fontFamily: 'system-ui, sans-serif', color: '#43532e' }} onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={pointerUp} onPointerCancel={pointerUp}>
     <style>{`
       .life-stick { display: none; }
+      .life-photo-button { min-width: 168px; min-height: 72px; font-size: 22px; }
+      .life-action { width: 184px !important; height: 116px !important; font-size: 23px !important; }
+      .life-jump { bottom: 160px !important; min-width: 120px; font-size: 18px; }
+      .photo-controls { position: absolute; left: 20px; bottom: 24px; width: 240px; padding: 18px; border-radius: 20px; background: #fffbeae8; pointer-events: auto; box-sizing: border-box; }
+      .photo-controls label { display: block; font-size: 14px; margin: 8px 0; }
+      .photo-controls input { width: 100%; min-height: 28px; accent-color: #668c43; }
+      .photo-controls button { min-height: 44px; width: 100%; }
+      .photo-action { min-height: 52px; font-size: 18px; }
       @media (max-width:600px), (max-height:500px), (pointer:coarse) {
         .life-stick { display: block; }
+        .life-photo-button { min-width: 108px; min-height: 48px; font-size: 16px; }
+        .life-action { width: 124px !important; height: 92px !important; font-size: 17px !important; }
+        .photo-controls { left: 12px; bottom: 132px; width: 180px; padding: 10px; }
+        .photo-controls label { font-size: 12px; margin: 2px 0; }
+        .photo-action { min-height: 44px; font-size: 14px; }
         .life-jump, .life-subtitle { display: none !important; }
         .life-map { width: 138px !important; }
         .life-title { font-size: 17px !important; }
         .life-message { bottom: 180px !important; }
       }
-      @media (max-height:500px) { .life-map { width: 116px !important; } .life-message { bottom: 20px !important; max-width: 45vw !important; } }
+      @media (max-height:500px) { .photo-controls { bottom: 16px; width: 200px; } .life-map { width: 116px !important; } .life-message { bottom: 20px !important; max-width: 45vw !important; } }
     `}</style>
     <Canvas onCreated={({ gl, scene, camera }) => { renderer.current = { gl, scene, camera }; }} shadows camera={{ position: [0, 5, 12], fov: 55, near: 0.1, far: 500 }} dpr={[1, 2]}>
       <fog attach="fog" args={[SKY_BOTTOM, 65, 150]} /><Sky /><hemisphereLight args={['#fff8e4', '#6c9552', 1.2]} /><ambientLight intensity={0.35} />
-      <FollowLight target={playerPos} /><World /><LifeScene input={input} game={game} onUpdate={(life) => setHud(lifeSnapshot(life))} playerPos={playerPos} running={phase === 'playing'} />
+      <FollowLight target={playerPos} /><World /><LifeScene input={input} game={game} onUpdate={(life) => setHud(lifeSnapshot(life))} playerPos={playerPos} running={phase === 'playing'} photoCamera={phase === 'photo' ? photoCamera : null} />
     </Canvas>
     {phase === 'playing' && <>
       <div style={{ position: 'absolute', top: 'max(12px, env(safe-area-inset-top))', left: 12, maxWidth: 'calc(100% - 80px)', boxSizing: 'border-box', padding: '10px 14px', borderRadius: 16, background: '#fffbeae8', pointerEvents: 'none' }}>
@@ -316,7 +337,7 @@ export default function TukkiWorld() {
         <div style={{ fontSize: 12, marginTop: 4 }}>{hud.resting ? 'ひと休み中 ☕' : '今日は、どこへ行こう？'}</div>
         <div className="life-subtitle" style={{ fontSize: 11, marginTop: 4 }}>WASDで散歩 · Eであいさつ / 休む · ドラッグで見回す</div>
       </div>
-      <button aria-label="写真モード" onPointerDown={(e) => e.stopPropagation()} onClick={() => { stopInput(); setMessage(null); setPhoto(null); setPhotoError(''); setPhase('photo'); }} style={{ ...buttonStyle, position: 'absolute', left: 12, top: 116, padding: '12px 16px', fontWeight: 800 }}>📷 写真</button>
+      <button className="life-photo-button" aria-label="写真モード" onPointerDown={(e) => e.stopPropagation()} onClick={() => { stopInput(); setMessage(null); setPhoto(null); setPhotoError(''); setPhotoCamera({ distance: 10, height: 1.8, side: 0 }); setPhase('photo'); }} style={{ ...buttonStyle, position: 'absolute', left: 12, top: 116, padding: '12px 16px', fontWeight: 800 }}>📷 写真</button>
       <button aria-label="遊び方 / 一時停止" onPointerDown={(e) => e.stopPropagation()} onClick={pause} style={{ ...buttonStyle, position: 'absolute', top: 'max(12px, env(safe-area-inset-top))', right: 12, width: 44, height: 44, fontSize: 22 }}>Ⅱ</button>
       <div className="life-map" style={{ position: 'absolute', top: 78, right: 12, width: 154, padding: 8, borderRadius: 16, background: '#fffbeae8', boxSizing: 'border-box', pointerEvents: 'none' }}>
         <div style={{ fontSize: 11, fontWeight: 800 }}>草原の地図 <span style={{ float: 'right' }}>↑北</span></div>
@@ -335,23 +356,30 @@ export default function TukkiWorld() {
         <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', fontSize: 64, color: '#647b4a88', pointerEvents: 'none' }}>＋</div>
         <div style={{ position: 'absolute', left: 36, top: 36, width: 48, height: 48, borderRadius: '50%', background: '#fffbea', border: '2px solid #6b8757', boxSizing: 'border-box', transform: `translate(${(stickUi?.dx ?? 0) * 0.6}px, ${(stickUi?.dy ?? 0) * 0.6}px)`, pointerEvents: 'none' }} />
       </div>
-      <button aria-label="生活アクション" onPointerDown={(e) => e.stopPropagation()} onClick={action} style={{ ...buttonStyle, position: 'absolute', right: 16, bottom: 'max(28px, env(safe-area-inset-bottom))', width: 124, height: 92, borderRadius: 28, fontSize: 17, fontWeight: 800, background: '#ffe3a1' }}>{hud.action.label}</button>
+      <button className="life-action" aria-label="生活アクション" onPointerDown={(e) => e.stopPropagation()} onClick={action} style={{ ...buttonStyle, position: 'absolute', right: 16, bottom: 'max(28px, env(safe-area-inset-bottom))', width: 124, height: 92, borderRadius: 28, fontSize: 17, fontWeight: 800, background: '#ffe3a1' }}>{hud.action.label}</button>
       <button className="life-jump" aria-label="ジャンプ" onPointerDown={(e) => { e.stopPropagation(); e.currentTarget.setPointerCapture(e.pointerId); setButton(true); }} onPointerUp={() => setButton(false)} onPointerCancel={() => setButton(false)} onLostPointerCapture={() => setButton(false)} style={{ ...buttonStyle, position: 'absolute', right: 16, bottom: 140, padding: 10 }}>ジャンプ</button>
       {message && <div className="life-message" role="status" style={{ position: 'absolute', bottom: 32, left: '50%', transform: 'translateX(-50%)', width: 'min(80vw, 420px)', maxWidth: '80vw', padding: '14px 18px', background: '#fffbeaf5', borderRadius: 18, boxShadow: '0 4px 20px #354b2522', boxSizing: 'border-box', pointerEvents: 'none' }}><strong style={{ fontSize: 13 }}>{message.name}</strong><div style={{ fontSize: 14, lineHeight: 1.7, marginTop: 5 }}>{message.text}</div></div>}
     </>}
     {phase === 'photo' && <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
       <div style={{ position: 'absolute', top: 16, left: 16, right: 16, display: 'flex', justifyContent: 'space-between', gap: 12 }}>
-        <span style={{ background: '#fffbeae8', borderRadius: 14, padding: 12 }}>ドラッグで角度を変えて撮影</span>
+        <span style={{ background: '#fffbeae8', borderRadius: 14, padding: 12 }}>写真モード · ドラッグで角度を調整</span>
         <button onPointerDown={(e) => e.stopPropagation()} onClick={() => { stopInput(); setPhoto(null); setPhase('playing'); }} style={{ ...buttonStyle, padding: 12, pointerEvents: 'auto' }}>散歩に戻る</button>
       </div>
-      {!photo && <button aria-label="撮影する" onPointerDown={(e) => e.stopPropagation()} onClick={shoot} style={{ ...buttonStyle, position: 'absolute', bottom: 'max(28px, env(safe-area-inset-bottom))', left: '50%', transform: 'translateX(-50%)', width: 88, height: 88, borderRadius: '50%', fontSize: 18, fontWeight: 800, pointerEvents: 'auto', border: '5px solid white' }}>撮影</button>}
+      {!photo && <aside className="photo-controls" aria-label="撮影カメラの位置" onPointerDown={(e) => e.stopPropagation()}>
+        <strong>カメラの位置</strong>
+        <label>距離<input aria-label="カメラの距離" type="range" min="5" max="24" step="0.5" value={photoCamera.distance} onChange={(e) => setPhotoCamera((c) => ({ ...c, distance: Number(e.target.value) }))} /></label>
+        <label>高さ<input aria-label="カメラの高さ" type="range" min="0.5" max="6" step="0.1" value={photoCamera.height} onChange={(e) => setPhotoCamera((c) => ({ ...c, height: Number(e.target.value) }))} /></label>
+        <label>左右の位置<input aria-label="カメラの左右位置" type="range" min="-5" max="5" step="0.1" value={photoCamera.side} onChange={(e) => setPhotoCamera((c) => ({ ...c, side: Number(e.target.value) }))} /></label>
+        <button style={buttonStyle} onClick={() => setPhotoCamera({ distance: 10, height: 1.8, side: 0 })}>位置をリセット</button>
+      </aside>}
+      {!photo && <button aria-label="撮影する" onPointerDown={(e) => e.stopPropagation()} onClick={shoot} style={{ ...buttonStyle, position: 'absolute', bottom: 'max(28px, env(safe-area-inset-bottom))', left: '50%', transform: 'translateX(-50%)', width: 104, height: 104, borderRadius: '50%', fontSize: 18, fontWeight: 800, pointerEvents: 'auto', border: '5px solid white' }}>撮影</button>}
       {photoError && <p role="alert" style={{ background: '#fffbea', padding: 12 }}>{photoError}</p>}
       {photo && <section role="dialog" aria-label="撮影した写真" onPointerDown={(e) => e.stopPropagation()} style={{ position: 'absolute', inset: 0, background: '#233620dd', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: 20, pointerEvents: 'auto' }}>
         <img src={photo} alt="自然の中のツッキーくんの写真" style={{ maxWidth: '100%', maxHeight: '65vh', objectFit: 'contain', borderRadius: 12 }} />
         <div style={{ display: 'flex', gap: 12 }}>
-          <button onClick={() => setPhoto(null)} style={{ ...buttonStyle, padding: 14 }}>撮り直す</button>
-          <a href={photo} download={`tukki-${new Date().toISOString().replace(/[:.]/g, '-')}.png`} style={{ ...buttonStyle, textDecoration: 'none', padding: 14, fontWeight: 800, background: '#ffe3a1' }}>写真を保存</a>
-          <button onClick={() => { setPhoto(null); setPhase('playing'); }} style={{ ...buttonStyle, padding: 14 }}>閉じる</button>
+          <button className="photo-action" onClick={() => setPhoto(null)} style={{ ...buttonStyle, padding: 14 }}>撮り直す</button>
+          <a className="photo-action" href={photo} download={`tukki-${new Date().toISOString().replace(/[:.]/g, '-')}.png`} style={{ ...buttonStyle, textDecoration: 'none', padding: 14, fontWeight: 800, background: '#ffe3a1' }}>写真を保存</a>
+          <button className="photo-action" onClick={() => { setPhoto(null); setPhase('playing'); }} style={{ ...buttonStyle, padding: 14 }}>閉じる</button>
         </div>
         <small style={{ color: 'white' }}>スマホでは写真の長押しからも保存できます。</small>
       </section>}
