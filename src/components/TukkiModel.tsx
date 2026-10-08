@@ -254,8 +254,8 @@ const TukkiModel = forwardRef<TukkiHandle, Props>(function TukkiModel({ color, s
       const swing = Math.sin(walk) * 0.7 * amount * (1 - sit);
       // 腕は基本「お腹の前で合わせる」構え。歩くとそこから前後に揺れる
       armL.current.rotation.x = -0.3 + swing * 0.35;
-      armR.current.rotation.x = color === 'orange' ? -0.35 + Math.sin(t * 3) * 0.1 : -0.3 - swing * 0.35;
-      armR.current.rotation.z = color === 'orange' ? 2.3 + Math.sin(t * 3) * 0.15 : -0.95;
+      armR.current.rotation.x = color === 'orange' ? -0.12 + Math.sin(t * 3) * 0.035 : -0.3 - swing * 0.35;
+      armR.current.rotation.z = color === 'orange' ? 2.7 + Math.sin(t * 3) * 0.1 : -0.95;
       legL.current.rotation.x = -1.3 * sit - swing * 0.9 * (1 - Math.abs(sideways));
       legR.current.rotation.x = -1.3 * sit + swing * 0.9 * (1 - Math.abs(sideways));
       legL.current.rotation.z = 0.12 + swing * sideways * 0.65;
@@ -348,16 +348,16 @@ const TukkiModel = forwardRef<TukkiHandle, Props>(function TukkiModel({ color, s
           { r: armL, s: -1 },
           { r: armR, s: 1 },
         ].map(({ r, s }) => (
-          <group key={s} ref={r} position={[s * 1.02, 1.57, 0.82]} rotation={[-0.3, 0, -s * 0.95]}>
-            <Part geometry={geo.capsule} material={mats.body} outline={O} position={[0, -0.45, 0]} scale={[0.25, 0.31, 0.25]} width={1.04} />
-            <Part geometry={S} material={mats.body} outline={O} position={[0, -0.9, 0]} scale={[0.32, 0.25, 0.28]} width={1.045} />
-            {[-1, 0, 1].map((k) => (
+          <group key={s} ref={r} position={[s * 0.95, color === 'orange' && s === 1 ? 1.8 : 1.6, 0.75]} rotation={[-0.3, 0, -s * 0.95]}>
+            <Part geometry={geo.capsule} material={mats.body} outline={O} position={[0, -0.42, 0.04]} scale={[0.29, 0.32, 0.27]} width={1.04} />
+            <Part geometry={S} material={mats.body} outline={O} position={[0, -0.9, 0.12]} scale={[0.33, 0.29, 0.29]} width={1.045} />
+            {!(color === 'orange' && s === 1) && [-1, 0, 1].map((k) => (
               <Part
                 key={k}
                 geometry={geo.cone}
                 material={mats.claw}
                 outline={O}
-                position={[k * 0.13, -1.13, 0.16]}
+                position={[k * 0.13, -1.16, 0.25]}
                 rotation={[Math.PI, 0, 0]}
                 scale={[0.045, 0.16, 0.045]}
                 width={1.2}
@@ -365,8 +365,8 @@ const TukkiModel = forwardRef<TukkiHandle, Props>(function TukkiModel({ color, s
               />
             ))}
             {color === 'orange' && s === 1 && <>
-              <mesh geometry={S} material={mats.cheek} position={[0, -0.92, 0.27]} scale={[0.15, 0.12, 0.02]} />
-              {[-1, 0, 1].map((i) => <mesh key={i} geometry={S} material={mats.cheek} position={[i * 0.1, -0.71, 0.25]} scale={[0.035, 0.04, 0.02]} />)}
+              <mesh geometry={S} material={mats.cheek} position={[0, -0.9, 0.4]} scale={[0.15, 0.12, 0.02]} />
+              {[-1, 0, 1].map((i) => <mesh key={i} geometry={S} material={mats.cheek} position={[i * 0.1, -1.08, 0.36]} scale={[0.035, 0.04, 0.02]} />)}
             </>}
             {color === 'pink' && s === 1 && <group position={[0, -0.9, 0.36]}>
               <Part geometry={S} material={mats.muzzle} outline={O} scale={[0.48, 0.3, 0.055]} width={1.055} />
