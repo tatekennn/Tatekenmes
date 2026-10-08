@@ -269,6 +269,20 @@ export default function TukkiWorld() {
   const [photo, setPhoto] = useState<string | null>(null);
   const [photoCamera, setPhotoCamera] = useState<PhotoCamera>({ distance: 10, height: 1.8, side: 0 });
   const [photoError, setPhotoError] = useState('');
+  useEffect(() => {
+    if (phase !== 'photo' || photo) return;
+    const element = screen.current;
+    if (!element) return;
+    const wheel = (event: WheelEvent) => {
+      if (!(event.target instanceof Element) || !event.target.closest('canvas')) return;
+      event.preventDefault();
+      const pixels = event.deltaY * (event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? element.clientHeight : 1);
+      const zoom = Math.exp(THREE.MathUtils.clamp(pixels, -200, 200) * 0.0018);
+      setPhotoCamera((camera) => ({ ...camera, distance: THREE.MathUtils.clamp(camera.distance * zoom, 5, 24) }));
+    };
+    element.addEventListener('wheel', wheel, { passive: false });
+    return () => element.removeEventListener('wheel', wheel);
+  }, [phase, photo]);
   const shoot = () => {
     const r = renderer.current; if (!r) return;
     try { r.gl.render(r.scene, r.camera); setPhoto(r.gl.domElement.toDataURL('image/png')); setPhotoError(''); }
@@ -393,7 +407,7 @@ export default function TukkiWorld() {
     </>}
     {phase === 'photo' && <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
       <div style={{ position: 'absolute', top: 16, left: 16, right: 16, display: 'flex', justifyContent: 'space-between', gap: 12 }}>
-        <span style={{ background: '#fffbeae8', borderRadius: 14, padding: 12 }}>写真モード · ドラッグで角度を調整</span>
+        <span style={{ background: '#fffbeae8', borderRadius: 14, padding: 12 }}>写真モード · ドラッグで角度 · ホイールでズーム</span>
         <button onPointerDown={(e) => e.stopPropagation()} onClick={() => { stopInput(); setPhoto(null); setPhase('playing'); }} style={{ ...buttonStyle, padding: 12, pointerEvents: 'auto' }}>散歩に戻る</button>
       </div>
       {!photo && <button className="photo-action" onPointerDown={(e) => e.stopPropagation()} onClick={enterBackground} title="Escまたはダブルクリック・ダブルタップで戻る" style={{ ...buttonStyle, position: 'absolute', right: 16, bottom: 28, padding: 14, pointerEvents: 'auto' }}>⛶ 背景にする</button>}
