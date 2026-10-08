@@ -36,29 +36,49 @@ function keepInField(a: Resident) {
     const dx = a.x - p.x, dz = a.z - p.z, d = Math.hypot(dx, dz), minimum = a.radius + p.radius;
     if (d < minimum) { a.x = p.x + (d ? dx / d : 1) * minimum; a.z = p.z + (d ? dz / d : 0) * minimum; }
   }
+  for (const bench of BENCHES) {
+    if (a.y > groundHeight(bench.x, bench.z) + 1.8) continue;
+    const localX = a.x - bench.x, localZ = a.z - bench.z;
+    const closestX = Math.max(-1.7, Math.min(1.7, localX));
+    const closestZ = Math.max(-0.75, Math.min(0.55, localZ));
+    const dx = localX - closestX, dz = localZ - closestZ, distance = Math.hypot(dx, dz);
+    if (distance >= a.radius) continue;
+    if (distance > 0.0001) {
+      a.x += dx / distance * (a.radius - distance); a.z += dz / distance * (a.radius - distance);
+    } else {
+      const sides = [{ gap: localX + 1.7, x: -1, z: 0 }, { gap: 1.7 - localX, x: 1, z: 0 }, { gap: localZ + 0.75, x: 0, z: -1 }, { gap: 0.55 - localZ, x: 0, z: 1 }];
+      const side = sides.reduce((best, candidate) => candidate.gap < best.gap ? candidate : best);
+      a.x += side.x * (side.gap + a.radius); a.z += side.z * (side.gap + a.radius);
+    }
+  }
   const floor = groundHeight(a.x, a.z);
   if (a.y < floor) { a.y = floor; a.vy = 0; }
 }
-export function lifeAction(life: Life): { kind: 'stand' | 'greet' | 'sit'; index: number; label: string } {
-  if (life.resting) return { kind: 'stand', index: -1, label: '立ち上がる' };
+export function lifeActions(life: Life) {
   const player = life.actors[0];
-  const nearbyBench = BENCHES.findIndex((b) => Math.hypot(b.x - player.x, b.z - player.z) < 2);
-  if (nearbyBench >= 0) return { kind: 'sit', index: nearbyBench, label: 'ベンチに座る' };
   let closest = -1, distance = 5;
   life.actors.slice(1).forEach((a, i) => { const d = Math.hypot(a.x - player.x, a.z - player.z); if (d < distance) { closest = i + 1; distance = d; } });
-  if (closest >= 0) return { kind: 'greet', index: closest, label: 'あいさつ' };
   let bench = -1; distance = 4;
   BENCHES.forEach((p, i) => { const d = Math.hypot(p.x - player.x, p.z - player.z); if (d < distance) { bench = i; distance = d; } });
-  return { kind: 'sit', index: bench, label: bench >= 0 ? 'ベンチに座る' : 'ひと休み' };
+  return {
+    greet: { kind: 'greet' as const, index: closest, label: 'あいさつ', available: closest >= 0 },
+    rest: life.resting ? { kind: 'stand' as const, index: -1, label: '立ち上がる' } : { kind: 'sit' as const, index: bench, label: bench >= 0 ? 'ベンチに座る' : 'ひと休み' },
+  };
 }
-export function interact(life: Life) {
-  const action = lifeAction(life), player = life.actors[0];
+export function lifeAction(life: Life) {
+  const actions = lifeActions(life);
+  if (life.resting || (actions.rest.index >= 0 && Math.hypot(life.actors[0].x - BENCHES[actions.rest.index].x, life.actors[0].z - BENCHES[actions.rest.index].z) < 2)) return actions.rest;
+  return actions.greet.available ? actions.greet : actions.rest;
+}
+export function interact(life: Life, choice?: 'greet' | 'rest') {
+  const action = choice ? lifeActions(life)[choice] : lifeAction(life), player = life.actors[0];
   if (action.kind === 'stand') { if (life.restBench !== null) player.z = BENCHES[life.restBench].z + 2; life.resting = false; life.restBench = null; player.y = groundHeight(player.x, player.z); return { name: 'ツッキーくん', text: 'さあ、またゆっくりお散歩しよう。' }; }
   if (action.kind === 'greet') {
+    if (action.index < 0) return { name: 'あいさつ', text: '仲間の近くへ行って、声をかけよう。' };
     const other = life.actors[action.index], resident = RESIDENTS[action.index];
     other.stoppedUntil = life.elapsed + 5; other.vx = other.vz = 0;
     other.facing = Math.atan2(player.x - other.x, player.z - other.z);
-    player.facing = Math.atan2(other.x - player.x, other.z - player.z);
+    if (!life.resting) player.facing = Math.atan2(other.x - player.x, other.z - player.z);
     const text = resident.greetings[life.greetings++ % resident.greetings.length];
     return { name: resident.name, text };
   }
@@ -84,6 +104,7 @@ export function stepLife(life: Life, seconds: number, input: { x: number; z: num
         }
         x = a.targetX - a.x; z = a.targetZ - a.z;
         if (Math.hypot(x, z) < 1 && life.elapsed >= a.stoppedUntil) { a.stoppedUntil = life.elapsed + 3 + i % 3; a.chooseAt = a.stoppedUntil; }
+        for (const bench of BENCHES) { const dx = a.x - bench.x, dz = a.z - bench.z, d = Math.hypot(dx, dz); if (d > 0 && d < 4) { x += dx / d * (4 - d) * 4; z += dz / d * (4 - d) * 4; } }
         for (const tree of TREE_SPOTS) { const dx = a.x - tree.x, dz = a.z - tree.z, d = Math.hypot(dx, dz); if (d > 0 && d < 4) { x += dx / d * (4 - d) * 3; z += dz / d * (4 - d) * 3; } }
       }
       if (life.elapsed < a.stoppedUntil) x = z = 0;
@@ -109,4 +130,4 @@ export function stepLife(life: Life, seconds: number, input: { x: number; z: num
     }
   }
 }
-export function lifeSnapshot(life: Life) { return { actors: life.actors.map((a) => ({ x: a.x, z: a.z, facing: a.facing })), resting: life.resting, action: lifeAction(life) }; }
+export function lifeSnapshot(life: Life) { return { actors: life.actors.map((a) => ({ x: a.x, z: a.z, facing: a.facing })), resting: life.resting, actions: lifeActions(life) }; }

@@ -274,10 +274,10 @@ export default function TukkiWorld() {
   const drag = useRef<{ id: number; x: number; y: number } | null>(null);
   const stickRef = useRef<{ id: number; ox: number; oy: number } | null>(null);
   const [stickUi, setStickUi] = useState<{ x: number; y: number; dx: number; dy: number } | null>(null);
-  const action = () => { if (phase !== 'playing') return; setMessage(interact(game)); setHud(lifeSnapshot(game)); };
+  const action = (choice: 'greet' | 'rest') => { if (phase !== 'playing') return; setMessage(interact(game, choice)); setHud(lifeSnapshot(game)); };
   const actionRef = useRef(action); actionRef.current = action;
   useEffect(() => {
-    const key = (e: KeyboardEvent) => { if (e.code === 'KeyE' && !e.repeat) { e.preventDefault(); actionRef.current(); } };
+    const key = (e: KeyboardEvent) => { if ((e.code === 'KeyE' || e.code === 'KeyR') && !e.repeat) { e.preventDefault(); actionRef.current(e.code === 'KeyE' ? 'greet' : 'rest'); } };
     window.addEventListener('keydown', key); return () => window.removeEventListener('keydown', key);
   }, []);
   useEffect(() => { if (!message) return; const timer = window.setTimeout(() => setMessage(null), 6000); return () => window.clearTimeout(timer); }, [message]);
@@ -306,8 +306,8 @@ export default function TukkiWorld() {
     <style>{`
       .life-stick { display: none; }
       .life-photo-button { min-width: 168px; min-height: 72px; font-size: 22px; }
-      .life-action { width: 184px !important; height: 116px !important; font-size: 23px !important; }
-      .life-jump { bottom: 160px !important; min-width: 120px; font-size: 18px; }
+      .life-action { width: 184px !important; height: 88px !important; font-size: 23px !important; }
+      .life-jump { bottom: 232px !important; min-width: 120px; font-size: 18px; }
       .photo-controls { position: absolute; left: 20px; bottom: 24px; width: 240px; padding: 18px; border-radius: 20px; background: #fffbeae8; pointer-events: auto; box-sizing: border-box; }
       .photo-controls label { display: block; font-size: 14px; margin: 8px 0; }
       .photo-controls input { width: 100%; min-height: 28px; accent-color: #668c43; }
@@ -316,7 +316,7 @@ export default function TukkiWorld() {
       @media (max-width:600px), (max-height:500px), (pointer:coarse) {
         .life-stick { display: block; }
         .life-photo-button { min-width: 108px; min-height: 48px; font-size: 16px; }
-        .life-action { width: 124px !important; height: 92px !important; font-size: 17px !important; }
+        .life-action { width: 124px !important; height: 68px !important; font-size: 17px !important; }
         .photo-controls { left: 12px; bottom: 132px; width: 180px; padding: 10px; }
         .photo-controls label { font-size: 12px; margin: 2px 0; }
         .photo-action { min-height: 44px; font-size: 14px; }
@@ -335,7 +335,7 @@ export default function TukkiWorld() {
       <div style={{ position: 'absolute', top: 'max(12px, env(safe-area-inset-top))', left: 12, maxWidth: 'calc(100% - 80px)', boxSizing: 'border-box', padding: '10px 14px', borderRadius: 16, background: '#fffbeae8', pointerEvents: 'none' }}>
         <div className="life-title" style={{ fontSize: 20, fontWeight: 800 }}>ツッキーくんの のんびり生活</div>
         <div style={{ fontSize: 12, marginTop: 4 }}>{hud.resting ? 'ひと休み中 ☕' : '今日は、どこへ行こう？'}</div>
-        <div className="life-subtitle" style={{ fontSize: 11, marginTop: 4 }}>WASDで散歩 · Eであいさつ / 休む · ドラッグで見回す</div>
+        <div className="life-subtitle" style={{ fontSize: 11, marginTop: 4 }}>WASDで散歩 · Eであいさつ · Rで休憩 · ドラッグで見回す</div>
       </div>
       <button className="life-photo-button" aria-label="写真モード" onPointerDown={(e) => e.stopPropagation()} onClick={() => { stopInput(); setMessage(null); setPhoto(null); setPhotoError(''); setPhotoCamera({ distance: 10, height: 1.8, side: 0 }); setPhase('photo'); }} style={{ ...buttonStyle, position: 'absolute', left: 12, top: 116, padding: '12px 16px', fontWeight: 800 }}>📷 写真</button>
       <button aria-label="遊び方 / 一時停止" onPointerDown={(e) => e.stopPropagation()} onClick={pause} style={{ ...buttonStyle, position: 'absolute', top: 'max(12px, env(safe-area-inset-top))', right: 12, width: 44, height: 44, fontSize: 22 }}>Ⅱ</button>
@@ -356,7 +356,10 @@ export default function TukkiWorld() {
         <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', fontSize: 64, color: '#647b4a88', pointerEvents: 'none' }}>＋</div>
         <div style={{ position: 'absolute', left: 36, top: 36, width: 48, height: 48, borderRadius: '50%', background: '#fffbea', border: '2px solid #6b8757', boxSizing: 'border-box', transform: `translate(${(stickUi?.dx ?? 0) * 0.6}px, ${(stickUi?.dy ?? 0) * 0.6}px)`, pointerEvents: 'none' }} />
       </div>
-      <button className="life-action" aria-label="生活アクション" onPointerDown={(e) => e.stopPropagation()} onClick={action} style={{ ...buttonStyle, position: 'absolute', right: 16, bottom: 'max(28px, env(safe-area-inset-bottom))', width: 124, height: 92, borderRadius: 28, fontSize: 17, fontWeight: 800, background: '#ffe3a1' }}>{hud.action.label}</button>
+      <div style={{ position: 'absolute', right: 16, bottom: 'max(28px, env(safe-area-inset-bottom))', display: 'grid', gap: 10 }} onPointerDown={(e) => e.stopPropagation()}>
+        <button className="life-action" aria-label="あいさつ" disabled={!hud.actions.greet.available} onClick={() => action('greet')} style={{ ...buttonStyle, borderRadius: 22, fontWeight: 800, background: '#fffbea', opacity: hud.actions.greet.available ? 1 : 0.6, cursor: hud.actions.greet.available ? 'pointer' : 'default' }}>💬 あいさつ{!hud.actions.greet.available && <small style={{ display: 'block', fontSize: 11, marginTop: 4 }}>仲間の近くで</small>}</button>
+        <button className="life-action" aria-label="休憩" onClick={() => action('rest')} style={{ ...buttonStyle, borderRadius: 22, fontWeight: 800, background: '#ffe3a1' }}>☕ {hud.actions.rest.label}</button>
+      </div>
       <button className="life-jump" aria-label="ジャンプ" onPointerDown={(e) => { e.stopPropagation(); e.currentTarget.setPointerCapture(e.pointerId); setButton(true); }} onPointerUp={() => setButton(false)} onPointerCancel={() => setButton(false)} onLostPointerCapture={() => setButton(false)} style={{ ...buttonStyle, position: 'absolute', right: 16, bottom: 140, padding: 10 }}>ジャンプ</button>
       {message && <div className="life-message" role="status" style={{ position: 'absolute', bottom: 32, left: '50%', transform: 'translateX(-50%)', width: 'min(80vw, 420px)', maxWidth: '80vw', padding: '14px 18px', background: '#fffbeaf5', borderRadius: 18, boxShadow: '0 4px 20px #354b2522', boxSizing: 'border-box', pointerEvents: 'none' }}><strong style={{ fontSize: 13 }}>{message.name}</strong><div style={{ fontSize: 14, lineHeight: 1.7, marginTop: 5 }}>{message.text}</div></div>}
     </>}
@@ -389,7 +392,7 @@ export default function TukkiWorld() {
         <div style={{ letterSpacing: 3, fontSize: 12, color: '#8a784e' }}>A SLOW DAY</div><h1 id="life-title" style={{ fontSize: 30, lineHeight: 1.35 }}>ツッキーくんの<br />のんびり生活</h1>
         <p style={{ lineHeight: 1.8 }}>急がなくても、何もしなくても大丈夫。<br />仲間たちと、草原でゆっくり過ごそう。</p>
         <div style={{ background: '#edf2d9', borderRadius: 16, padding: 16, lineHeight: 1.9, fontSize: 14 }}>🌿 好きなところへお散歩<br />💬 仲間の近くで「あいさつ」<br />☕ ベンチや草の上で「ひと休み」<br />📷 好きな景色で写真を撮って保存<br /><span style={{ color: '#71814f' }}>制限時間も、順位もありません。</span></div>
-        <p style={{ fontSize: 13, lineHeight: 1.8 }}>スマホ：左下のスティックで移動、右側をドラッグして見回す。右下のボタンであいさつ・ひと休み。<br />PC：WASD / 矢印で移動、Eでアクション、Spaceでジャンプ。</p>
+        <p style={{ fontSize: 13, lineHeight: 1.8 }}>スマホ：左下のスティックで移動、右側をドラッグして見回す。右下で「あいさつ」「休憩」を選ぶ。<br />PC：WASD / 矢印で移動、Eであいさつ、Rで休憩 / 立ち上がる、Spaceでジャンプ。</p>
         <button autoFocus onClick={() => setPhase('playing')} style={{ ...buttonStyle, width: '100%', padding: 16, fontWeight: 800, fontSize: 18, background: '#e5bc5d', borderRadius: 16 }}>{phase === 'intro' ? '草原へ行く' : 'お散歩に戻る'}</button>
       </section>
     </div>}
