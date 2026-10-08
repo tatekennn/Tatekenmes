@@ -27,8 +27,8 @@ export function createLife(): Life {
     const angle = (i - 1) / 8 * Math.PI * 2;
     const x = i === 0 ? 0 : i === 1 ? 4 : Math.cos(angle) * 12;
     const z = i === 0 ? 0 : i === 1 ? -2 : Math.sin(angle) * 12;
-    return { x, z, y: groundHeight(x, z), vx: 0, vy: 0, vz: 0, facing: Math.PI, walk: 0, radius: i === 0 ? 1.3 : 1.12,
-      stoppedUntil: i === 0 ? 0 : 2 + i * 0.45, chooseAt: 0, lookFacing: Math.PI, routeStop: 0, path: [], pathIndex: 0, stuckFor: 0, targetX: x, targetZ: z };
+    return { x, z, y: groundHeight(x, z), vx: 0, vy: 0, vz: 0, facing: i === 0 ? Math.PI : 0, walk: 0, radius: i === 0 ? 1.3 : 1.12,
+      stoppedUntil: i === 0 ? 0 : 2 + i * 0.45, chooseAt: 0, lookFacing: i === 0 ? Math.PI : 0, routeStop: 0, path: [], pathIndex: 0, stuckFor: 0, targetX: x, targetZ: z };
   }), elapsed: 0, resting: false, restBench: null, jumpHeld: false, greetings: 0 };
 }
 function keepInField(a: Resident) {
