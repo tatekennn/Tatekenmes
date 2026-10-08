@@ -343,7 +343,7 @@ const TukkiModel = forwardRef<TukkiHandle, Props>(function TukkiModel({ color, s
             position={[0.1 + i * 0.13, 0.85, 0]} rotation={[0, 0, -0.3 + i * 0.18]} scale={[0.07, 0.25, 0.07]} width={1.07} />)}
         </group>
 
-        {/* 腕: 肩から前へ曲げ、お腹の前で手を合わせる。爪は内側向き */}
+        {/* 腕: 肩から前へ曲げ、お腹の前で手を合わせる。爪は指先から手の延長方向へ伸ばす */}
         {[
           { r: armL, s: -1 },
           { r: armR, s: 1 },
@@ -357,9 +357,9 @@ const TukkiModel = forwardRef<TukkiHandle, Props>(function TukkiModel({ color, s
                 geometry={geo.cone}
                 material={mats.claw}
                 outline={O}
-                position={[s * -0.26, -0.92 + k * 0.1, 0.23]}
-                rotation={[0, 0, s * Math.PI / 2]}
-                scale={[0.05, 0.12, 0.05]}
+                position={[k * 0.13, -1.13, 0.16]}
+                rotation={[Math.PI, 0, 0]}
+                scale={[0.045, 0.16, 0.045]}
                 width={1.2}
                 castShadow={false}
               />
