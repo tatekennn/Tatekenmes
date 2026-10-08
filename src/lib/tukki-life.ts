@@ -1,4 +1,5 @@
 import { WORLD_RADIUS, TREE_SPOTS, groundHeight } from './tukki-game';
+import { createWalkNavigator, RESIDENT_WALKS } from './tukki-walk';
 import type { TukkiColor } from '@/components/TukkiModel';
 
 export const RESIDENTS: { color: TukkiColor; name: string; greetings: string[] }[] = [
@@ -14,8 +15,10 @@ export const RESIDENTS: { color: TukkiColor; name: string; greetings: string[] }
 ];
 export const HOMES = [{ x: -12, z: -17, color: '#e6a18a' }, { x: 12, z: -17, color: '#a4bc9a' }, { x: -18, z: 10, color: '#c6afd8' }];
 export const BENCHES = [{ x: -4, z: 4 }, { x: 4, z: 4 }];
+const navigator = createWalkNavigator(HOMES, BENCHES);
 export interface Resident {
   x: number; y: number; z: number; vx: number; vy: number; vz: number; facing: number; walk: number;
+  lookFacing: number; routeStop: number; path: { x: number; z: number }[]; pathIndex: number; stuckFor: number;
   radius: number; stoppedUntil: number; chooseAt: number; targetX: number; targetZ: number;
 }
 export interface Life { actors: Resident[]; elapsed: number; resting: boolean; restBench: number | null; jumpHeld: boolean; greetings: number }
@@ -25,7 +28,7 @@ export function createLife(): Life {
     const x = i === 0 ? 0 : i === 1 ? 4 : Math.cos(angle) * 12;
     const z = i === 0 ? 0 : i === 1 ? -2 : Math.sin(angle) * 12;
     return { x, z, y: groundHeight(x, z), vx: 0, vy: 0, vz: 0, facing: Math.PI, walk: 0, radius: i === 0 ? 1.3 : 1.12,
-      stoppedUntil: i === 0 ? 0 : 3 + i * 0.4, chooseAt: 0, targetX: x, targetZ: z };
+      stoppedUntil: i === 0 ? 0 : 2 + i * 0.45, chooseAt: 0, lookFacing: Math.PI, routeStop: 0, path: [], pathIndex: 0, stuckFor: 0, targetX: x, targetZ: z };
   }), elapsed: 0, resting: false, restBench: null, jumpHeld: false, greetings: 0 };
 }
 function keepInField(a: Resident) {
@@ -77,7 +80,7 @@ export function interact(life: Life, choice?: 'greet' | 'rest') {
     if (action.index < 0) return { name: 'あいさつ', text: '仲間の近くへ行って、声をかけよう。' };
     const other = life.actors[action.index], resident = RESIDENTS[action.index];
     other.stoppedUntil = life.elapsed + 5; other.vx = other.vz = 0;
-    other.facing = Math.atan2(player.x - other.x, player.z - other.z);
+    other.facing = Math.atan2(player.x - other.x, player.z - other.z); other.lookFacing = other.facing;
     if (!life.resting) player.facing = Math.atan2(other.x - player.x, other.z - player.z);
     const text = resident.greetings[life.greetings++ % resident.greetings.length];
     return { name: resident.name, text };
@@ -98,23 +101,45 @@ export function stepLife(life: Life, seconds: number, input: { x: number; z: num
       if (i === 0 && life.resting) return;
       let x = input.x, z = input.z;
       if (i > 0) {
-        if (life.elapsed >= a.chooseAt && life.elapsed >= a.stoppedUntil) {
-          const angle = i * 2.4 + life.elapsed * 0.18;
-          a.targetX = Math.cos(angle) * (8 + i % 3 * 4); a.targetZ = Math.sin(angle) * (8 + i % 3 * 4); a.chooseAt = life.elapsed + 7 + i % 4;
-        }
-        x = a.targetX - a.x; z = a.targetZ - a.z;
-        if (Math.hypot(x, z) < 1 && life.elapsed >= a.stoppedUntil) { a.stoppedUntil = life.elapsed + 3 + i % 3; a.chooseAt = a.stoppedUntil; }
-        for (const bench of BENCHES) { const dx = a.x - bench.x, dz = a.z - bench.z, d = Math.hypot(dx, dz); if (d > 0 && d < 4) { x += dx / d * (4 - d) * 4; z += dz / d * (4 - d) * 4; } }
-        for (const tree of TREE_SPOTS) { const dx = a.x - tree.x, dz = a.z - tree.z, d = Math.hypot(dx, dz); if (d > 0 && d < 4) { x += dx / d * (4 - d) * 3; z += dz / d * (4 - d) * 3; } }
+        const route = RESIDENT_WALKS[i];
+        if (life.elapsed >= a.stoppedUntil) {
+          if (life.elapsed >= a.chooseAt || a.stuckFor > 3) {
+            const stop = route[a.routeStop];
+            a.path = navigator.plan(a, stop); a.pathIndex = 0; a.stuckFor = 0;
+            a.chooseAt = Infinity;
+            if (!a.path.length) a.path = [{ x: a.x, z: a.z }];
+          }
+          while (a.pathIndex < a.path.length && Math.hypot(a.path[a.pathIndex].x - a.x, a.path[a.pathIndex].z - a.z) < 1) a.pathIndex++;
+          const waypoint = a.path[a.pathIndex], following = a.path[a.pathIndex + 1];
+          if (waypoint && following && life.actors.some(other => other !== a && Math.hypot(other.x - waypoint.x, other.z - waypoint.z) < 2.5) && navigator.segmentClear(a, following)) a.pathIndex++;
+          const finalPoint = a.path[a.path.length - 1];
+          if (a.pathIndex === a.path.length - 1 && finalPoint && Math.hypot(a.x - finalPoint.x, a.z - finalPoint.z) < 3.5 && life.actors.some(other => other !== a && Math.hypot(other.x - finalPoint.x, other.z - finalPoint.z) < 2.5)) a.pathIndex++;
+          const next = a.path[a.pathIndex];
+          if (next) { a.targetX = next.x; a.targetZ = next.z; x = next.x - a.x; z = next.z - a.z; }
+          else {
+            const stop = route[a.routeStop];
+            a.stoppedUntil = life.elapsed + stop.pause; a.chooseAt = a.stoppedUntil;
+            a.routeStop = (a.routeStop + 1) % route.length; a.lookFacing = stop.facing; x = z = 0;
+          }
+          // Give nearby walkers room instead of converging on the same point.
+          for (const other of life.actors) {
+            if (other === a) continue;
+            const dx = a.x - other.x, dz = a.z - other.z, distance = Math.hypot(dx, dz);
+            if (distance > 0.01 && distance < 3.3) { x += dx / distance * (3.3 - distance) * 0.8; z += dz / distance * (3.3 - distance) * 0.8; }
+          }
+        } else x = z = 0;
       }
       if (life.elapsed < a.stoppedUntil) x = z = 0;
       const length = Math.hypot(x, z), factor = length > 1 ? 1 / length : 1, speed = i === 0 ? 6.5 : 1.6 + i % 3 * 0.25;
       const blend = 1 - Math.exp(-(length < 0.01 ? 16 : 10) * dt);
       a.vx += (x * factor * speed - a.vx) * blend; a.vz += (z * factor * speed - a.vz) * blend;
       if (i === 0 && input.jump && !life.jumpHeld && a.y <= groundHeight(a.x, a.z) + 0.001) a.vy = 9;
+      const beforeX = a.x, beforeZ = a.z;
       a.vy -= 24 * dt; a.x += a.vx * dt; a.z += a.vz * dt; a.y += a.vy * dt; keepInField(a);
+      if (i > 0 && life.elapsed >= a.stoppedUntil && a.pathIndex < a.path.length) a.stuckFor = Math.hypot(a.x - beforeX, a.z - beforeZ) < dt * 0.3 ? a.stuckFor + dt : Math.max(0, a.stuckFor - dt);
       const moving = Math.hypot(a.vx, a.vz);
-      if (moving > 0.2) { const target = Math.atan2(a.vx, a.vz), difference = Math.atan2(Math.sin(target - a.facing), Math.cos(target - a.facing)); a.facing += difference * Math.min(1, 12 * dt); }
+      if (i > 0 && life.elapsed < a.stoppedUntil) { const difference = Math.atan2(Math.sin(a.lookFacing - a.facing), Math.cos(a.lookFacing - a.facing)); a.facing += difference * Math.min(1, 3 * dt); }
+      else if (moving > 0.2) { const target = Math.atan2(a.vx, a.vz), difference = Math.atan2(Math.sin(target - a.facing), Math.cos(target - a.facing)); a.facing += difference * Math.min(1, 12 * dt); }
       a.walk += dt * moving * (i === 0 ? 1.8 : 3);
     });
     life.jumpHeld = input.jump;
