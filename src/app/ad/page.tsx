@@ -14,9 +14,8 @@ export const metadata: Metadata = {
   twitter: { card: 'summary_large_image', title: TITLE, description: DESCRIPTION },
 };
 
-// 連絡先（_for-sale の TXT レコードと同じメール）
-const CONTACT_EMAIL = 'ken.kokubunji@gmail.com';
-const CONTACT_URL = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent('覇気.com 広告掲載の申し込み')}`;
+// 連絡先はページに書かない（たてけんに直接連絡してもらう）
+const CONTACT_URL = '#contact';
 
 // 実際に稼働している掲載例（表示名と punycode ホスト）
 const EXAMPLES: { label: string; host: string }[] = [
@@ -154,18 +153,18 @@ export default function AdPage() {
         </div>
       </section>
 
-      <section className="ad-section ad-cta" aria-labelledby="ad-cta-heading">
+      <section className="ad-section ad-cta" id="contact" aria-labelledby="ad-cta-heading">
         <h2 className="ad-heading" id="ad-cta-heading">
           申し込み
         </h2>
         <p className="ad-note">
-          希望するサブドメイン名と、宣伝したいアプリ・サービスの URL を添えてメールでご連絡ください。覇気を持ってお返事します。
+          希望するサブドメイン名と、宣伝したいアプリ・サービスの URL を添えて、
+          <strong>たてけんに直接ご連絡ください</strong>。覇気を持ってお返事します。
         </p>
-        <a className="ad-button ad-button--primary" href={CONTACT_URL}>
-          広告を出す
-        </a>
         <p className="ad-contact">
-          <a href={CONTACT_URL}>{CONTACT_EMAIL}</a>
+          <a href="https://xn--08j1av7a2n.xn--7qwx14d.com/" target="_blank" rel="noopener noreferrer">
+            たてけんの.覇気.com
+          </a>
         </p>
       </section>
 
