@@ -26,7 +26,7 @@ export const RESERVED = new Set([
   // LT デモ用に予約（分譲フォームからは作らせない）
   'shop', 'evil', 'alice', 'bob',
   // 固定ページ用
-  'tukki',
+  'tukki', 'ad', '広告',
 ]);
 
 // LT デモ用サブドメイン（「の」を付けない固定ラベル）。
@@ -42,4 +42,6 @@ export const DEMO_HOSTS: Record<string, string> = {
 // 「の」を付けない固定ラベルの専用ページ。レコードは運用側が手動で用意する。
 export const FIXED_HOSTS: Record<string, string> = {
   tukki: '/tukki', // ツッキーくんが3D空間を飛び回るページ
+  ad: '/ad', // サブドメイン広告枠の募集ページ
+  'xn--4rrt1v': '/ad', // 広告.覇気.com（中身は ad と同じ）
 };
