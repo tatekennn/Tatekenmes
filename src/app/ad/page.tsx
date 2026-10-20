@@ -14,7 +14,9 @@ export const metadata: Metadata = {
   twitter: { card: 'summary_large_image', title: TITLE, description: DESCRIPTION },
 };
 
-const CONTACT_URL = 'https://github.com/tatekennn/Tatekenmes/issues/new?title=%E5%BA%83%E5%91%8A%E6%8E%B2%E8%BC%89%E3%81%AE%E7%94%B3%E3%81%97%E8%BE%BC%E3%81%BF';
+// 連絡先（_for-sale の TXT レコードと同じメール）
+const CONTACT_EMAIL = 'ken.kokubunji@gmail.com';
+const CONTACT_URL = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent('覇気.com 広告掲載の申し込み')}`;
 
 // 実際に稼働している掲載例（表示名と punycode ホスト）
 const EXAMPLES: { label: string; host: string }[] = [
@@ -63,7 +65,7 @@ export default function AdPage() {
           覇気.com では、サブドメインをまるごと広告枠として提供しています。「<strong>アプリ名.覇気.com</strong>」が、そのままあなたのアプリやサービスの広告になります。
         </p>
         <div className="ad-hero-actions">
-          <a className="ad-button ad-button--primary" href={CONTACT_URL} target="_blank" rel="noopener noreferrer">
+          <a className="ad-button ad-button--primary" href={CONTACT_URL}>
             広告を出す
           </a>
           <a className="ad-button" href="#examples">
@@ -157,11 +159,14 @@ export default function AdPage() {
           申し込み
         </h2>
         <p className="ad-note">
-          希望するサブドメイン名と、宣伝したいアプリ・サービスの URL を添えてご連絡ください。覇気を持ってお返事します。
+          希望するサブドメイン名と、宣伝したいアプリ・サービスの URL を添えてメールでご連絡ください。覇気を持ってお返事します。
         </p>
-        <a className="ad-button ad-button--primary" href={CONTACT_URL} target="_blank" rel="noopener noreferrer">
+        <a className="ad-button ad-button--primary" href={CONTACT_URL}>
           広告を出す
         </a>
+        <p className="ad-contact">
+          <a href={CONTACT_URL}>{CONTACT_EMAIL}</a>
+        </p>
       </section>
 
       <footer className="ad-footer">
